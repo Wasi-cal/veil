@@ -17,9 +17,8 @@ def _git(cwd: Path, *args: str) -> str:
         cwd=cwd,
         check=True,
         capture_output=True,
-        text=True,
     )
-    return result.stdout
+    return result.stdout.decode()
 
 
 class FakePullRequest(BaseModel):
@@ -36,13 +35,13 @@ class FakeWorkspace:
         self.path = path
 
     def read_file(self, path: str) -> str:
-        return (self.path / path).read_text()
+        return (self.path / path).read_bytes().decode()
 
     def list_files(self) -> list[str]:
         return _git(self.path, "ls-files").split("\n")[:-1]
 
     def write_file(self, path: str, content: str) -> None:
-        (self.path / path).write_text(content)
+        (self.path / path).write_bytes(content.encode())
 
     def commit(self, branch: str, message: str) -> None:
         _git(self.path, "checkout", "-b", branch)

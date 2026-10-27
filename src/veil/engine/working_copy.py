@@ -42,7 +42,7 @@ class WorkingCopy:
         if old not in current:
             raise EditRejected("Refused: The text to replace is not in the file.")
         updated = current.replace(old, new, 1)
-        if current and not updated:
+        if current.strip() and not updated.strip():
             raise EditRejected(
                 "Refused: The edit deletes the file. Deletions are not allowed."
             )
@@ -74,7 +74,15 @@ def _changed_lines(originals: dict[str, str], currents: dict[str, str]) -> int:
 
 
 def _file_changed_lines(before: str, after: str) -> int:
-    diff = difflib.unified_diff(
-        before.splitlines(), after.splitlines(), lineterm="", n=0
+    """Count each changed line once. A change to a line ending or to a space counts as a change."""
+    matcher = difflib.SequenceMatcher(
+        None,
+        before.splitlines(keepends=True),
+        after.splitlines(keepends=True),
+        autojunk=False,
     )
-    return sum(1 for line in list(diff)[2:] if line[:1] in "+-")
+    return sum(
+        max(old_end - old_start, new_end - new_start)
+        for tag, old_start, old_end, new_start, new_end in matcher.get_opcodes()
+        if tag != "equal"
+    )

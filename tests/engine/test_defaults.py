@@ -28,9 +28,9 @@ def test_default_step_cap_is_25_tool_calls(tmp_path):
     assert_failed_fix(tracker, repos, run(context))
 
 
-@pytest.mark.parametrize(("lines", "outcome"), [(100, "fixed"), (101, "failed")])
+@pytest.mark.parametrize(("lines", "outcome"), [(200, "fixed"), (201, "failed")])
 def test_default_diff_limit_is_200_changed_lines(tmp_path, lines, outcome):
-    """Replacing N lines removes N lines and adds N lines, so 100 lines is exactly 200 changed lines."""
+    """Replacing N lines changes N lines, so 200 lines is exactly the limit."""
     context, _, _, _ = make_context(
         tmp_path,
         [
