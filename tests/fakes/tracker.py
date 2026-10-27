@@ -19,6 +19,7 @@ class FakeTracker:
         self._tickets = tickets
         self._status: dict[str, str] = {t.key: "To Do" for t in tickets}
         self._comments: dict[str, list[str]] = {t.key: [] for t in tickets}
+        self._labels: dict[str, list[str]] = {t.key: [] for t in tickets}
 
     def open_tickets(self) -> list[Ticket]:
         return list(self._tickets)
@@ -28,6 +29,12 @@ class FakeTracker:
 
     def set_status(self, key: str, status: str) -> None:
         self._status[key] = status
+
+    def add_label(self, key: str, label: str) -> None:
+        self._labels[key].append(label)
+
+    def labels_on(self, key: str) -> list[str]:
+        return list(self._labels[key])
 
     def status_of(self, key: str) -> str:
         return self._status[key]

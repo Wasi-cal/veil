@@ -1,41 +1,8 @@
 import re
 
-from tests.fakes import (
-    FakeModelClient,
-    FakeRepoProvider,
-    FakeTracker,
-    edit_file,
-    finish,
-    make_ticket,
-)
-from veil.engine import Context, Settings, run
-
-VULNERABLE = "import os\n\nvalue = eval(input())\n"
-FIXED = "import os\n\nvalue = int(input())\n"
-EDIT_THEN_FINISH = [
-    [edit_file("app.py", "eval(input())", "int(input())")],
-    [finish("Replaced eval with int.")],
-]
-
-
-def make_context(
-    tmp_path, model_script, tokens_per_call=0, files=None, **ticket_fields
-):
-    fields = {
-        "key": "GR-100",
-        "repo": "acme/app",
-        "file": "app.py",
-        "line": 3,
-        **ticket_fields,
-    }
-    ticket = make_ticket(**fields)
-    tracker = FakeTracker([ticket])
-    repos = FakeRepoProvider(tmp_path, {"acme/app": files or {"app.py": VULNERABLE}})
-    model = FakeModelClient(model_script, tokens_per_call=tokens_per_call)
-    context = Context(
-        settings=Settings(), tracker=tracker, repo_provider=repos, model_client=model
-    )
-    return context, tracker, repos, model
+from tests.engine.support import EDIT_THEN_FINISH, FIXED, make_context
+from tests.fakes import edit_file, finish
+from veil.engine import run
 
 
 def test_scripted_edit_makes_one_commit_and_one_draft_pr(tmp_path):

@@ -1,2 +1,5 @@
 EDIT_FILE = "edit_file"
 FINISH = "finish"
+READ_FILE = "read_file"
+SEARCH = "search"
+LIST_DIR = "list_dir"

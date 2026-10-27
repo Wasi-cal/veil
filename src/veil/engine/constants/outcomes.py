@@ -1,1 +1,2 @@
 FIXED = "fixed"
+FAILED = "failed"
