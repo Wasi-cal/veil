@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How veil works</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --fg: #1d1d1b; --muted: #5d5d58; --card: #ffffff; --border: #d9d9d3;
+    --accent: #2f6fdd; --accent-soft: #e6eefc; --ok: #2c7a4b; --warn: #b4531c; --warn-soft: #fbece1;
+    --imp: #e8f3ea; --by: #fdf1dd; --code: #efefea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151516; --fg: #ececea; --muted: #a2a29c; --card: #1f1f21; --border: #3a3a3d;
+      --accent: #7aa7f5; --accent-soft: #1e2a44; --ok: #6fcf97; --warn: #f2994a; --warn-soft: #3a2a1d;
+      --imp: #1d3325; --by: #3a301a; --code: #2a2a2d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header, main { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+  header { padding-top: 28px; }
+  h1 { margin: 0 0 4px; font-size: 1.7rem; }
+  h2 { margin: 28px 0 8px; font-size: 1.25rem; }
+  h3 { margin: 0 0 6px; font-size: 1.02rem; }
+  p { margin: 8px 0; max-width: 78ch; }
+  .sub { color: var(--muted); margin: 0 0 16px; }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .88em; background: var(--code); padding: 1px 5px; border-radius: 4px; }
+  nav.tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+  nav.tabs button { font: inherit; padding: 7px 14px; border: 1px solid var(--border); background: var(--card); color: var(--fg); border-radius: 999px; cursor: pointer; }
+  nav.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  section.tab { display: none; padding-bottom: 60px; }
+  section.tab.on { display: block; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+
+  /* big picture */
+  .stack { display: flex; flex-direction: column; align-items: stretch; gap: 0; margin-top: 12px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row .box { flex: 1 1 280px; }
+  .box { background: var(--card); border: 1px solid var(--border); border-left: 5px solid var(--accent); border-radius: 10px; padding: 10px 14px; }
+  .box.door { border-left-color: var(--ok); }
+  .box h3 .count { font-weight: 400; color: var(--muted); font-size: .85rem; }
+  .box .imports { color: var(--muted); font-size: .88rem; margin-top: 4px; }
+  .down { text-align: center; color: var(--muted); line-height: 1.3; padding: 4px 0; font-size: .9rem; }
+  .stat { margin-top: 14px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); }
+
+  /* sequence */
+  .seq { width: 100%; height: auto; min-width: 900px; color: var(--muted); }
+  .scroll { overflow-x: auto; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px; }
+  .seq .head { fill: var(--accent-soft); stroke: var(--accent); }
+  .seq .headtext { fill: var(--fg); font-size: 13px; font-weight: 600; }
+  .seq .life { stroke: var(--border); stroke-dasharray: 4 4; }
+  .seq .msg { stroke: var(--muted); stroke-width: 1.6; }
+  .seq .label { fill: var(--fg); font-size: 12.5px; }
+  .seq .note { fill: var(--muted); font-size: 11.5px; font-style: italic; }
+  .seq .loop { fill: none; stroke: var(--accent); stroke-dasharray: 6 4; }
+  .seq .looptext { fill: var(--accent); font-size: 12px; font-weight: 600; }
+  .seq .fail { fill: var(--warn-soft); stroke: var(--warn); }
+  .seq .failtext { fill: var(--fg); font-size: 13px; }
+
+  /* layers of the working copy */
+  .layers { display: flex; flex-direction: column; gap: 0; margin: 12px 0; }
+  .layer { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+  .layer.mid { border-color: var(--accent); background: var(--accent-soft); }
+  .layer small { color: var(--muted); }
+  .two { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-top: 8px; }
+  .mini { background: var(--card); border: 1px dashed var(--border); border-radius: 8px; padding: 8px 12px; }
+  ol.steps { margin: 6px 0 6px 1.2em; padding: 0; max-width: 80ch; }
+  ol.steps li { margin: 3px 0; }
+
+  /* handlers */
+  .pipe { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 18px; }
+  .chip { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 8px; padding: 6px 10px; font-size: .92rem; }
+  .arrow { color: var(--muted); }
+  .tool h3 .mono { background: var(--accent-soft); }
+  .tool dl { margin: 6px 0 0; }
+  .tool dt { font-weight: 600; margin-top: 6px; font-size: .9rem; color: var(--muted); }
+  .tool dd { margin: 2px 0 0; }
+  .bad { color: var(--warn); }
+
+  /* file explorer */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 10px 0 4px; }
+  .controls input[type=search] { font: inherit; padding: 6px 12px; border: 1px solid var(--border); background: var(--card); color: var(--fg); border-radius: 999px; min-width: 220px; }
+  .seg button { font: inherit; padding: 5px 12px; border: 1px solid var(--border); background: var(--card); color: var(--fg); cursor: pointer; }
+  .seg button:first-child { border-radius: 999px 0 0 999px; } .seg button:last-child { border-radius: 0 999px 999px 0; }
+  .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .legend span { display: inline-block; margin-right: 12px; font-size: .88rem; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; border: 1px solid var(--border); }
+  .explorer { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+  @media (max-width: 900px) { .explorer { grid-template-columns: 1fr; } .detail { position: static !important; } }
+  .group { margin-bottom: 14px; }
+  .group h3 { margin-bottom: 2px; }
+  .group .note { color: var(--muted); font-size: .9rem; margin: 0 0 6px; }
+  .files { display: flex; flex-wrap: wrap; gap: 6px; }
+  .file { font: inherit; text-align: left; padding: 6px 10px; border: 1px solid var(--border); background: var(--card); color: var(--fg); border-radius: 8px; cursor: pointer; }
+  .file small { color: var(--muted); display: block; font-size: .75rem; }
+  .file:hover { border-color: var(--accent); }
+  .file.sel { background: var(--accent); border-color: var(--accent); color: #fff; } .file.sel small { color: #dbe6fb; }
+  .file.imp { background: var(--imp); border-color: var(--ok); }
+  .file.by { background: var(--by); border-color: var(--warn); }
+  .has-sel .file:not(.sel):not(.imp):not(.by) { opacity: .35; }
+  .file.hide, .group.hide { display: none; }
+  .detail { position: sticky; top: 12px; }
+  .detail h3 { word-break: break-all; }
+  .detail ul { margin: 4px 0 8px 1.1em; padding: 0; }
+  .detail li button { font: inherit; background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; text-align: left; word-break: break-all; }
+  .empty { color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>How veil works</h1>
+  <p class="sub">A map of every file in the veil repo and how the files link. The links come from the real imports. Build this page again with <code>python docs/architecture/build.py</code>.</p>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+</header>
+<main>
+
+<section class="tab" id="tab-picture" data-title="Big picture">
+  <h2>The folders, from top to bottom</h2>
+  <p>The Engine has one folder for each concern. A folder imports only from the folders below it. This keeps each file small and easy to find.</p>
+  <div class="stack" id="stack"></div>
+  <div class="stat" id="stat"></div>
+  <h2>What is outside the Engine</h2>
+  <div class="grid">
+    <div class="card"><h3><code>adapters/</code> and <code>shells/</code></h3><p>These folders are empty today. The real Jira, GitHub and OpenAI parts go in <code>adapters/</code> (tickets GR-18 to GR-20). The two ways to run the Engine go in <code>shells/</code>.</p></div>
+    <div class="card"><h3><code>tests/</code></h3><p>Almost every test calls <code>run(context)</code> with three fakes. Open the tab "Files and links" and choose "Tests" to see them.</p></div>
+    <div class="card"><h3><code>docs/</code></h3><p>The decisions (ADR 0001 to 0003) and this page.</p></div>
+  </div>
+</section>
+
+<section class="tab" id="tab-run" data-title="One run">
+  <h2>What happens in one run</h2>
+  <p>Time goes down the page. An arrow is a call. Steps 7 and 8 repeat until the model calls <code>finish</code> or the attempt reaches the step cap.</p>
+  <div class="scroll">__SEQUENCE__</div>
+</section>
+
+<section class="tab" id="tab-workspace" data-title="Workspace and working copy">
+  <h2>Three layers between a tool and the files</h2>
+  <div class="layers">
+    <div class="layer"><h3>Toolbox and handlers <small>(tools/)</small></h3><p>The model asks for an action, for example "edit line 3". A handler turns the request into a call on the working copy.</p></div>
+    <div class="down">calls ↓</div>
+    <div class="layer mid"><h3>WorkingCopy <small>(workspace/working_copy.py)</small></h3>
+      <p>A thin layer on top of the workspace. It holds no files. It holds the safety checks and a record in memory.</p>
+      <div class="two">
+        <div class="mini"><b>originals</b><br>The first text of each file that the model edited.</div>
+        <div class="mini"><b>current</b><br>The latest text of each edited file.</div>
+        <div class="mini"><b>settings</b><br>The diff limit and the extra refused patterns.</div>
+      </div></div>
+    <div class="down">reads and writes ↓</div>
+    <div class="layer"><h3>Workspace <small>(interfaces/workspace.py)</small></h3><p>One private checkout of one repository for one ticket. It has four operations: <code>read_file</code>, <code>list_files</code>, <code>write_file</code> and <code>commit</code>.</p>
+      <div class="two">
+        <div class="mini"><b>In the tests</b><br><code>FakeWorkspace</code>: a local git clone in a new folder.</div>
+        <div class="mini"><b>In real use (later)</b><br>A clone from GitHub. Ticket GR-18 builds it.</div>
+      </div></div>
+  </div>
+
+  <h2>How the Engine creates the working copy</h2>
+  <p>One line in <code>fix/attempt.py</code> creates it. This happens once for each ticket, right after the workspace opens.</p>
+  <ol class="steps">
+    <li><code>workspace = context.repo_provider.open_workspace(ticket.repo)</code></li>
+    <li><code>working_copy = WorkingCopy(workspace, settings)</code></li>
+  </ol>
+  <p>The constructor copies no file. It stores the workspace and the settings. It makes two empty dictionaries: <code>originals</code> and <code>current</code>.</p>
+
+  <h2>What "open a workspace" means</h2>
+  <p><code>open_workspace(repo)</code> is a method of the repo provider. It returns a new Workspace: a private checkout of the repository. Each ticket gets its own. A Failed Fix leaves nothing behind, because the Engine never commits that checkout.</p>
+  <p>In the tests, <code>FakeRepoProvider.open_workspace</code> runs <code>git clone</code> of a local repository into <code>clone/&lt;n&gt;/&lt;repo&gt;</code>. The number <code>n</code> is new for each call.</p>
+
+  <h2>What happens when the model edits a file</h2>
+  <ol class="steps">
+    <li>Check the path. Refuse workflows, lockfiles, secret files and paths outside the repository.</li>
+    <li>Read the current text. If the file does not exist, refuse: new files are not allowed.</li>
+    <li>If the old text is not in the file, refuse.</li>
+    <li>If the new text leaves the file empty or only blank, refuse: deletions are not allowed.</li>
+    <li>Count the changed lines of all edited files. If the count is more than the diff limit, refuse.</li>
+    <li>Write the new text to the workspace now. Update <code>current</code>. Keep the first text in <code>originals</code>.</li>
+  </ol>
+  <p>A refused edit changes nothing. At <code>finish</code>, the Engine runs the final checks. The change must not be empty. It must not be over the limit. Each edited file must still parse.</p>
+</section>
+
+<section class="tab" id="tab-handlers" data-title="Handlers">
+  <h2>What happens to one tool call</h2>
+  <p>The class <code>Toolbox</code> in <code>tools/toolbox.py</code> runs these four steps for every call. A tool never raises an error. A wrong call gives text that starts with <code>Error:</code> or <code>Refused:</code>.</p>
+  <div class="pipe">
+    <span class="chip">1 Find the tool by name</span><span class="arrow">→</span>
+    <span class="chip">2 Check the arguments with a pydantic model</span><span class="arrow">→</span>
+    <span class="chip">3 Call the handler</span><span class="arrow">→</span>
+    <span class="chip">4 Cut the result to 8 KB</span>
+  </div>
+  <p>The handlers are in <code>tools/handlers/</code>. Each has the same shape: <code>handler(args, working_copy, settings)</code> returns text.</p>
+  <div class="grid">
+    <div class="card tool"><h3><span class="mono">edit_file</span></h3>
+      <dl><dt>Arguments</dt><dd><code>path</code>, <code>old</code>, <code>new</code></dd>
+      <dt>What it does</dt><dd>Asks the working copy to replace the first <code>old</code> text with <code>new</code>.</dd>
+      <dt>Result</dt><dd><code>Edit applied.</code> or <span class="bad"><code>Refused: …</code></span></dd>
+      <dt>File</dt><dd><code>handlers/edit_file.py</code></dd></dl></div>
+    <div class="card tool"><h3><span class="mono">read_file</span></h3>
+      <dl><dt>Arguments</dt><dd><code>path</code>, <code>start_line</code> (1 or more)</dd>
+      <dt>What it does</dt><dd>Reads the current text of one file. Returns up to 300 lines from <code>start_line</code>. If more lines exist, it adds the note to narrow the request.</dd>
+      <dt>Refuses</dt><dd class="bad">Secret files and paths outside the repository.</dd>
+      <dt>File</dt><dd><code>handlers/read_file.py</code></dd></dl></div>
+    <div class="card tool"><h3><span class="mono">search</span></h3>
+      <dl><dt>Arguments</dt><dd><code>pattern</code> (a regular expression)</dd>
+      <dt>What it does</dt><dd>Reads every file that the model may read. Returns up to 50 lines as <code>path:line:text</code>. It skips secret files and binary files.</dd>
+      <dt>Errors</dt><dd class="bad">A pattern that is not a valid regular expression.</dd>
+      <dt>File</dt><dd><code>handlers/search.py</code></dd></dl></div>
+    <div class="card tool"><h3><span class="mono">list_dir</span></h3>
+      <dl><dt>Arguments</dt><dd><code>path</code> (default <code>.</code>)</dd>
+      <dt>What it does</dt><dd>Lists the entries of one folder. A folder name ends with <code>/</code>. It hides secret files.</dd>
+      <dt>Refuses</dt><dd class="bad">A path outside the repository.</dd>
+      <dt>File</dt><dd><code>handlers/list_dir.py</code></dd></dl></div>
+    <div class="card tool"><h3><span class="mono">finish</span></h3>
+      <dl><dt>Arguments</dt><dd><code>summary</code></dd>
+      <dt>What it does</dt><dd>It has no handler file. <code>fix/conversation.py</code> sees the name and ends the loop. The Engine then runs the final checks and publishes.</dd>
+      <dt>File</dt><dd><code>fix/conversation.py</code></dd></dl></div>
+    <div class="card tool"><h3>Two helpers</h3>
+      <dl><dt><code>handlers/readable.py</code></dt><dd><code>readable_path</code> checks one path. <code>readable_files</code> lists the files that the model may read.</dd>
+      <dt><code>tools/result_cap.py</code></dt><dd>Cuts a long result and adds the note: "The result is incomplete. Make the request narrower."</dd></dl></div>
+  </div>
+</section>
+
+<section class="tab" id="tab-files" data-title="Files and links">
+  <h2>Every file and how it links</h2>
+  <p>Click a file. Green files are the files that it imports. Orange files import it. The other files fade. Empty <code id="empty"></code> package files are not shown.</p>
+  <div class="controls">
+    <div class="seg" id="scope"><button data-scope="src" aria-pressed="true">Source</button><button data-scope="tests" aria-pressed="false">Tests</button><button data-scope="all" aria-pressed="false">All</button></div>
+    <input type="search" id="find" placeholder="Find a file" aria-label="Find a file">
+    <span class="legend"><span><i class="sw" style="background:var(--accent)"></i>selected</span><span><i class="sw" style="background:var(--imp)"></i>it imports</span><span><i class="sw" style="background:var(--by)"></i>imports it</span></span>
+  </div>
+  <div class="explorer">
+    <div id="groups"></div>
+    <aside class="card detail" id="detail"><p class="empty">Click a file to see what it does and how it links.</p></aside>
+  </div>
+</section>
+
+</main>
+<script>
+const DATA = __DATA__;
+const byId = Object.fromEntries(DATA.nodes.map(n => [n.id, n]));
+const el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e[k] = v; else e.setAttribute(k, v); } kids.flat().forEach(k => e.append(k)); return e; };
+const isTest = n => n.path.startsWith('tests/');
+
+/* tabs */
+const tabs = [...document.querySelectorAll('section.tab')];
+const nav = document.getElementById('tabs');
+function showTab(id) {
+  tabs.forEach(t => t.classList.toggle('on', t.id === id));
+  [...nav.children].forEach(b => b.setAttribute('aria-selected', b.dataset.id === id));
+  history.replaceState(null, '', '#' + id);
+}
+tabs.forEach(t => nav.append(el('button', { role: 'tab', 'data-id': t.id, onclick: () => showTab(t.id) }, t.dataset.title)));
+showTab(tabs.some(t => '#' + t.id === location.hash) ? location.hash.slice(1) : tabs[0].id);
+
+/* big picture */
+const countIn = g => DATA.nodes.filter(n => n.group === g).length;
+const stack = document.getElementById('stack');
+const doorNote = DATA.groupNotes.engine;
+stack.append(el('div', { class: 'row' }, el('div', { class: 'box door' }, el('h3', {}, 'engine/__init__.py ', el('span', { class: 'count' }, '(public door)')), el('div', {}, doorNote))));
+stack.append(el('div', { class: 'down' }, '↓ imports from run, context and models'));
+DATA.layers.forEach((row, i) => {
+  stack.append(el('div', { class: 'row' }, row.map(g => {
+    const to = Object.entries(DATA.folderEdges[g] || {});
+    return el('div', { class: 'box' },
+      el('h3', {}, g === 'run' ? 'run.py ' : g === 'context' ? 'context.py ' : g + '/ ', el('span', { class: 'count' }, '(' + countIn(g) + (countIn(g) === 1 ? ' file)' : ' files)'))),
+      el('div', {}, DATA.groupNotes[g]),
+      el('div', { class: 'imports' }, to.length ? 'Imports from: ' + to.map(([k, v]) => k + ' (' + v + ')').join(', ') : 'Imports from no other folder.'));
+  })));
+  if (i < DATA.layers.length - 1) stack.append(el('div', { class: 'down' }, '↓'));
+});
+document.getElementById('stat').textContent = DATA.upward.length === 0
+  ? 'Upward imports: 0. No folder imports from a folder above it. A contract in pyproject.toml checks this on every test run.'
+  : 'Upward imports found: ' + DATA.upward.join(', ');
+
+/* file explorer */
+document.getElementById('empty').textContent = '__init__.py (' + DATA.emptyInits + ')';
+const groupsEl = document.getElementById('groups');
+const detail = document.getElementById('detail');
+let scope = 'src', selected = null;
+const order = [...DATA.srcOrder, ...DATA.testOrder];
+const label = g => g === 'run' ? 'run.py' : g === 'context' ? 'context.py' : g === 'engine' ? 'engine/__init__.py' : g + '/';
+order.forEach(g => {
+  const nodes = DATA.nodes.filter(n => n.group === g);
+  if (!nodes.length) return;
+  groupsEl.append(el('div', { class: 'group', 'data-group': g, 'data-test': g.startsWith('tests') ? '1' : '0' },
+    el('h3', {}, label(g)), el('p', { class: 'note' }, DATA.groupNotes[g] || ''),
+    el('div', { class: 'files' }, nodes.map(n => el('button', { class: 'file', 'data-id': n.id, title: n.path, onclick: () => select(n.id) },
+      n.file, el('small', {}, n.lines + ' lines'))))));
+});
+function link(id) { return el('li', {}, el('button', { onclick: () => select(id) }, byId[id].path.replace('src/veil/engine/', '').replace('src/veil/', ''))); }
+function select(id) {
+  selected = id;
+  const n = byId[id];
+  groupsEl.classList.add('has-sel');
+  document.querySelectorAll('.file').forEach(b => {
+    const i = b.dataset.id;
+    b.classList.toggle('sel', i === id);
+    b.classList.toggle('imp', n.imports.includes(i));
+    b.classList.toggle('by', n.importedBy.includes(i));
+  });
+  detail.replaceChildren(
+    el('h3', {}, n.path), el('p', {}, n.desc), el('p', { class: 'empty' }, n.lines + ' lines of code'),
+    el('b', {}, 'It imports (' + n.imports.length + ')'),
+    n.imports.length ? el('ul', {}, n.imports.map(link)) : el('p', { class: 'empty' }, 'Nothing from this repo.'),
+    el('b', {}, 'Imported by (' + n.importedBy.length + ')'),
+    n.importedBy.length ? el('ul', {}, n.importedBy.map(link)) : el('p', { class: 'empty' }, 'No other file.'));
+  const target = document.querySelector('.file[data-id="' + id + '"]');
+  if (target && target.classList.contains('hide')) setScope('all');
+}
+function apply() {
+  const q = document.getElementById('find').value.trim().toLowerCase();
+  document.querySelectorAll('.group').forEach(g => {
+    const test = g.dataset.test === '1';
+    const scopeOk = scope === 'all' || (scope === 'tests') === test;
+    let any = false;
+    g.querySelectorAll('.file').forEach(b => {
+      const n = byId[b.dataset.id];
+      const ok = scopeOk && (!q || n.path.toLowerCase().includes(q) || n.desc.toLowerCase().includes(q));
+      b.classList.toggle('hide', !ok); if (ok) any = true;
+    });
+    g.classList.toggle('hide', !any);
+  });
+}
+function setScope(s) {
+  scope = s;
+  document.querySelectorAll('#scope button').forEach(b => b.setAttribute('aria-pressed', b.dataset.scope === s));
+  apply();
+}
+document.querySelectorAll('#scope button').forEach(b => b.onclick = () => setScope(b.dataset.scope));
+document.getElementById('find').oninput = apply;
+setScope('src');
+</script>
+</body>
+</html>
