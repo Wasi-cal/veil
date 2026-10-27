@@ -8,6 +8,7 @@ Spec and tickets live in Jira (site `gozu-calfus.atlassian.net`, project `GR`): 
 
 Structure
 - Follow ADR 0002. `engine` never imports from `adapters` or `shells`. Add a lint check for this.
+- Follow ADR 0003 for the folders in `engine`. Put a new file in the folder of its concern. Keep only `run.py` and `context.py` at the top of `engine`.
 - The Engine is one entry point, `run(context)`. It reads no environment variables and does not know its Shell.
 
 SOLID, in plain terms

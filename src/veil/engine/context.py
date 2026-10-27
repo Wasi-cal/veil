@@ -1,7 +1,9 @@
 from pydantic import BaseModel, ConfigDict
 
-from veil.engine.interfaces import ModelClient, RepoProvider, Tracker
-from veil.engine.models.settings import Settings
+from veil.engine.interfaces.model_client import ModelClient
+from veil.engine.interfaces.repo_provider import RepoProvider
+from veil.engine.interfaces.tracker import Tracker
+from veil.engine.models.config.settings import Settings
 
 
 class Context(BaseModel):

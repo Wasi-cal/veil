@@ -1,7 +1,7 @@
-from veil.engine.models.model_reply import ModelReply
-from veil.engine.models.run_report import RunReport
-from veil.engine.models.settings import Settings
-from veil.engine.models.ticket import Ticket
-from veil.engine.models.tool_call import ToolCall
+from veil.engine.models.config.settings import Settings
+from veil.engine.models.llm.model_reply import ModelReply
+from veil.engine.models.llm.tool_call import ToolCall
+from veil.engine.models.report.run_report import RunReport
+from veil.engine.models.ticket.ticket import Ticket
 
 __all__ = ["ModelReply", "RunReport", "Settings", "Ticket", "ToolCall"]
