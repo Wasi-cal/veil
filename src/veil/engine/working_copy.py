@@ -8,11 +8,11 @@ from veil.engine.syntax import check_parses
 
 
 class EditRejected(Exception):
-    """An edit broke a limit or a rule. The message goes back to the model."""
+    """An edit breaks a limit or a rule. The model gets the message."""
 
 
 class WorkingCopy:
-    """Applies edits to a Workspace. Every check runs before anything is written."""
+    """Apply edits to a Workspace. Each check runs before the Engine writes anything."""
 
     def __init__(self, workspace: Workspace, settings: Settings):
         self._workspace = workspace
@@ -32,33 +32,37 @@ class WorkingCopy:
         try:
             path = check_editable(path, self._settings.extra_refused_read_patterns)
         except RuleViolation as violation:
-            raise EditRejected(f"Edit rejected: {violation}") from None
+            raise EditRejected(f"Refused: {violation}") from None
         try:
             current = self.read(path)
         except (FileNotFoundError, IsADirectoryError):
-            raise EditRejected("Edit rejected: new files are not allowed.") from None
+            raise EditRejected(
+                "Refused: The path is not a file in the repository. New files are not allowed."
+            ) from None
         if old not in current:
-            raise EditRejected("Edit rejected: the text to replace was not found.")
+            raise EditRejected("Refused: The text to replace is not in the file.")
         updated = current.replace(old, new, 1)
         if current and not updated:
-            raise EditRejected("Edit rejected: deleting a file is not allowed.")
+            raise EditRejected(
+                "Refused: The edit deletes the file. Deletions are not allowed."
+            )
         originals = {**self._originals, path: self._originals.get(path, current)}
         currents = {**self._current, path: updated}
         if _changed_lines(originals, currents) > self._settings.diff_limit:
             raise EditRejected(
-                f"Edit rejected: it would cross the diff limit of {self._settings.diff_limit} changed lines."
+                f"Refused: The edit crosses the diff limit of {self._settings.diff_limit} changed lines."
             )
         self._workspace.write_file(path, updated)
         self._originals, self._current = originals, currents
 
     def verify(self) -> None:
-        """Checks at `finish`. Raise FailedFix if the change is empty, too big or broken."""
+        """Run the checks at `finish`. Raise FailedFix if the change is empty, too large or does not parse."""
         changed = _changed_lines(self._originals, self._current)
         if changed == 0:
-            raise FailedFix("The model finished without making any change.")
+            raise FailedFix("The model finished and made no change.")
         if changed > self._settings.diff_limit:
             raise FailedFix(
-                f"The change crosses the diff limit of {self._settings.diff_limit} lines."
+                f"The change has more than {self._settings.diff_limit} changed lines. This crosses the diff limit."
             )
         check_parses(self._current)
 

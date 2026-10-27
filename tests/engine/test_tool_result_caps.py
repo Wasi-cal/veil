@@ -6,7 +6,7 @@ NUMBERED = "".join(f"L{n:04d}\n" for n in range(1, 1001))
 
 
 def results_for(tmp_path, calls, files):
-    """Run one Fix attempt. Return what the model got back for each call in `calls`."""
+    """Run one Fix attempt. Return the result that the model gets for each call in `calls`."""
     script = [[call] for call in calls] + [[GOOD_EDIT], [finish("Fixed.")]]
     context, _, _, model = make_context(
         tmp_path, script, files={"app.py": VULNERABLE, **files}

@@ -22,7 +22,7 @@ def finish(summary: str) -> ToolCall:
 
 
 class FakeModelClient:
-    """Plays back a script: one list of tool calls per model call."""
+    """Play a script. Each model call returns one list of tool calls."""
 
     def __init__(self, script: list[list[ToolCall]], tokens_per_call: int = 0):
         self._script = list(script)

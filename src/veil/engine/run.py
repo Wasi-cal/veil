@@ -32,9 +32,11 @@ def _fix(context: Context, ticket: Ticket, report: RunReport) -> None:
         path = check_readable(ticket.file, settings.extra_refused_read_patterns)
         source = working_copy.read(path)
     except RuleViolation as violation:
-        raise FailedFix(f"{ticket.file} cannot be read: {violation}") from None
+        raise FailedFix(f"The Engine cannot read {ticket.file}. {violation}") from None
     except (FileNotFoundError, IsADirectoryError, UnicodeDecodeError):
-        raise FailedFix(f"{ticket.file} is not a text file in {ticket.repo}.") from None
+        raise FailedFix(
+            f"The file {ticket.file} is not a text file in {ticket.repo}."
+        ) from None
     messages = [{"role": "user", "content": first_prompt(ticket, source)}]
     toolbox = Toolbox(working_copy, settings)
     steps = 0
@@ -42,7 +44,7 @@ def _fix(context: Context, ticket: Ticket, report: RunReport) -> None:
     while not finished:
         reply = context.model_client.next(messages)
         report.tokens_used += reply.tokens
-        steps += 0 if reply.tool_calls else 1  # an empty reply still costs a step
+        steps += 0 if reply.tool_calls else 1  # An empty reply also counts as a step.
         for call in reply.tool_calls:
             steps += 1
             if call.name == FINISH:
@@ -59,19 +61,23 @@ def _fix(context: Context, ticket: Ticket, report: RunReport) -> None:
     pr_url = context.repo_provider.open_draft_pr(
         ticket.repo, branch, f"Fix {ticket.key}", ""
     )
-    context.tracker.add_comment(ticket.key, f"Draft Fix PR: {pr_url}")
+    context.tracker.add_comment(
+        ticket.key, f"The Engine opened a draft Fix PR: {pr_url}"
+    )
     context.tracker.set_status(ticket.key, IN_REVIEW)
     report.pull_requests.append(pr_url)
     report.outcomes[ticket.key] = FIXED
 
 
 def _step_cap_reached(cap: int) -> FailedFix:
-    return FailedFix(f"Step cap reached: {cap} tool calls without finishing.")
+    return FailedFix(
+        f"The attempt used {cap} tool calls and did not finish. This is the step cap."
+    )
 
 
 def _record_failed_fix(
     context: Context, ticket: Ticket, failed: FailedFix, report: RunReport
 ) -> None:
-    context.tracker.add_comment(ticket.key, f"Failed Fix: {failed.reason}")
+    context.tracker.add_comment(ticket.key, f"Failed Fix. {failed.reason}")
     context.tracker.add_label(ticket.key, FAILED_FIX_LABEL)
     report.outcomes[ticket.key] = FAILED

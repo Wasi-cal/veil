@@ -14,11 +14,17 @@ from veil.engine.models.tool_call import ToolCall
 from veil.engine.path_rules import RuleViolation, check_readable, normalize_dir
 from veil.engine.working_copy import EditRejected, WorkingCopy
 
-NARROW_NOTE = "Result cut short. Narrow your request, for example a later line range or a tighter pattern."
+NARROW_NOTE = "The result is incomplete. Make the request narrower. For example, use a later start line or a more exact pattern."
+
+
+def _first_problem(error: ValidationError) -> str:
+    problem = error.errors()[0]
+    field = ".".join(str(part) for part in problem["loc"]) or "arguments"
+    return f"Field {field}: {problem['msg']}."
 
 
 class Toolbox:
-    """The tools the model can call. Each returns text for the model. None of them raises."""
+    """The tools that the model can call. Each tool returns text to the model. No tool raises an error."""
 
     def __init__(self, working_copy: WorkingCopy, settings: Settings):
         self._working_copy = working_copy
@@ -32,12 +38,12 @@ class Toolbox:
 
     def run(self, call: ToolCall) -> str:
         if call.name not in self._tools:
-            return f"Tool error: there is no tool called {call.name!r}."
+            return f"Error: The tool {call.name!r} does not exist."
         arguments_model, handler = self._tools[call.name]
         try:
             arguments = arguments_model.model_validate(call.arguments)
         except ValidationError as error:
-            return f"Tool error: bad arguments for {call.name}: {error.errors()[0]['msg']}."
+            return f"Error: The arguments for {call.name} are not valid. {_first_problem(error)}"
         return self._cap(handler(arguments))
 
     def _edit_file(self, args: EditFileArgs) -> str:
@@ -52,9 +58,9 @@ class Toolbox:
             path = self._readable(args.path)
             lines = self._working_copy.read(path).splitlines()
         except RuleViolation as violation:
-            return f"Read refused: {violation}"
+            return f"Refused: {violation}"
         except (FileNotFoundError, IsADirectoryError, UnicodeDecodeError):
-            return f"Tool error: {args.path} is not a text file in this repository."
+            return f"Error: {args.path} is not a text file in the repository."
         window = lines[args.start_line - 1 :][: self._settings.read_file_max_lines]
         text = "\n".join(window)
         if args.start_line - 1 + len(window) < len(lines):
@@ -65,9 +71,7 @@ class Toolbox:
         try:
             regex = re.compile(args.pattern)
         except re.error as error:
-            return (
-                f"Tool error: the pattern is not a valid regular expression: {error}."
-            )
+            return f"Error: The pattern is not a valid regular expression. {error}."
         limit = self._settings.search_max_matches
         matches: list[str] = []
         for path in self._readable_files():
@@ -86,14 +90,14 @@ class Toolbox:
         try:
             base = normalize_dir(args.path)
         except RuleViolation as violation:
-            return f"List refused: {violation}"
+            return f"Refused: {violation}"
         prefix = f"{base}/" if base else ""
         entries = set()
         for path in self._readable_files():
             if path.startswith(prefix):
                 name, slash, _ = path[len(prefix) :].partition("/")
                 entries.add(f"{name}/" if slash else name)
-        return "\n".join(sorted(entries)) or "No files in that folder."
+        return "\n".join(sorted(entries)) or "The folder has no files."
 
     def _readable(self, path: str) -> str:
         return check_readable(path, self._settings.extra_refused_read_patterns)

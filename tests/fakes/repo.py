@@ -51,7 +51,7 @@ class FakeWorkspace:
 
 
 class FakeRepoProvider:
-    """Real local git repos. No network."""
+    """Real local git repositories. No network."""
 
     def __init__(self, root: Path, repos: dict[str, dict[str, str | bytes]]):
         self._root = root

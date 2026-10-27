@@ -10,7 +10,7 @@ from veil.engine.constants.limits import (
 
 
 class Settings(BaseModel):
-    """Defaults live in code. Callers pass their own values in."""
+    """The defaults are in code. The caller can give other values."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 

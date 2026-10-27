@@ -18,7 +18,7 @@ EDIT_THEN_FINISH = [
 
 
 def toggle_edits(count):
-    """`count` valid edits that flip the same text back and forth. None ever finishes."""
+    """`count` valid edits that change the same text back and forth. None of them finishes the attempt."""
     pairs = [("eval(input())", "int(input())"), ("int(input())", "eval(input())")]
     return [[edit_file("app.py", *pairs[n % 2])] for n in range(count)]
 
@@ -54,7 +54,7 @@ def make_context(
 
 
 def assert_failed_fix(tracker, repos, report, key="GR-100"):
-    """A Failed Fix: no PR, ticket stays open with a reason and the marker label."""
+    """Check a Failed Fix. There is no PR. The ticket stays open. It has a reason comment and the marker label."""
     assert repos.pull_requests == []
     assert report.outcomes[key] == "failed"
     assert tracker.status_of(key) == "To Do"

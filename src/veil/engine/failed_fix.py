@@ -1,5 +1,5 @@
 class FailedFix(Exception):
-    """The Engine could not fix a Gozu Ticket within its limits. `reason` goes in the comment."""
+    """The Engine cannot fix a Gozu Ticket within its limits. The `reason` goes in the comment on the ticket."""
 
     def __init__(self, reason: str):
         super().__init__(reason)

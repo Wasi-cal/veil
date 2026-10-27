@@ -17,6 +17,6 @@ LOCKFILE_NAMES = frozenset(
     }
 )
 
-# Secret files the model may never read. Settings can add patterns, never remove these.
+# The model must never read these secret files. Settings can add patterns. Settings cannot remove these patterns.
 READ_REFUSED_PATTERNS = (".env*", "*.pem", "*.key", "*.p12", "id_rsa*", ".npmrc")
 READ_REFUSED_DIRS = (".git",)

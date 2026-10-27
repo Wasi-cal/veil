@@ -14,7 +14,7 @@ PARSERS: dict[str, Callable[[str], object]] = {
 
 
 def check_parses(files: dict[str, str]) -> None:
-    """Raise FailedFix for the first file that no longer parses. Unknown types are skipped."""
+    """Raise FailedFix for the first file that does not parse. Skip files of unknown type."""
     for path, content in files.items():
         parser = PARSERS.get(PurePosixPath(path).suffix.lower())
         if parser is None:
@@ -22,4 +22,4 @@ def check_parses(files: dict[str, str]) -> None:
         try:
             parser(content)
         except (SyntaxError, ValueError, RecursionError) as error:
-            raise FailedFix(f"{path} no longer parses: {error}") from None
+            raise FailedFix(f"The file {path} does not parse. {error}") from None
