@@ -1,31 +1,7 @@
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
-
-
-class Ticket(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    key: str
-    repo: str
-    file: str
-    line: int
-    severity: str
-    finding: str
-
-
-class ToolCall(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    name: str
-    arguments: dict[str, Any] = Field(default_factory=dict)
-
-
-class ModelReply(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    tool_calls: list[ToolCall]
-    tokens: int = 0
+from veil.engine.models.model_reply import ModelReply
+from veil.engine.models.ticket import Ticket
 
 
 @runtime_checkable

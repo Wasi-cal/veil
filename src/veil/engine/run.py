@@ -1,23 +1,12 @@
-from pydantic import BaseModel, ConfigDict, Field
-
-from veil.engine.interfaces import ModelClient, RepoProvider, Ticket, Tracker
+from veil.engine.constants.outcomes import FIXED
+from veil.engine.constants.statuses import IN_REVIEW
+from veil.engine.constants.tools import EDIT_FILE, FINISH
+from veil.engine.context import Context
+from veil.engine.models.run_report import RunReport
+from veil.engine.models.ticket import Ticket
 from veil.engine.prompt import first_prompt
-from veil.engine.settings import Settings
 
-
-class Context(BaseModel):
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
-
-    settings: Settings
-    tracker: Tracker
-    repo_provider: RepoProvider
-    model_client: ModelClient
-
-
-class RunReport(BaseModel):
-    pull_requests: list[str] = Field(default_factory=list)
-    outcomes: dict[str, str] = Field(default_factory=dict)
-    tokens_used: int = 0
+FIX_BRANCH_PREFIX = "gozu/fix-"
 
 
 def run(context: Context) -> RunReport:
@@ -36,16 +25,16 @@ def _fix(context: Context, ticket: Ticket, report: RunReport) -> None:
         reply = context.model_client.next(messages)
         report.tokens_used += reply.tokens
         for call in reply.tool_calls:
-            if call.name == "edit_file":
+            if call.name == EDIT_FILE:
                 workspace.edit_file(**call.arguments)
-            elif call.name == "finish":
+            elif call.name == FINISH:
                 finished = True
-    branch = f"gozu/fix-{ticket.key.lower()}"
+    branch = f"{FIX_BRANCH_PREFIX}{ticket.key.lower()}"
     workspace.commit(branch, f"Fix {ticket.key}")
     pr_url = context.repo_provider.open_draft_pr(
         ticket.repo, branch, f"Fix {ticket.key}", ""
     )
     context.tracker.add_comment(ticket.key, f"Draft Fix PR: {pr_url}")
-    context.tracker.set_status(ticket.key, "In Review")
+    context.tracker.set_status(ticket.key, IN_REVIEW)
     report.pull_requests.append(pr_url)
-    report.outcomes[ticket.key] = "fixed"
+    report.outcomes[ticket.key] = FIXED
