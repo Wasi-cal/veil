@@ -39,6 +39,8 @@ def make_context(
     files=None,
     settings=None,
     extra_tickets=(),
+    source_files=None,
+    open_source_pr=True,
     **ticket_fields,
 ):
     fields = {
@@ -52,6 +54,11 @@ def make_context(
     others = [make_ticket(**{**fields, **extra}) for extra in extra_tickets]
     tracker = FakeTracker([ticket, *others])
     repos = FakeRepoProvider(tmp_path, {"acme/app": files or {"app.py": VULNERABLE}})
+    for branch in {t.branch for t in [ticket, *others]}:
+        if not branch.startswith("gozu/fix-"):
+            repos.seed_source_pr(
+                "acme/app", branch, source_files, is_open=open_source_pr
+            )
     model = FakeModelClient(model_script, tokens_per_call=tokens_per_call)
     context = Context(
         settings=settings or Settings(),
@@ -70,3 +77,13 @@ def assert_failed_fix(tracker, repos, report, key="GR-100"):
     assert tracker.labels_on(key) == ["veil-failed-fix"]
     [comment] = tracker.comments_on(key)
     return comment
+
+
+def assert_untouched(tracker, repos, model, key="GR-100"):
+    """A skipped ticket: no workspace, no model call, no PR and no change in the tracker."""
+    assert repos.workspaces_opened == 0
+    assert model.models_used == []
+    assert repos.pull_requests == []
+    assert tracker.comments_on(key) == []
+    assert tracker.labels_on(key) == []
+    assert tracker.status_of(key) == "To Do"

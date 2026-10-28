@@ -8,7 +8,7 @@ def make_ticket(
     line: int = 1,
     severity: str = "Medium",
     finding: str = "Avoid eval on user input.",
-    branch: str = "main",
+    branch: str = "feature",
     labels: tuple[str, ...] | None = None,
 ) -> Ticket:
     """Build a ticket. Each key gets its own issue label, so tickets do not share one."""

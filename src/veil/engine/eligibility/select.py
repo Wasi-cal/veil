@@ -5,6 +5,7 @@ from veil.engine.constants.skip_reasons import (
     FAILED_FIX,
     NO_ISSUE_LABEL,
     RAISED_AGAINST_FIX_BRANCH,
+    SOURCE_PR_NOT_OPEN,
 )
 from veil.engine.interfaces.repo_provider import RepoProvider
 from veil.engine.models.report.run_report import RunReport
@@ -33,6 +34,8 @@ def skip_reason(ticket: Ticket, repo_provider: RepoProvider) -> str | None:
         return FAILED_FIX
     if ticket.issue_label is None:
         return NO_ISSUE_LABEL
+    if not repo_provider.has_open_pr(ticket.repo, ticket.branch):
+        return SOURCE_PR_NOT_OPEN
     existing = repo_provider.find_existing_fix(ticket.repo, ticket.issue_label)
     return None if existing is None else existing.kind
 

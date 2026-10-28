@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from veil.engine import ExistingFix
+from veil.engine import DraftPr, ExistingFix
 
 
 def _git(cwd: Path, *args: str) -> str:
@@ -25,11 +25,28 @@ def _git(cwd: Path, *args: str) -> str:
 
 class FakePullRequest(BaseModel):
     repo: str
-    branch: str
+    head: str
+    base: str
     title: str
     body: str
     draft: bool
     url: str
+
+
+class FakeClone(BaseModel):
+    """One checkout that the Engine opened. The Fix commits come after its start branch."""
+
+    repo: str
+    path: Path
+    start_branch: str
+
+
+class FakeRemoteFix(BaseModel):
+    """A Fix that the fake remote knows: an open PR or a gozu/fix-* branch, with its labels."""
+
+    repo: str
+    fix: ExistingFix
+    labels: tuple[str, ...]
 
 
 class FakeWorkspace:
@@ -56,9 +73,10 @@ class FakeRepoProvider:
 
     def __init__(self, root: Path, repos: dict[str, dict[str, str | bytes]]):
         self._root = root
-        self._clones: list[tuple[str, Path]] = []
+        self._clones: list[FakeClone] = []
         self.pull_requests: list[FakePullRequest] = []
-        self._remote: list[tuple[str, ExistingFix, tuple[str, ...]]] = []
+        self._remote: list[FakeRemoteFix] = []
+        self._open_source_prs: set[tuple[str, str]] = set()
         for name, files in repos.items():
             origin = root / "origin" / name
             origin.mkdir(parents=True)
@@ -73,72 +91,127 @@ class FakeRepoProvider:
             _git(origin, "add", "-A")
             _git(origin, "commit", "-m", "init")
 
+    # ---- set up the fake remote ----
+
+    def seed_source_pr(
+        self,
+        repo: str,
+        branch: str,
+        files: dict[str, str | bytes] | None = None,
+        is_open: bool = True,
+    ) -> None:
+        """Make a branch from main, as a developer does for a PR. The files change on that branch only.
+
+        With is_open=False the PR is merged or closed, or it never existed.
+        """
+        origin = self._root / "origin" / repo
+        _git(origin, "checkout", "-B", branch, "main")
+        for rel, content in (files or {}).items():
+            target = origin / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(
+                content if isinstance(content, bytes) else content.encode()
+            )
+        _git(origin, "add", "-A")
+        _git(origin, "commit", "--allow-empty", "-m", f"work on {branch}")
+        _git(origin, "checkout", "main")
+        if is_open:
+            self._open_source_prs.add((repo, branch))
+
     def seed_pull_request(
         self, repo: str, branch: str, labels: tuple[str, ...]
     ) -> None:
         """Put an open PR in the fake remote. An earlier run or a person made it."""
-        self._remote.append((repo, ExistingFix(kind="open_pr", branch=branch), labels))
+        fix = ExistingFix(kind="open_pr", branch=branch)
+        self._remote.append(FakeRemoteFix(repo=repo, fix=fix, labels=labels))
 
     def seed_branch(self, repo: str, branch: str, labels: tuple[str, ...]) -> None:
         """Put a gozu/fix-* branch that carries these labels in the fake remote. No PR is open."""
-        self._remote.append(
-            (repo, ExistingFix(kind="fix_branch", branch=branch), labels)
-        )
+        fix = ExistingFix(kind="fix_branch", branch=branch)
+        self._remote.append(FakeRemoteFix(repo=repo, fix=fix, labels=labels))
+
+    # ---- the RepoProvider interface ----
+
+    def open_workspace(self, repo: str, branch: str) -> FakeWorkspace:
+        path = self._root / "clone" / f"{len(self._clones)}" / repo
+        origin = str(self._root / "origin" / repo)
+        _git(self._root, "clone", "--branch", branch, origin, str(path))
+        self._clones.append(FakeClone(repo=repo, path=path, start_branch=branch))
+        return FakeWorkspace(path)
+
+    def has_open_pr(self, repo: str, branch: str) -> bool:
+        return (repo, branch) in self._open_source_prs
 
     def find_existing_fix(self, repo: str, issue_label: str) -> ExistingFix | None:
         found = [
-            fix
-            for r, fix, labels in self._remote
-            if r == repo and issue_label in labels
+            r.fix for r in self._remote if r.repo == repo and issue_label in r.labels
         ]
         return next(
             (f for f in found if f.kind == "open_pr"), found[0] if found else None
         )
 
-    @property
-    def workspaces_opened(self) -> int:
-        return len(self._clones)
-
-    def open_workspace(self, repo: str) -> FakeWorkspace:
-        clone = self._root / "clone" / f"{len(self._clones)}" / repo
-        _git(self._root, "clone", str(self._root / "origin" / repo), str(clone))
-        self._clones.append((repo, clone))
-        return FakeWorkspace(clone)
-
-    def open_draft_pr(
-        self,
-        repo: str,
-        branch: str,
-        title: str,
-        body: str,
-        labels: tuple[str, ...],
-    ) -> str:
-        url = (
-            f"https://github.example.invalid/{repo}/pull/{len(self.pull_requests) + 1}"
+    def open_draft_pr(self, draft: DraftPr) -> str:
+        """Push the head branch to the fake origin and open a PR. Refuse any other push, as a real provider does."""
+        if not draft.head.startswith("gozu/fix-") or draft.head == draft.base:
+            raise ValueError(
+                f"Refused to push {draft.head} for a PR against {draft.base}."
+            )
+        for pr in self.pull_requests:
+            if pr.repo == draft.repo and pr.head == draft.head:
+                return pr.url
+        clone = self._clone_with_branch(draft.repo, draft.head)
+        _git(clone.path, "push", "origin", draft.head)
+        url = f"https://github.example.invalid/{draft.repo}/pull/{len(self.pull_requests) + 1}"
+        fix = ExistingFix(kind="open_pr", branch=draft.head)
+        self._remote.append(
+            FakeRemoteFix(repo=draft.repo, fix=fix, labels=draft.labels)
         )
-        self._remote.append((repo, ExistingFix(kind="open_pr", branch=branch), labels))
         self.pull_requests.append(
             FakePullRequest(
-                repo=repo, branch=branch, title=title, body=body, draft=True, url=url
+                repo=draft.repo,
+                head=draft.head,
+                base=draft.base,
+                title=draft.title,
+                body=draft.body,
+                draft=True,
+                url=url,
             )
         )
         return url
 
-    def _clone_with(self, pr: FakePullRequest) -> Path:
-        for repo, clone in self._clones:
-            branches = _git(clone, "branch", "--list", pr.branch)
-            if repo == pr.repo and branches.strip():
-                return clone
-        raise LookupError(pr.branch)
+    # ---- what a test can look at ----
+
+    @property
+    def workspaces_opened(self) -> int:
+        return len(self._clones)
+
+    def head_of(self, repo: str, branch: str) -> str:
+        """The commit that a branch points to in the fake origin."""
+        origin = self._root / "origin" / repo
+        return _git(origin, "rev-parse", branch).strip()
 
     def commit_count_on(self, pr: FakePullRequest) -> int:
-        clone = self._clone_with(pr)
-        return int(_git(clone, "rev-list", "--count", f"main..{pr.branch}"))
+        clone = self._clone_with_branch(pr.repo, pr.head)
+        return int(
+            _git(clone.path, "rev-list", "--count", f"{clone.start_branch}..{pr.head}")
+        )
 
     def file_on(self, pr: FakePullRequest, path: str) -> str:
-        return _git(self._clone_with(pr), "show", f"{pr.branch}:{path}")
+        clone = self._clone_with_branch(pr.repo, pr.head)
+        return _git(clone.path, "show", f"{pr.head}:{path}")
 
     def changed_paths_on(self, pr: FakePullRequest) -> set[str]:
-        clone = self._clone_with(pr)
-        out = _git(clone, "diff", "--name-only", f"main..{pr.branch}")
+        clone = self._clone_with_branch(pr.repo, pr.head)
+        out = _git(
+            clone.path, "diff", "--name-only", f"{clone.start_branch}..{pr.head}"
+        )
         return set(out.split())
+
+    def _clone_with_branch(self, repo: str, branch: str) -> FakeClone:
+        for clone in self._clones:
+            if (
+                clone.repo == repo
+                and _git(clone.path, "branch", "--list", branch).strip()
+            ):
+                return clone
+        raise LookupError(branch)

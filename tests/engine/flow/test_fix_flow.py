@@ -17,7 +17,7 @@ def test_scripted_edit_makes_one_commit_and_one_draft_pr(tmp_path):
 
     [pr] = repos.pull_requests
     assert pr.draft is True
-    assert pr.branch.startswith("gozu/fix-")
+    assert pr.head.startswith("gozu/fix-")
     assert repos.commit_count_on(pr) == 1
     assert repos.file_on(pr, "app.py") == FIXED
 

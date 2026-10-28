@@ -1,16 +1,11 @@
 from tests.fakes import finish
-from tests.support.scenario import EDIT_THEN_FINISH, both_attempts, make_context
+from tests.support.scenario import (
+    EDIT_THEN_FINISH,
+    assert_untouched,
+    both_attempts,
+    make_context,
+)
 from veil.engine import Settings, run
-
-
-def assert_untouched(tracker, repos, model, key="GR-100"):
-    """A skipped ticket: no workspace, no model call, no PR and no change in the tracker."""
-    assert repos.workspaces_opened == 0
-    assert model.models_used == []
-    assert repos.pull_requests == []
-    assert tracker.comments_on(key) == []
-    assert tracker.labels_on(key) == []
-    assert tracker.status_of(key) == "To Do"
 
 
 def test_ticket_raised_against_a_fix_branch_is_skipped(tmp_path):

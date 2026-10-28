@@ -4,7 +4,7 @@ This page explains what the code does, step by step. Read `GLOSSARY.md` for the 
 
 ## The short version
 
-Veil takes open Gozu Tickets. Each ticket names one file and one line with a security finding. For each ticket, Veil asks an AI model to change the code. Then Veil opens a draft pull request. A human reviews the pull request.
+Veil takes open Gozu Tickets. Gozu makes a ticket when a developer raises a pull request and a scan finds a problem. We call that pull request the Source PR. Each ticket names one file and one line with a security finding. For each ticket, Veil asks an AI model to change the code. Then Veil opens a draft pull request. A human reviews the pull request.
 
 The part that does this work is the Engine. You start it with one function call: `run(context)`.
 
@@ -23,12 +23,12 @@ The Engine knows only the shape of these parts. It does not know Jira, GitHub or
 
 The function `run` handles the tickets one by one. Before each ticket, it checks if the Engine may fix the ticket (see the section "Which tickets the Engine skips"). Then it calls `fix_ticket`. That function starts an attempt with the cheap model. If the attempt fails, it starts one more attempt with the strong model. An attempt has these steps:
 
-1. Open a copy of the repository.
+1. Open a copy of the repository. This is the branch of the ticket, the branch of the Source PR.
 2. Read the file that the ticket names. Refuse if the file may hold secrets.
 3. Build the first message to the model. It holds the repository, file, line, severity and finding. It also holds about 40 lines of code around the flagged line. The Engine marks the text from the ticket as untrusted data.
 4. Talk to the model. The model answers with tool calls. The Engine runs each call and sends the result back. This repeats until the model calls `finish`. Before each model call, the Engine checks the token ceiling.
 5. Check the change. It must not be empty. It must have 200 changed lines or fewer. Each edited file must still parse.
-6. Publish. The Engine commits the change on a branch that starts with `gozu/fix-`. It opens a draft pull request. It adds a comment with the link on the ticket. It moves the ticket to In Review.
+6. Publish. The Engine commits the change on a branch that starts with `gozu/fix-`. It opens a draft pull request that targets the branch of the Source PR. It adds a comment with the link on the ticket. It moves the ticket to In Review.
 
 ## Which tickets the Engine skips
 
@@ -39,6 +39,7 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 | `raised_against_fix_branch` | The finding is on a `gozu/fix-*` branch. A human decides what happens to it. |
 | `failed_fix` | The ticket has the label `veil-failed-fix`. It stays untouched until a human deletes the label. |
 | `no_issue_label` | The ticket has no label that starts with `issue-`. The Engine cannot prove that no PR exists. |
+| `source_pr_not_open` | The branch of the ticket has no open PR. The developer merged or closed the Source PR, or the branch never had a PR. |
 | `open_pr` | The repo provider has an open PR that carries the issue label of the ticket. |
 | `fix_branch` | The repo provider has a `gozu/fix-*` branch that carries the issue label. No PR is open. |
 

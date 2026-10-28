@@ -26,7 +26,7 @@ def attempt(
     """
     settings = context.settings
     ensure_budget(report, settings)
-    workspace = context.repo_provider.open_workspace(ticket.repo)
+    workspace = context.repo_provider.open_workspace(ticket.repo, ticket.branch)
     working_copy = WorkingCopy(workspace, settings)
     try:
         source = working_copy.read(readable_path(ticket.file, settings))

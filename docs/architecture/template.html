@@ -159,13 +159,13 @@
   <h2>How the Engine creates the working copy</h2>
   <p>One line in <code>fix/attempt.py</code> creates it. This happens once for each attempt, right after the workspace opens.</p>
   <ol class="steps">
-    <li><code>workspace = context.repo_provider.open_workspace(ticket.repo)</code></li>
+    <li><code>workspace = context.repo_provider.open_workspace(ticket.repo, ticket.branch)</code></li>
     <li><code>working_copy = WorkingCopy(workspace, settings)</code></li>
   </ol>
   <p>The constructor copies no file. It stores the workspace and the settings. It makes two empty dictionaries: <code>originals</code> and <code>current</code>.</p>
 
   <h2>What "open a workspace" means</h2>
-  <p><code>open_workspace(repo)</code> is a method of the repo provider. It returns a new Workspace: a private checkout of the repository. Each attempt gets its own, so a second attempt starts fresh. A failed attempt leaves nothing behind, because the Engine never commits that checkout.</p>
+  <p><code>open_workspace(repo, branch)</code> is a method of the repo provider. It returns a new Workspace: a private checkout of the branch of the Source PR. Each attempt gets its own, so a second attempt starts fresh. A failed attempt leaves nothing behind, because the Engine never commits that checkout.</p>
   <p>In the tests, <code>FakeRepoProvider.open_workspace</code> runs <code>git clone</code> of a local repository into <code>clone/&lt;n&gt;/&lt;repo&gt;</code>. The number <code>n</code> is new for each call.</p>
 
   <h2>What happens when the model edits a file</h2>
