@@ -1,6 +1,6 @@
 from veil.engine.constants.tools import FINISH
 from veil.engine.errors.attempt_failed import AttemptFailed
-from veil.engine.errors.budget_exhausted import BudgetExhausted
+from veil.engine.fix.budget import ensure_budget
 from veil.engine.interfaces.model_client import ModelClient
 from veil.engine.models.config.settings import Settings
 from veil.engine.models.report.run_report import RunReport
@@ -22,8 +22,7 @@ def converse(
     steps = 0
     finished = False
     while not finished:
-        if report.tokens_used >= settings.token_ceiling:
-            raise BudgetExhausted
+        ensure_budget(report, settings)
         reply = model_client.next(messages, model)
         report.tokens_used += reply.tokens
         steps += 0 if reply.tool_calls else 1  # An empty reply also counts as a step.

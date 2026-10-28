@@ -35,7 +35,7 @@ name = "engine folders import only from the folders below them"
 type = "layers"
 layers = [
   "veil.engine.run",
-  "veil.engine.fix",
+  "veil.engine.fix | veil.engine.eligibility",
   "veil.engine.tools | veil.engine.context",
   "veil.engine.workspace",
   "veil.engine.interfaces",

@@ -1,6 +1,7 @@
 from veil.engine.context import Context
 from veil.engine.errors.failed_fix import FailedFix
 from veil.engine.errors.rule_violation import RuleViolation
+from veil.engine.fix.budget import ensure_budget
 from veil.engine.fix.conversation import converse
 from veil.engine.fix.prompt import first_prompt
 from veil.engine.fix.publish import publish
@@ -24,6 +25,7 @@ def attempt(
     Raise FailedFix if the Engine cannot read the file of the ticket.
     """
     settings = context.settings
+    ensure_budget(report, settings)
     workspace = context.repo_provider.open_workspace(ticket.repo)
     working_copy = WorkingCopy(workspace, settings)
     try:

@@ -21,7 +21,7 @@ The Engine knows only the shape of these parts. It does not know Jira, GitHub or
 
 ## What happens in one run
 
-The function `run` handles the tickets one by one. For each ticket it calls `fix_ticket`. That function starts an attempt with the cheap model. If the attempt fails, it starts one more attempt with the strong model. An attempt has these steps:
+The function `run` handles the tickets one by one. Before each ticket, it checks if the Engine may fix the ticket (see the section "Which tickets the Engine skips"). Then it calls `fix_ticket`. That function starts an attempt with the cheap model. If the attempt fails, it starts one more attempt with the strong model. An attempt has these steps:
 
 1. Open a copy of the repository.
 2. Read the file that the ticket names. Refuse if the file may hold secrets.
@@ -29,6 +29,24 @@ The function `run` handles the tickets one by one. For each ticket it calls `fix
 4. Talk to the model. The model answers with tool calls. The Engine runs each call and sends the result back. This repeats until the model calls `finish`. Before each model call, the Engine checks the token ceiling.
 5. Check the change. It must not be empty. It must have 200 changed lines or fewer. Each edited file must still parse.
 6. Publish. The Engine commits the change on a branch that starts with `gozu/fix-`. It opens a draft pull request. It adds a comment with the link on the ticket. It moves the ticket to In Review.
+
+## Which tickets the Engine skips
+
+The tracker gives the Engine the candidates: tickets that are open, unassigned and marked by Gozu. The Engine then checks each candidate just before its attempt. The Engine skips a ticket for one of these reasons:
+
+| Reason in the report | What it means |
+|---|---|
+| `raised_against_fix_branch` | The finding is on a `gozu/fix-*` branch. A human decides what happens to it. |
+| `failed_fix` | The ticket has the label `veil-failed-fix`. It stays untouched until a human deletes the label. |
+| `no_issue_label` | The ticket has no label that starts with `issue-`. The Engine cannot prove that no PR exists. |
+| `open_pr` | The repo provider has an open PR that carries the issue label of the ticket. |
+| `fix_branch` | The repo provider has a `gozu/fix-*` branch that carries the issue label. No PR is open. |
+
+A skipped ticket opens no checkout, uses no tokens and gets no comment. The run report lists each skipped ticket under its reason.
+
+This makes a second run safe. The Engine puts the issue label on each draft PR that it opens. The next run finds the PR and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
+
+If the tracker lists a ticket twice, the Engine uses it once. If two tickets have the same issue label, the Engine fixes the first one. It skips the second because the first PR already exists.
 
 ## When an attempt fails
 

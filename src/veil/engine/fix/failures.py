@@ -1,10 +1,9 @@
+from veil.engine.constants.labels import FAILED_FIX_LABEL
 from veil.engine.constants.outcomes import FAILED, LEFT_FOR_NEXT_RUN
 from veil.engine.context import Context
 from veil.engine.errors.failed_fix import FailedFix
 from veil.engine.models.report.run_report import RunReport
 from veil.engine.models.ticket.ticket import Ticket
-
-FAILED_FIX_LABEL = "veil-failed-fix"
 
 
 def record_failed_fix(

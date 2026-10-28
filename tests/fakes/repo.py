@@ -3,6 +3,8 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
+from veil.engine import ExistingFix
+
 
 def _git(cwd: Path, *args: str) -> str:
     result = subprocess.run(
@@ -56,6 +58,7 @@ class FakeRepoProvider:
         self._root = root
         self._clones: list[tuple[str, Path]] = []
         self.pull_requests: list[FakePullRequest] = []
+        self._remote: list[tuple[str, ExistingFix, tuple[str, ...]]] = []
         for name, files in repos.items():
             origin = root / "origin" / name
             origin.mkdir(parents=True)
@@ -70,6 +73,28 @@ class FakeRepoProvider:
             _git(origin, "add", "-A")
             _git(origin, "commit", "-m", "init")
 
+    def seed_pull_request(
+        self, repo: str, branch: str, labels: tuple[str, ...]
+    ) -> None:
+        """Put an open PR in the fake remote. An earlier run or a person made it."""
+        self._remote.append((repo, ExistingFix(kind="open_pr", branch=branch), labels))
+
+    def seed_branch(self, repo: str, branch: str, labels: tuple[str, ...]) -> None:
+        """Put a gozu/fix-* branch that carries these labels in the fake remote. No PR is open."""
+        self._remote.append(
+            (repo, ExistingFix(kind="fix_branch", branch=branch), labels)
+        )
+
+    def find_existing_fix(self, repo: str, issue_label: str) -> ExistingFix | None:
+        found = [
+            fix
+            for r, fix, labels in self._remote
+            if r == repo and issue_label in labels
+        ]
+        return next(
+            (f for f in found if f.kind == "open_pr"), found[0] if found else None
+        )
+
     @property
     def workspaces_opened(self) -> int:
         return len(self._clones)
@@ -80,10 +105,18 @@ class FakeRepoProvider:
         self._clones.append((repo, clone))
         return FakeWorkspace(clone)
 
-    def open_draft_pr(self, repo: str, branch: str, title: str, body: str) -> str:
+    def open_draft_pr(
+        self,
+        repo: str,
+        branch: str,
+        title: str,
+        body: str,
+        labels: tuple[str, ...],
+    ) -> str:
         url = (
             f"https://github.example.invalid/{repo}/pull/{len(self.pull_requests) + 1}"
         )
+        self._remote.append((repo, ExistingFix(kind="open_pr", branch=branch), labels))
         self.pull_requests.append(
             FakePullRequest(
                 repo=repo, branch=branch, title=title, body=body, draft=True, url=url

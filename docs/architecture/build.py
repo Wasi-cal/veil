@@ -14,7 +14,8 @@ OUTPUT = Path(__file__).resolve().parent / "index.html"
 
 DESCRIPTIONS = {
     "src/veil/engine/__init__.py": "The public door of the Engine. It exports run, Context and the main models.",
-    "src/veil/engine/run.py": "The entry point, run(context). It loops over the tickets, records each Failed Fix and stops at the token ceiling.",
+    "src/veil/engine/run.py": "The entry point, run(context). It loops over the tickets, skips the ones that have a fix, records each Failed Fix and stops at the token ceiling.",
+    "src/veil/engine/eligibility/select.py": "Decides if the Engine may fix a ticket: the no-loop rule, the Failed Fix label, the issue label and the check for an existing Fix.",
     "src/veil/engine/context.py": "The Context: settings, tracker, repo provider and model client. The caller builds it.",
     "src/veil/engine/fix/attempt.py": "One attempt to fix one ticket with one model. It opens a new workspace, builds the working copy and runs the steps.",
     "src/veil/engine/fix/escalation.py": "Tries the cheap model. If the attempt fails, it tries the strong model once on a fresh checkout.",
@@ -35,15 +36,16 @@ DESCRIPTIONS = {
     "src/veil/engine/workspace/syntax.py": "Checks that edited .py, .json and .toml files still parse.",
     "src/veil/engine/interfaces/__init__.py": "Exports the four interfaces.",
     "src/veil/engine/interfaces/tracker.py": "Interface: list the open tickets, add a comment, set a status and add a label.",
-    "src/veil/engine/interfaces/repo_provider.py": "Interface: open a workspace for a repository and open a draft pull request.",
+    "src/veil/engine/interfaces/repo_provider.py": "Interface: open a workspace, find an existing Fix for an issue label and open a draft pull request with labels.",
     "src/veil/engine/interfaces/workspace.py": "Interface: read, list, write and commit files in one checkout of a repository.",
     "src/veil/engine/interfaces/model_client.py": "Interface: send the messages and the model name to the model and get the next tool calls.",
     "src/veil/engine/models/__init__.py": "Exports the five main models.",
-    "src/veil/engine/models/ticket/ticket.py": "A Gozu Ticket: key, repository, file, line, severity and finding.",
+    "src/veil/engine/models/ticket/ticket.py": "A Gozu Ticket: key, repository, file, line, severity, finding, branch and labels.",
+    "src/veil/engine/models/provider/existing_fix.py": "A Fix that the repo provider already has for a ticket: an open PR or a fix branch.",
     "src/veil/engine/models/llm/tool_call.py": "One tool call from the model: a name and arguments.",
     "src/veil/engine/models/llm/model_reply.py": "One reply from the model: the tool calls and the tokens used.",
     "src/veil/engine/models/config/settings.py": "The settings: the two model names, the token ceiling and the limits. Each has a default and a bound. Unknown settings are not allowed.",
-    "src/veil/engine/models/report/run_report.py": "The run report: the pull requests, the outcome of each ticket and the tokens used.",
+    "src/veil/engine/models/report/run_report.py": "The run report: the pull requests, the outcome of each ticket, the skipped tickets with their reasons and the tokens used.",
     "src/veil/engine/models/tool_args/edit_file_args.py": "The arguments of edit_file: path, old text and new text.",
     "src/veil/engine/models/tool_args/read_file_args.py": "The arguments of read_file: path and start line.",
     "src/veil/engine/models/tool_args/search_args.py": "The arguments of search: a regular expression.",
@@ -57,7 +59,11 @@ DESCRIPTIONS = {
     "src/veil/engine/constants/models.py": "The default names of the cheap model and the strong model.",
     "src/veil/engine/constants/paths.py": "Protected folders, lockfile names and the patterns of secret files.",
     "src/veil/engine/constants/tools.py": "The names of the five tools.",
-    "src/veil/engine/constants/outcomes.py": "The outcome words of the run report: fixed, failed and left for the next run.",
+    "src/veil/engine/constants/outcomes.py": "The outcome words of the run report: fixed, failed, skipped and left for the next run.",
+    "src/veil/engine/constants/branches.py": "The prefix of the branches that the Engine makes: gozu/fix-.",
+    "src/veil/engine/constants/labels.py": "The label names: the issue label prefix and the Failed Fix marker.",
+    "src/veil/engine/constants/skip_reasons.py": "The reasons to skip a ticket.",
+    "src/veil/engine/fix/budget.py": "Checks the token ceiling before an attempt and before each model call.",
     "src/veil/engine/constants/statuses.py": "The ticket status that the Engine sets: In Review.",
     "src/veil/engine/constants/prompt.py": "Prompt values: 20 lines on each side of the flagged line and the names of the untrusted tags.",
     "tests/architecture/test_layers.py": "Checks the folder order, the rule for adapters and shells, and that the Engine reads no environment variables.",
@@ -71,6 +77,7 @@ DESCRIPTIONS = {
     "tests/engine/edits/test_syntax_check.py": "A file that no longer parses fails the attempt at finish.",
     "tests/engine/reads/test_read_refusals.py": "Secret files are never read or searched. Settings add patterns but cannot remove them.",
     "tests/engine/reads/test_list_dir.py": "list_dir shows only the asked folder and hides secret files.",
+    "tests/engine/eligibility/test_eligibility.py": "Skip rules, the report of skipped tickets and a second run that makes no duplicates.",
     "tests/engine/failures/test_failed_fix.py": "Each way to a Failed Fix. A Failed Fix does not stop the next ticket.",
     "tests/engine/failures/test_bad_tool_calls.py": "A bad tool call gives an error to the model. The run goes on.",
     "tests/engine/settings/test_defaults.py": "The default limits, the bounds of the settings and the safety rules that are not settings.",
@@ -84,7 +91,8 @@ DESCRIPTIONS = {
 
 GROUP_NOTES = {
     "engine": "The public door. Callers import from here.",
-    "run": "The top of the Engine. It starts one attempt for each ticket.",
+    "run": "The top of the Engine. It starts one attempt for each ticket that the Engine may fix.",
+    "eligibility": "The rules that decide which tickets the Engine may fix.",
     "fix": "One attempt to fix one ticket, step by step.",
     "tools": "The tools that the model can call. Each tool has its own file.",
     "context": "What the caller passes in.",
@@ -98,6 +106,7 @@ GROUP_NOTES = {
     "tests/engine/limits": "Tests of the limits.",
     "tests/engine/escalation": "Tests of the second attempt with the strong model.",
     "tests/engine/budget": "Tests of the token ceiling.",
+    "tests/engine/eligibility": "Tests of which tickets the Engine skips, and of the second run.",
     "tests/engine/edits": "Tests of edit rules and the syntax check.",
     "tests/engine/reads": "Tests of what the model may read.",
     "tests/engine/failures": "Tests of Failed Fixes and bad tool calls.",
@@ -109,7 +118,7 @@ GROUP_NOTES = {
 # From top to bottom. A folder imports only from the rows below it.
 LAYERS = [
     ["run"],
-    ["fix"],
+    ["fix", "eligibility"],
     ["tools", "context"],
     ["workspace"],
     ["interfaces"],
@@ -120,6 +129,7 @@ SRC_ORDER = [
     "engine",
     "run",
     "fix",
+    "eligibility",
     "tools",
     "context",
     "workspace",
@@ -132,6 +142,7 @@ TEST_ORDER = [
     "tests/engine/flow",
     "tests/engine/escalation",
     "tests/engine/budget",
+    "tests/engine/eligibility",
     "tests/engine/limits",
     "tests/engine/edits",
     "tests/engine/reads",
@@ -274,7 +285,7 @@ def sequence_svg() -> str:
     width, gap, top = 1240, 150, 56
     xs = [70 + i * gap for i in range(len(LIFELINES))]
     steps = [
-        (0, 7, "1  open_tickets()", False, ""),
+        (0, 7, "1  open_tickets()", False, "then skip tickets that have a fix"),
         (
             0,
             1,

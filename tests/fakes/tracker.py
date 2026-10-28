@@ -8,9 +8,19 @@ def make_ticket(
     line: int = 1,
     severity: str = "Medium",
     finding: str = "Avoid eval on user input.",
+    branch: str = "main",
+    labels: tuple[str, ...] | None = None,
 ) -> Ticket:
+    """Build a ticket. Each key gets its own issue label, so tickets do not share one."""
     return Ticket(
-        key=key, repo=repo, file=file, line=line, severity=severity, finding=finding
+        key=key,
+        repo=repo,
+        file=file,
+        line=line,
+        severity=severity,
+        finding=finding,
+        branch=branch,
+        labels=(f"issue-{key.lower()}",) if labels is None else labels,
     )
 
 
@@ -22,7 +32,11 @@ class FakeTracker:
         self._labels: dict[str, list[str]] = {t.key: [] for t in tickets}
 
     def open_tickets(self) -> list[Ticket]:
-        return list(self._tickets)
+        """Return the tickets with the labels that the Engine added, as a real tracker does."""
+        return [
+            t.model_copy(update={"labels": (*t.labels, *self._labels[t.key])})
+            for t in self._tickets
+        ]
 
     def add_comment(self, key: str, text: str) -> None:
         self._comments[key].append(text)
