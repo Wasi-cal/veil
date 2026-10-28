@@ -21,14 +21,49 @@ The Engine knows only the shape of these parts. It does not know Jira, GitHub or
 
 ## What happens in one run
 
-The function `run` handles the tickets one by one. Before each ticket, it checks if the Engine may fix the ticket (see the section "Which tickets the Engine skips"). Then it calls `fix_ticket`. That function starts an attempt with the cheap model. If the attempt fails, it starts one more attempt with the strong model. An attempt has these steps:
+The function `run` works in four stages:
 
-1. Open a copy of the repository. This is the branch of the ticket, the branch of the Source PR.
-2. Read the file that the ticket names. Refuse if the file may hold secrets.
+1. It skips the tickets that must not get a Fix (see the section "Which tickets the Engine skips").
+2. It puts the other tickets into groups. Each group gets one draft pull request (see the section "How the Engine groups tickets"). High groups come first.
+3. It fixes the tickets of each group, one after the other, in one checkout.
+4. It opens one draft pull request for each group.
+
+For one group, the steps are:
+
+1. Open a copy of the repository. This is the branch of the Source PR. A group has one copy.
+2. For each ticket of the group, read the file that the ticket names. Refuse if the file may hold secrets.
 3. Build the first message to the model. It holds the repository, file, line, severity and finding. It also holds about 40 lines of code around the flagged line. The Engine marks the text from the ticket as untrusted data.
 4. Talk to the model. The model answers with tool calls. The Engine runs each call and sends the result back. This repeats until the model calls `finish`. Before each model call, the Engine checks the token ceiling.
-5. Check the change. It must not be empty. It must have 200 changed lines or fewer. Each edited file must still parse.
-6. Publish. The Engine commits the change on a branch that starts with `gozu/fix-`. It opens a draft pull request that targets the branch of the Source PR. It adds a comment with the link on the ticket. It moves the ticket to In Review.
+5. The model gives two things with `finish`: a commit message of one line, and an explanation of at most 3 sentences. If the format is wrong, the Engine gives an error and the model can try again.
+6. Check the change. It must not be empty. It must have 200 changed lines or fewer. Each edited file must still parse. Then the Engine makes one commit for this Fix. The next ticket starts from that commit, so it sees the earlier Fixes.
+7. After the last ticket, publish. The Engine opens one draft pull request that targets the branch of the Source PR. The body holds the explanation of each Fix. It adds a comment with the link on each ticket and moves each ticket to In Review.
+
+If the first attempt fails, the Engine starts one more attempt with the strong model (see the section "When an attempt fails").
+
+## How the Engine groups tickets
+
+The Engine gives each ticket a Severity Bucket from the severity map. The map is a setting. A map that you give changes only its own words. The other words keep the default. The default map is:
+
+| Gozu severity | Bucket |
+|---|---|
+| `BLOCKER`, `CRITICAL`, `HIGH` | High |
+| `MAJOR`, `MEDIUM` | Medium |
+| `MINOR`, `INFO`, `LOW` | Low |
+
+A severity word that is not in the map is High. The ticket then gets its own PR and a person looks at it.
+
+| Bucket | Group |
+|---|---|
+| Low and Medium | One Shared PR for each repository and each Source PR branch. It holds at most 10 tickets (setting `shared_pr_max`). The other tickets wait for the next run. |
+| High | One High PR for each ticket. |
+| High, same file | High tickets that flag the same file in the same Source PR go into one PR, because their Fixes overlap. The body of the PR gives the reason. |
+
+Other rules:
+
+- A Failed Fix stays out of the PR. The PR holds only the Fixes that passed. A ticket that ends as a Failed Fix leaves no edit in the PR.
+- If the token ceiling stops the run in the middle of a group, the Engine still publishes the Fixes that passed. The current ticket and the later tickets wait for the next run.
+- The branch of a Shared PR starts with the branch prefix (setting `branch_prefix`, default `gozu/fix-`), the word `shared` and the key of the first Fix that passed. The branch of a High PR starts with the prefix and that key. A ticket that failed gives no name. So a later run can make a new PR for that ticket without a branch clash.
+- All PRs are drafts. The Engine merges nothing.
 
 ## Which tickets the Engine skips
 
@@ -40,6 +75,7 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 | `failed_fix` | The ticket has the label `veil-failed-fix`. It stays untouched until a human deletes the label. |
 | `no_issue_label` | The ticket has no label that starts with `issue-`. The Engine cannot prove that no PR exists. |
 | `source_pr_not_open` | The branch of the ticket has no open PR. The developer merged or closed the Source PR, or the branch never had a PR. |
+| `duplicate_issue` | An earlier ticket in this run has the same issue label in the same repository. It is the same finding, so the Engine keeps the first ticket. |
 | `open_pr` | The repo provider has an open PR that carries the issue label of the ticket. |
 | `fix_branch` | The repo provider has a `gozu/fix-*` branch that carries the issue label. No PR is open. |
 
@@ -53,7 +89,7 @@ If the tracker lists a ticket twice, the Engine uses it once. If two tickets hav
 
 An attempt fails at the step cap, when the model calls `finish` and made no change, or when an edited file does not parse. Then the Engine starts one more attempt with the strong model. This second attempt has these rules:
 
-- It starts on a new checkout of the repository. It does not keep any edit of the first attempt.
+- It starts from the last commit of the group. The Engine discards the edits of the first attempt, so none of them stays.
 - It gets only the reason of the failure, in its first message. It does not get the other messages of the first attempt.
 - It is the last attempt. There is no third attempt.
 

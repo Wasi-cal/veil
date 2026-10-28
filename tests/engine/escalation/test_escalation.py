@@ -28,7 +28,7 @@ def test_cheap_attempt_that_hits_the_step_cap_escalates_once_to_the_strong_model
     assert report.outcomes == {"GR-100": "fixed"}
     [pr] = repos.pull_requests
     assert repos.file_on(pr, "app.py") == FIXED
-    assert repos.workspaces_opened == 2
+    assert repos.workspaces_opened == 1
 
 
 def test_strong_attempt_gets_only_the_failure_reason_of_the_cheap_attempt(tmp_path):

@@ -63,16 +63,26 @@ class FakeWorkspace:
         (self.path / path).write_bytes(content.encode())
 
     def commit(self, branch: str, message: str) -> None:
-        _git(self.path, "checkout", "-b", branch)
+        _git(self.path, "checkout", "-B", branch)
         _git(self.path, "add", "-A")
         _git(self.path, "commit", "-m", message)
+
+    def discard_changes(self) -> None:
+        _git(self.path, "reset", "--hard")
+        _git(self.path, "clean", "-fd")
 
 
 class FakeRepoProvider:
     """Real local git repositories. No network."""
 
-    def __init__(self, root: Path, repos: dict[str, dict[str, str | bytes]]):
+    def __init__(
+        self,
+        root: Path,
+        repos: dict[str, dict[str, str | bytes]],
+        branch_prefix: str = "gozu/fix-",
+    ):
         self._root = root
+        self._branch_prefix = branch_prefix
         self._clones: list[FakeClone] = []
         self.pull_requests: list[FakePullRequest] = []
         self._remote: list[FakeRemoteFix] = []
@@ -152,7 +162,7 @@ class FakeRepoProvider:
 
     def open_draft_pr(self, draft: DraftPr) -> str:
         """Push the head branch to the fake origin and open a PR. Refuse any other push, as a real provider does."""
-        if not draft.head.startswith("gozu/fix-") or draft.head == draft.base:
+        if not draft.head.startswith(self._branch_prefix) or draft.head == draft.base:
             raise ValueError(
                 f"Refused to push {draft.head} for a PR against {draft.base}."
             )
@@ -195,6 +205,18 @@ class FakeRepoProvider:
         return int(
             _git(clone.path, "rev-list", "--count", f"{clone.start_branch}..{pr.head}")
         )
+
+    def commit_subjects_on(self, pr: FakePullRequest) -> list[str]:
+        """The subject line of each Fix commit on the PR branch, oldest first."""
+        clone = self._clone_with_branch(pr.repo, pr.head)
+        out = _git(
+            clone.path,
+            "log",
+            "--reverse",
+            "--format=%s",
+            f"{clone.start_branch}..{pr.head}",
+        )
+        return out.splitlines()
 
     def file_on(self, pr: FakePullRequest, path: str) -> str:
         clone = self._clone_with_branch(pr.repo, pr.head)

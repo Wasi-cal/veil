@@ -173,7 +173,7 @@ def test_second_ticket_with_the_same_issue_label_is_skipped_in_the_same_run(tmp_
     report = run(context)
 
     assert report.outcomes == {"GR-100": "fixed", "GR-101": "skipped"}
-    assert report.skipped == {"open_pr": ["GR-101"]}
+    assert report.skipped == {"duplicate_issue": ["GR-101"]}
     assert len(repos.pull_requests) == 1
 
 

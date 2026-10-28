@@ -17,8 +17,13 @@ def list_dir(path: str = ".") -> ToolCall:
     return ToolCall(name="list_dir", arguments={"path": path})
 
 
-def finish(summary: str) -> ToolCall:
-    return ToolCall(name="finish", arguments={"summary": summary})
+def finish(
+    explanation: str = "Fixed.", commit_message: str = "Fix the finding."
+) -> ToolCall:
+    return ToolCall(
+        name="finish",
+        arguments={"commit_message": commit_message, "explanation": explanation},
+    )
 
 
 class FakeModelClient:

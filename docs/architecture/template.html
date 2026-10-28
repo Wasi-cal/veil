@@ -149,7 +149,7 @@
         <div class="mini"><b>settings</b><br>The diff limit and the extra refused patterns.</div>
       </div></div>
     <div class="down">reads and writes ↓</div>
-    <div class="layer"><h3>Workspace <small>(interfaces/workspace.py)</small></h3><p>One private checkout of one repository for one attempt. It has four operations: <code>read_file</code>, <code>list_files</code>, <code>write_file</code> and <code>commit</code>.</p>
+    <div class="layer"><h3>Workspace <small>(interfaces/workspace.py)</small></h3><p>One private checkout of one repository for one group of tickets. It has four operations: <code>read_file</code>, <code>list_files</code>, <code>write_file</code> and <code>commit</code>.</p>
       <div class="two">
         <div class="mini"><b>In the tests</b><br><code>FakeWorkspace</code>: a local git clone in a new folder.</div>
         <div class="mini"><b>In real use (later)</b><br>A clone from GitHub. Ticket GR-18 builds it.</div>
@@ -157,15 +157,15 @@
   </div>
 
   <h2>How the Engine creates the working copy</h2>
-  <p>One line in <code>fix/attempt.py</code> creates it. This happens once for each attempt, right after the workspace opens.</p>
+  <p>One line in <code>fix/attempt.py</code> creates it. This happens once for each attempt. The workspace comes from <code>fix/group.py</code> and has the commits of the earlier Fixes of the group.</p>
   <ol class="steps">
-    <li><code>workspace = context.repo_provider.open_workspace(ticket.repo, ticket.branch)</code></li>
+    <li><code>workspace = context.repo_provider.open_workspace(group.repo, group.branch)</code> (in <code>fix/group.py</code>)</li>
     <li><code>working_copy = WorkingCopy(workspace, settings)</code></li>
   </ol>
   <p>The constructor copies no file. It stores the workspace and the settings. It makes two empty dictionaries: <code>originals</code> and <code>current</code>.</p>
 
   <h2>What "open a workspace" means</h2>
-  <p><code>open_workspace(repo, branch)</code> is a method of the repo provider. It returns a new Workspace: a private checkout of the branch of the Source PR. Each attempt gets its own, so a second attempt starts fresh. A failed attempt leaves nothing behind, because the Engine never commits that checkout.</p>
+  <p><code>open_workspace(repo, branch)</code> is a method of the repo provider. It returns a new Workspace: a private checkout of the branch of the Source PR. Each group gets one checkout. A failed attempt discards its edits, so the next attempt starts from the last commit. The Engine never pushes that checkout except the branch of the Fix PR.</p>
   <p>In the tests, <code>FakeRepoProvider.open_workspace</code> runs <code>git clone</code> of a local repository into <code>clone/&lt;n&gt;/&lt;repo&gt;</code>. The number <code>n</code> is new for each call.</p>
 
   <h2>What happens when the model edits a file</h2>

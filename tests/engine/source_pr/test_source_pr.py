@@ -78,7 +78,7 @@ def test_ticket_whose_source_pr_is_not_open_is_skipped(tmp_path, branch):
     assert_untouched(tracker, repos, model)
 
 
-def test_the_strong_attempt_also_starts_on_a_fresh_checkout_of_the_source_branch(
+def test_the_strong_attempt_also_starts_from_clean_files_of_the_source_branch(
     tmp_path,
 ):
     context, _, repos, _ = make_context(
@@ -93,7 +93,7 @@ def test_the_strong_attempt_also_starts_on_a_fresh_checkout_of_the_source_branch
     report = run(context)
 
     assert report.outcomes == {"GR-100": "fixed"}
-    assert repos.workspaces_opened == 2
+    assert repos.workspaces_opened == 1
     [pr] = repos.pull_requests
     assert pr.base == "feature-x"
     assert repos.file_on(pr, "app.py") == FIXED

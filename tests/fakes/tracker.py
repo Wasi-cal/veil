@@ -47,6 +47,10 @@ class FakeTracker:
     def add_label(self, key: str, label: str) -> None:
         self._labels[key].append(label)
 
+    def remove_label(self, key: str, label: str) -> None:
+        """A person deletes a label in the tracker."""
+        self._labels[key].remove(label)
+
     def labels_on(self, key: str) -> list[str]:
         return list(self._labels[key])
 

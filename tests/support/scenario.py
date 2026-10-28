@@ -53,15 +53,20 @@ def make_context(
     ticket = make_ticket(**fields)
     others = [make_ticket(**{**fields, **extra}) for extra in extra_tickets]
     tracker = FakeTracker([ticket, *others])
-    repos = FakeRepoProvider(tmp_path, {"acme/app": files or {"app.py": VULNERABLE}})
+    settings = settings or Settings()
+    repos = FakeRepoProvider(
+        tmp_path,
+        {"acme/app": files or {"app.py": VULNERABLE}},
+        branch_prefix=settings.branch_prefix,
+    )
     for branch in {t.branch for t in [ticket, *others]}:
-        if not branch.startswith("gozu/fix-"):
+        if not branch.startswith(settings.branch_prefix):
             repos.seed_source_pr(
                 "acme/app", branch, source_files, is_open=open_source_pr
             )
     model = FakeModelClient(model_script, tokens_per_call=tokens_per_call)
     context = Context(
-        settings=settings or Settings(),
+        settings=settings,
         tracker=tracker,
         repo_provider=repos,
         model_client=model,
