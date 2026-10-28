@@ -1,32 +1,15 @@
-import json
-import urllib.error
-import urllib.request
-from urllib.parse import quote, urlencode
-
 from pydantic import SecretStr
 
 from veil.adapters.github.constants.http import (
     API_URL,
     API_VERSION,
-    ERROR_DETAIL_MAX_CHARS,
     PAGE_SIZE,
-    TIMEOUT_SECONDS,
 )
 from veil.adapters.github.constants.pr_states import MERGED, PrState
 from veil.adapters.github.constants.repo_name import REPO_NAME
 from veil.adapters.github.models.pull_request import PullRequest
+from veil.adapters.json_http import call_json
 from veil.engine.errors.repo_provider_error import RepoProviderError
-from veil.engine.secrets.redact import redact
-
-
-class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    """Never follow a redirect. A redirect could send the token to another host."""
-
-    def redirect_request(self, *_args, **_kwargs):
-        return None
-
-
-_OPENER = urllib.request.build_opener(_NoRedirect)
 
 
 class HttpGitHubApi:
@@ -119,33 +102,18 @@ class HttpGitHubApi:
         params: dict[str, str | int] | None = None,
         body: dict | None = None,
     ):
-        url = self._base_url + quote(path, safe="/")
-        if params:
-            url += "?" + urlencode(params)
-        request = urllib.request.Request(
-            url,
+        return call_json(
+            service="GitHub",
+            error=RepoProviderError,
+            secrets=(self._token.get_secret_value(),),
+            base_url=self._base_url,
             method=method,
-            data=json.dumps(body).encode() if body is not None else None,
+            path=path,
+            params=params,
+            body=body,
             headers={
                 "Authorization": f"Bearer {self._token.get_secret_value()}",
                 "Accept": "application/vnd.github+json",
-                "Content-Type": "application/json",
                 "X-GitHub-Api-Version": API_VERSION,
             },
         )
-        secrets = (self._token.get_secret_value(),)
-        try:
-            with _OPENER.open(request, timeout=TIMEOUT_SECONDS) as response:
-                return json.load(response)
-        except urllib.error.HTTPError as failure:
-            detail = failure.read().decode(errors="replace")[:ERROR_DETAIL_MAX_CHARS]
-            raise RepoProviderError(
-                redact(
-                    f"GitHub {method} {path} failed with {failure.code}. {detail}",
-                    secrets,
-                )
-            ) from None
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as failure:
-            raise RepoProviderError(
-                redact(f"GitHub {method} {path} failed. {failure}", secrets)
-            ) from None

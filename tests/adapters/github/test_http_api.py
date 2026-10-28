@@ -2,17 +2,18 @@ import pytest
 from pydantic import SecretStr
 
 from tests.adapters.github.support import TOKEN
-from tests.fakes.github_server import StubGitHubServer, pull_json
+from tests.fakes.github_fixtures import pull_json
+from tests.fakes.http_server import StubHttpServer
 from veil.adapters.github.http_api import HttpGitHubApi
 from veil.engine.errors.repo_provider_error import RepoProviderError
 
 
-def api_for(server: StubGitHubServer) -> HttpGitHubApi:
+def api_for(server: StubHttpServer) -> HttpGitHubApi:
     return HttpGitHubApi(SecretStr(TOKEN), base_url=server.url)
 
 
 def test_it_finds_the_pull_requests_of_a_head_branch_in_every_state():
-    with StubGitHubServer() as server:
+    with StubHttpServer() as server:
         server.routes[("GET", "/repos/acme/app/pulls")] = (
             200,
             [
@@ -38,7 +39,7 @@ def test_it_finds_the_pull_requests_of_a_head_branch_in_every_state():
 
 
 def test_it_finds_the_pull_requests_that_carry_a_label():
-    with StubGitHubServer() as server:
+    with StubHttpServer() as server:
         server.routes[("GET", "/search/issues")] = (200, {"items": [{"number": 7}]})
         server.routes[("GET", "/repos/acme/app/pulls/7")] = (
             200,
@@ -57,7 +58,7 @@ def test_it_finds_the_pull_requests_that_carry_a_label():
 
 
 def test_it_opens_a_draft_pr_and_puts_the_labels_on_it():
-    with StubGitHubServer() as server:
+    with StubHttpServer() as server:
         server.routes[("POST", "/repos/acme/app/pulls")] = (
             201,
             pull_json(9, head="gozu/fix-GR-1", base="feature-x", draft=True),
@@ -88,7 +89,7 @@ def test_it_opens_a_draft_pr_and_puts_the_labels_on_it():
 
 
 def test_an_api_error_raises_without_the_token():
-    with StubGitHubServer() as server:
+    with StubHttpServer() as server:
         server.routes[("GET", "/repos/acme/app/pulls")] = (
             401,
             {"message": f"Bad credentials {TOKEN}"},
@@ -103,14 +104,14 @@ def test_an_api_error_raises_without_the_token():
 
 @pytest.mark.parametrize("repo", ["acme", "acme/app/extra", "../x/y", "acme/a b"])
 def test_it_refuses_a_repository_name_that_could_change_the_url(repo):
-    with StubGitHubServer() as server, pytest.raises(RepoProviderError):
+    with StubHttpServer() as server, pytest.raises(RepoProviderError):
         api_for(server).find_pull_requests(repo, head="x")
 
     assert server.seen == []
 
 
 def test_a_redirect_never_carries_the_token_to_another_host():
-    with StubGitHubServer() as elsewhere, StubGitHubServer() as server:
+    with StubHttpServer() as elsewhere, StubHttpServer() as server:
         server.routes[("GET", "/repos/acme/app/pulls")] = (
             302,
             {},

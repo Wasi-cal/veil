@@ -68,5 +68,5 @@ def test_the_constants_check_finds_a_constant_in_the_wrong_place():
     assert set(found) == {
         "toolbox.py:TOOLS",
         "syntax.py:PARSERS",
-        "http_api.py:_OPENER",
+        "no_redirect.py:_OPENER",
     }

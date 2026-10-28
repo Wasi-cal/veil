@@ -53,3 +53,24 @@ layers = [
   "veil.adapters.github.models",
   "veil.adapters.github.constants",
 ]
+
+[[tool.importlinter.contracts]]
+name = "jira adapter folders import only from the folders below them"
+type = "layers"
+layers = [
+  "veil.adapters.jira.tracker | veil.adapters.jira.gateway",
+  "veil.adapters.jira.http_client | veil.adapters.jira.issue_parser",
+  "veil.adapters.jira.adf",
+  "veil.adapters.jira.models",
+  "veil.adapters.jira.constants",
+]
+
+[[tool.importlinter.contracts]]
+name = "shared adapter code imports no adapter"
+type = "forbidden"
+source_modules = [
+  "veil.adapters.json_http",
+  "veil.adapters.no_redirect",
+  "veil.adapters.constants",
+]
+forbidden_modules = ["veil.adapters.github", "veil.adapters.jira"]

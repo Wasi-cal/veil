@@ -15,11 +15,15 @@ class SeenRequest(BaseModel):
     body: dict | None
 
 
-class StubGitHubServer:
-    """A local HTTP server that answers like api.github.com. Routes map (method, path) to (status, JSON)."""
+class StubHttpServer:
+    """A local HTTP server that replays recorded responses.
+
+    A route maps (method, path) to (status, JSON) or (status, JSON, headers).
+    A list of such answers is played in order. The last answer repeats.
+    """
 
     def __init__(self):
-        self.routes: dict[tuple[str, str], tuple] = {}
+        self.routes: dict[tuple[str, str], tuple | list] = {}
         self.seen: list[SeenRequest] = []
         server = self
 
@@ -37,9 +41,12 @@ class StubGitHubServer:
                         body=json.loads(raw) if raw else None,
                     )
                 )
-                status, payload, *extra = server.routes.get(
+                answer = server.routes.get(
                     (self.command, parts.path), (404, {"message": "Not Found"})
                 )
+                if isinstance(answer, list):
+                    answer = answer.pop(0) if len(answer) > 1 else answer[0]
+                status, payload, *extra = answer
                 data = json.dumps(payload).encode()
                 self.send_response(status)
                 for name, value in (extra[0] if extra else {}).items():
@@ -49,7 +56,7 @@ class StubGitHubServer:
                 self.end_headers()
                 self.wfile.write(data)
 
-            do_GET = do_POST = _answer
+            do_GET = do_POST = do_PUT = _answer
 
             def log_message(self, *_args):
                 pass
@@ -65,28 +72,3 @@ class StubGitHubServer:
     def __exit__(self, *_exc) -> None:
         self._http.shutdown()
         self._http.server_close()
-
-
-def pull_json(
-    number: int = 1,
-    head: str = "feature-x",
-    base: str = "main",
-    state: str = "open",
-    merged: bool = False,
-    head_repo: str = "acme/app",
-    labels: tuple[str, ...] = (),
-    draft: bool = False,
-) -> dict:
-    """The fields of a GitHub pull request that the adapter reads."""
-    return {
-        "number": number,
-        "html_url": f"https://github.example.invalid/acme/app/pull/{number}",
-        "state": state,
-        "merged_at": "2026-01-01T00:00:00Z" if merged else None,
-        "draft": draft,
-        "title": "t",
-        "body": "b",
-        "head": {"ref": head, "repo": {"full_name": head_repo}},
-        "base": {"ref": base, "repo": {"full_name": "acme/app"}},
-        "labels": [{"name": name} for name in labels],
-    }
