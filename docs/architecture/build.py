@@ -72,6 +72,21 @@ DESCRIPTIONS = {
     "src/veil/engine/errors/attempt_failed.py": "Error type: an attempt failed after the model started. A stronger model can try again. It is not a Failed Fix.",
     "src/veil/engine/errors/budget_exhausted.py": "Error type: the run used its token ceiling. The Engine stops and leaves the rest of the tickets for the next run.",
     "src/veil/engine/errors/edit_rejected.py": "Error type: an edit breaks a limit or a rule. The model gets the message.",
+    "src/veil/adapters/github/api.py": "The GitHubApi interface: find PRs and open a draft PR.",
+    "src/veil/adapters/github/git_command.py": "Runs git with a small environment. Passes the token in a per-command header. Hides it in errors.",
+    "src/veil/adapters/github/http_api.py": "The GitHub REST API over HTTP. The token goes in the Authorization header only.",
+    "src/veil/adapters/github/models/pull_request.py": "A PR as the GitHub API shows it, with its state and head repository.",
+    "src/veil/adapters/github/provider.py": "The real repo provider. Makes private checkouts, finds Fixes, pushes the Fix branch, opens draft PRs.",
+    "src/veil/adapters/github/workspace.py": "One private git checkout. Edits, commits, discards changes and pushes the Fix branch.",
+    "src/veil/engine/errors/repo_provider_error.py": "Error type: the repo provider could not do its task. The message has no credential value.",
+    "tests/adapters/github/support.py": "Helpers: a local bare git remote and a provider that uses it.",
+    "tests/adapters/github/test_checkout.py": "Checkout tests: shallow, private, no token on disk, cleanup, option-like names.",
+    "tests/adapters/github/test_draft_pr.py": "Draft PR tests: push only the Fix branch, never a second PR.",
+    "tests/adapters/github/test_existing_fix.py": "Tests for the Source PR check and the search for an existing Fix.",
+    "tests/adapters/github/test_git_environment.py": "Tests that git gets the proxy and certificate variables and no other variable.",
+    "tests/adapters/github/test_http_api.py": "Tests of the HTTP adapter against a local stub server.",
+    "tests/fakes/github_api.py": "A GitHubApi that keeps its PRs in a list.",
+    "tests/fakes/github_server.py": "A local HTTP server that answers like api.github.com.",
     "src/veil/engine/errors/rule_violation.py": "Error type: a path breaks a safety rule.",
     "src/veil/engine/constants/limits.py": "The default limits: 25 steps, 200 changed lines, 300 lines, 50 matches, 8 KB and 100,000 tokens.",
     "src/veil/engine/constants/models.py": "The default names of the cheap model and the strong model.",
@@ -116,6 +131,8 @@ DESCRIPTIONS = {
 }
 
 GROUP_NOTES = {
+    "adapters": "The real parts that fit the interfaces of the Engine. The Engine never imports them.",
+    "tests/adapters/github": "Tests of the real repo provider against a local git remote and a stub GitHub server.",
     "engine": "The public door. Callers import from here.",
     "run": "The top of the Engine. It fixes the groups of tickets that the Engine may fix.",
     "eligibility": "The rules that decide which tickets the Engine may fix.",
@@ -148,6 +165,7 @@ GROUP_NOTES = {
 
 # From top to bottom. A folder imports only from the rows below it.
 LAYERS = [
+    ["adapters"],
     ["run"],
     ["fix", "eligibility", "grouping"],
     ["tools", "context"],
@@ -157,6 +175,7 @@ LAYERS = [
     ["errors", "constants"],
 ]
 SRC_ORDER = [
+    "adapters",
     "engine",
     "run",
     "fix",
@@ -172,6 +191,7 @@ SRC_ORDER = [
     "constants",
 ]
 TEST_ORDER = [
+    "tests/adapters/github",
     "tests/engine/flow",
     "tests/engine/escalation",
     "tests/engine/budget",
@@ -209,6 +229,8 @@ def group_of(rel: str) -> str:
             or "/architecture/" in rel
             else "tests"
         )
+    if rel.startswith("src/veil/adapters/"):
+        return "adapters"
     inner = rel.removeprefix("src/veil/engine/")
     if "/" in inner:
         return inner.split("/")[0]
