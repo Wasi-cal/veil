@@ -52,6 +52,12 @@ class WorkingCopy:
         self._workspace.write_file(path, updated)
         self._originals, self._current = originals, currents
 
+    def edits(self) -> list[tuple[str, str]]:
+        """The old text and the new text of each file that this attempt edited."""
+        return [
+            (before, self._current[path]) for path, before in self._originals.items()
+        ]
+
     def verify(self) -> None:
         """Run the checks at `finish`. Raise AttemptFailed if the change is empty, too large or does not parse."""
         changed = changed_lines(self._originals, self._current)

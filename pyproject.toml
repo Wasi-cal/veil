@@ -37,7 +37,7 @@ layers = [
   "veil.engine.run",
   "veil.engine.fix | veil.engine.eligibility | veil.engine.grouping",
   "veil.engine.tools | veil.engine.context",
-  "veil.engine.workspace",
+  "veil.engine.workspace | veil.engine.secrets",
   "veil.engine.interfaces",
   "veil.engine.models",
   "veil.engine.errors | veil.engine.constants",

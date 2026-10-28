@@ -4,6 +4,7 @@ from veil.engine.errors.rule_violation import RuleViolation
 from veil.engine.fix.budget import ensure_budget
 from veil.engine.fix.conversation import converse
 from veil.engine.fix.prompt import first_prompt
+from veil.engine.fix.secret_check import ensure_no_secret
 from veil.engine.interfaces.workspace import Workspace
 from veil.engine.models.fix.fix import Fix
 from veil.engine.models.report.run_report import RunReport
@@ -46,6 +47,7 @@ def attempt(
         settings,
         report,
     )
+    ensure_no_secret(context, working_copy, finish)
     working_copy.verify()
     return Fix(
         ticket=ticket,

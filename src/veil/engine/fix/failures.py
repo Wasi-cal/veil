@@ -10,7 +10,9 @@ def record_failed_fix(
     context: Context, ticket: Ticket, failed: FailedFix, report: RunReport
 ) -> None:
     """Leave the ticket open with a reason comment and the marker label."""
-    context.tracker.add_comment(ticket.key, f"Failed Fix. {failed.reason}")
+    context.tracker.add_comment(
+        ticket.key, context.redact(f"Failed Fix. {failed.reason}")
+    )
     context.tracker.add_label(ticket.key, FAILED_FIX_LABEL)
     report.outcomes[ticket.key] = FAILED
 

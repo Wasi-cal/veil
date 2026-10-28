@@ -6,11 +6,11 @@ The `engine` package has one folder for each concern. A folder imports only from
 2. `fix/`, `eligibility/` and `grouping/` sit side by side. `fix/` makes one attempt to fix one ticket: the first prompt, the model conversation with the step cap, the publish step and the Failed Fix record. `eligibility/` decides which Gozu Tickets the Engine may fix: the no-loop rule, the Failed Fix marker, the issue label and the check for an existing Fix. `grouping/` decides which tickets share a Fix PR.
 3. `tools/` holds the tools that the model calls. Each tool has its own file in `tools/handlers/`.
 4. `context.py` holds what the caller passes in.
-5. `workspace/` applies edits safely: path rules, the changed-line count and the syntax check.
+5. `workspace/` and `secrets/` sit side by side. `workspace/` applies edits safely: path rules, the changed-line count and the syntax check. `secrets/` finds secrets in a text and hides credential values.
 6. `interfaces/` holds the tracker, the repo provider, the workspace and the model client.
 7. `models/` holds the pydantic models, one folder for each purpose.
 8. `errors/` and `constants/` hold the exception types and the fixed values.
 
-We chose this so that a file has one reason to change and a reader can find code by its concern. The `fix`, `eligibility` and `grouping` folders do not import each other. The `tools` and `context` folders do not import each other. The `errors` and `constants` folders do not import each other.
+We chose this so that a file has one reason to change and a reader can find code by its concern. The `fix`, `eligibility` and `grouping` folders do not import each other. The `tools` and `context` folders do not import each other. The `workspace` and `secrets` folders do not import each other. The `errors` and `constants` folders do not import each other.
 
-A contract in `pyproject.toml` enforces the order. The tests mirror the concerns: `flow`, `grouping`, `eligibility`, `source_pr`, `escalation`, `budget`, `limits`, `edits`, `reads`, `failures` and `settings`.
+A contract in `pyproject.toml` enforces the order. The tests mirror the concerns: `flow`, `secrets`, `grouping`, `eligibility`, `source_pr`, `escalation`, `budget`, `limits`, `edits`, `reads`, `failures` and `settings`.

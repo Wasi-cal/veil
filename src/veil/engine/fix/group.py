@@ -29,7 +29,7 @@ def fix_group(context: Context, group: FixGroup, report: RunReport) -> None:
                 continue
             if branch is None:
                 branch = branch_name(group, fix, context.settings.branch_prefix)
-            workspace.commit(branch, fix.commit_message)
+            workspace.commit(branch, context.redact(fix.commit_message))
             fixes.append(fix)
     except BudgetExhausted:
         workspace.discard_changes()

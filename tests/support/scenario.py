@@ -41,6 +41,7 @@ def make_context(
     extra_tickets=(),
     source_files=None,
     open_source_pr=True,
+    secrets=(),
     **ticket_fields,
 ):
     fields = {
@@ -67,6 +68,7 @@ def make_context(
     model = FakeModelClient(model_script, tokens_per_call=tokens_per_call)
     context = Context(
         settings=settings,
+        secrets=secrets,
         tracker=tracker,
         repo_provider=repos,
         model_client=model,
@@ -92,3 +94,20 @@ def assert_untouched(tracker, repos, model, key="GR-100"):
     assert tracker.comments_on(key) == []
     assert tracker.labels_on(key) == []
     assert tracker.status_of(key) == "To Do"
+
+
+# A credential of this run. It matches no known pattern, so only the exact value can find it.
+CREDENTIAL = "hunter2-credential-value-42"
+
+
+def assert_nowhere(secret, tracker, repos, report, keys=("GR-100",)):
+    """Check that a secret is in no output of the run: report, comments, PR title and body, commits and files."""
+    assert secret not in report.model_dump_json()
+    for key in keys:
+        assert all(secret not in comment for comment in tracker.comments_on(key))
+    for pr in repos.pull_requests:
+        assert secret not in pr.title
+        assert secret not in pr.body
+        assert all(secret not in subject for subject in repos.commit_subjects_on(pr))
+        for path in repos.changed_paths_on(pr):
+            assert secret not in repos.file_on(pr, path)

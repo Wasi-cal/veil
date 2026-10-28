@@ -32,6 +32,14 @@ _Avoid_: Critical PR, separate PR
 The group of a Gozu Ticket by severity. The bucket decides which kind of Fix PR the ticket goes into. Low and Medium go together. High goes on its own. A setting, the severity map, gives the bucket of each severity word.
 _Avoid_: Priority tier
 
+**Credential**:
+A value that gives access to a service, for example a token or an API key. The Shell gives the credential values of a run to the Engine.
+_Avoid_: Password, key (a key can also be a ticket key)
+
+**Secret**:
+A credential value of the run, or a text that matches a known secret pattern, for example a private key header. A Fix must never hold a secret, and the Engine never sends one.
+_Avoid_: Sensitive data
+
 **Failed Fix**:
 A Gozu Ticket that the agent could not fix safely. The ticket stays open with a comment and a marker label. It stays open until a human asks for another attempt.
 _Avoid_: Rejected ticket, skipped ticket

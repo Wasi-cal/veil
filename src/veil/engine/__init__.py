@@ -9,6 +9,7 @@ from veil.engine.models import (
     ToolCall,
 )
 from veil.engine.run import run
+from veil.engine.secrets.redact import redact
 
 __all__ = [
     "Context",
@@ -19,5 +20,6 @@ __all__ = [
     "Settings",
     "Ticket",
     "ToolCall",
+    "redact",
     "run",
 ]

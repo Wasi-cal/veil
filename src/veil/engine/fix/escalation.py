@@ -28,7 +28,7 @@ def fix_ticket(
                 report,
                 settings.strong_model,
                 workspace,
-                failure=first.reason,
+                failure=context.redact(first.reason),
             )
         except AttemptFailed as second:
             workspace.discard_changes()

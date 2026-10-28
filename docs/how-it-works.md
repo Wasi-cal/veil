@@ -10,12 +10,13 @@ The part that does this work is the Engine. You start it with one function call:
 
 ## What you give to the Engine
 
-The `context` holds four parts:
+The `context` holds five parts:
 
 - **settings**: the limits, for example 25 steps and 200 changed lines.
 - **tracker**: the place where the tickets are. In real use this is Jira.
 - **repo provider**: gives a copy of the repository and opens pull requests. In real use this is GitHub.
 - **model client**: talks to the AI model.
+- **secrets**: the credential values of this run, for example the GitHub token and the OpenAI key. The Shell passes them in. The Engine uses them to find and hide secrets. The Engine never reads them from the environment.
 
 The Engine knows only the shape of these parts. It does not know Jira, GitHub or OpenAI. In the tests, fakes take their place. The real parts come in later tickets (GR-18 to GR-20). This is why the tests need no network.
 
@@ -35,7 +36,7 @@ For one group, the steps are:
 3. Build the first message to the model. It holds the repository, file, line, severity and finding. It also holds about 40 lines of code around the flagged line. The Engine marks the text from the ticket as untrusted data.
 4. Talk to the model. The model answers with tool calls. The Engine runs each call and sends the result back. This repeats until the model calls `finish`. Before each model call, the Engine checks the token ceiling.
 5. The model gives two things with `finish`: a commit message of one line, and an explanation of at most 3 sentences. If the format is wrong, the Engine gives an error and the model can try again.
-6. Check the change. It must not be empty. It must have 200 changed lines or fewer. Each edited file must still parse. Then the Engine makes one commit for this Fix. The next ticket starts from that commit, so it sees the earlier Fixes.
+6. Check the change. It must not be empty. It must have 200 changed lines or fewer. Each edited file must still parse. The added lines, the commit message and the explanation must hold no secret (see the section "Secrets"). Then the Engine makes one commit for this Fix. The next ticket starts from that commit, so it sees the earlier Fixes.
 7. After the last ticket, publish. The Engine opens one draft pull request that targets the branch of the Source PR. The body holds the explanation of each Fix. It adds a comment with the link on each ticket and moves each ticket to In Review.
 
 If the first attempt fails, the Engine starts one more attempt with the strong model (see the section "When an attempt fails").
@@ -131,6 +132,17 @@ The model can call five tools:
 
 A tool never raises an error. If a call is wrong, the tool returns text that starts with `Error:` or `Refused:`. The model can then try again. Each result has a limit of 8 KB.
 
+## Secrets
+
+No secret may reach a commit, a PR, a Jira comment or a run report. The Engine uses two guards:
+
+1. **The scan.** Before the Engine commits a Fix, it checks the files that the Fix edits, the commit message and the explanation. It looks for the credential values of this run. It also looks for these patterns. They are private key headers, AWS key ids, GitHub tokens, Google API keys, Slack tokens, keys that start with `sk-` and Atlassian API tokens. A match fails the attempt. The strong model gets one more try. The reason names the kind of secret and where it is. It never holds the value. The scan runs before the syntax check, so a parser error cannot repeat a secret. A secret that was already in a file does not count, because the Fix did not add it. So a Fix that edits a line next to an old key can pass.
+2. **The redaction.** The Engine replaces each credential value and each text that matches a secret pattern with `[redacted]`. It does this in every text that it sends. These texts are the PR title and body, the commit message, every Jira comment, the reason of a Failed Fix and the run report. The Engine exports the function `redact`. Adapters and Shells use it for their own logs and errors.
+
+The Engine does not change errors that leave `run()`, for example a git error with a token in it. The repo provider must redact those errors before it raises them.
+
+A credential value must have at least 8 characters. A shorter value would change normal text when the Engine redacts, so the Context refuses it. The error message never shows the value.
+
 ## The safety rules
 
 These rules are code. Settings cannot turn them off.
@@ -139,6 +151,7 @@ These rules are code. Settings cannot turn them off.
 - The Engine never creates or deletes a file.
 - The Engine never reads `.env` files, keys or `.git/`.
 - The Engine never touches a path outside the repository.
+- The Engine never commits or sends a secret.
 - The class `WorkingCopy` checks each edit before it writes the edit. A refused edit changes nothing.
 
 ## Where to find things

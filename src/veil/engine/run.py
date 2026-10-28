@@ -30,4 +30,4 @@ def run(context: Context) -> RunReport:
             left = [t for t in planned if t.key not in report.outcomes]
             leave_for_next_run(left, report)
             break
-    return report
+    return report.redacted(context.redact)
