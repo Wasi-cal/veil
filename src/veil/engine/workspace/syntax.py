@@ -4,7 +4,7 @@ import tomllib
 from collections.abc import Callable
 from pathlib import PurePosixPath
 
-from veil.engine.errors.failed_fix import FailedFix
+from veil.engine.errors.attempt_failed import AttemptFailed
 
 PARSERS: dict[str, Callable[[str], object]] = {
     ".py": ast.parse,
@@ -22,4 +22,6 @@ def check_parses(files: dict[str, str]) -> None:
         try:
             parser(content)
         except (SyntaxError, ValueError, RecursionError) as error:
-            raise FailedFix(f"The file {path} does not parse. {error}") from None
+            raise AttemptFailed(
+                f"The file {path} does not parse. Parser message: {error}"
+            ) from None

@@ -4,6 +4,7 @@ from tests.fakes import finish
 from tests.support.scenario import (
     EDIT_THEN_FINISH,
     assert_failed_fix,
+    both_attempts,
     make_context,
     toggle_edits,
 )
@@ -11,7 +12,9 @@ from veil.engine import Settings, run
 
 
 def test_finish_without_any_edit_is_a_failed_fix(tmp_path):
-    context, tracker, repos, _ = make_context(tmp_path, [[finish("Nothing to do.")]])
+    context, tracker, repos, _ = make_context(
+        tmp_path, both_attempts([[finish("Nothing to do.")]])
+    )
 
     report = run(context)
 
@@ -51,7 +54,10 @@ def test_ticket_that_points_at_a_secret_or_outside_file_is_a_failed_fix_and_noth
 def test_failed_fix_does_not_stop_the_next_ticket(tmp_path):
     context, tracker, repos, _ = make_context(
         tmp_path,
-        [*toggle_edits(3), *EDIT_THEN_FINISH],
+        {
+            "cheap-model": [*toggle_edits(3), *EDIT_THEN_FINISH],
+            "strong-model": toggle_edits(3),
+        },
         settings=Settings(step_cap=3),
         extra_tickets=[{"key": "GR-101"}],
     )

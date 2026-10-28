@@ -22,12 +22,25 @@ def finish(summary: str) -> ToolCall:
 
 
 class FakeModelClient:
-    """Play a script. Each model call returns one list of tool calls."""
+    """Play a script. Each model call returns one list of tool calls.
 
-    def __init__(self, script: list[list[ToolCall]], tokens_per_call: int = 0):
-        self._script = list(script)
+    Give a list to use one script for every model. Give a dictionary to use one script for each model name.
+    """
+
+    def __init__(
+        self,
+        script: list[list[ToolCall]] | dict[str, list[list[ToolCall]]],
+        tokens_per_call: int = 0,
+    ):
+        self._by_model = (
+            {name: list(calls) for name, calls in script.items()}
+            if isinstance(script, dict)
+            else None
+        )
+        self._shared = None if isinstance(script, dict) else list(script)
         self._tokens_per_call = tokens_per_call
         self.received: list[list[dict]] = []
+        self.models_used: list[str] = []
 
     def everything_received(self) -> str:
         return "\n".join(m["content"] for call in self.received for m in call)
@@ -35,6 +48,8 @@ class FakeModelClient:
     def first_prompt(self) -> str:
         return self.received[0][0]["content"]
 
-    def next(self, messages: list[dict]) -> ModelReply:
+    def next(self, messages: list[dict], model: str) -> ModelReply:
+        self.models_used.append(model)
         self.received.append([dict(m) for m in messages])
-        return ModelReply(tool_calls=self._script.pop(0), tokens=self._tokens_per_call)
+        queue = self._shared if self._by_model is None else self._by_model[model]
+        return ModelReply(tool_calls=queue.pop(0), tokens=self._tokens_per_call)

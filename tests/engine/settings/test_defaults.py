@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from tests.fakes import edit_file, finish
 from tests.support.scenario import (
     assert_failed_fix,
+    both_attempts,
     make_context,
 )
 from veil.engine import Settings, run
@@ -25,7 +26,13 @@ def test_default_step_cap_is_25_tool_calls(tmp_path):
 
     context, tracker, repos, _ = make_context(
         tmp_path / "over",
-        [*script, [edit_file("app.py", "value = 24", "value = 25")], [finish("Done.")]],
+        both_attempts(
+            [
+                *script,
+                [edit_file("app.py", "value = 24", "value = 25")],
+                [finish("Done.")],
+            ]
+        ),
         files={"app.py": "value = 0\n"},
     )
     assert_failed_fix(tracker, repos, run(context))
@@ -36,10 +43,12 @@ def test_default_diff_limit_is_200_changed_lines(tmp_path, lines, outcome):
     """Replacing N lines changes N lines, so 200 lines is exactly the limit."""
     context, _, _, _ = make_context(
         tmp_path,
-        [
-            [edit_file("data.txt", numbered(lines, "a"), numbered(lines, "b"))],
-            [finish("Done.")],
-        ],
+        both_attempts(
+            [
+                [edit_file("data.txt", numbered(lines, "a"), numbered(lines, "b"))],
+                [finish("Done.")],
+            ]
+        ),
         files={"data.txt": numbered(lines, "a")},
         file="data.txt",
         line=1,
@@ -61,7 +70,7 @@ def test_default_diff_limit_is_200_changed_lines(tmp_path, lines, outcome):
 )
 def test_safety_rules_are_not_settings(setting):
     with pytest.raises(ValidationError):
-        Settings(**{setting: True})
+        Settings.model_validate({setting: True})
 
 
 @pytest.mark.parametrize(
@@ -73,8 +82,15 @@ def test_safety_rules_are_not_settings(setting):
         {"tool_result_max_bytes": 0},
         {"read_file_max_lines": 0},
         {"search_max_matches": 0},
+        {"token_ceiling": 0},
+        {"cheap_model": ""},
+        {"strong_model": ""},
     ],
 )
 def test_settings_reject_nonsense_limits(bad):
     with pytest.raises(ValidationError):
         Settings(**bad)
+
+
+def test_default_token_ceiling_is_100_000():
+    assert Settings().token_ceiling == 100_000

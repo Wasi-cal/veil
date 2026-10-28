@@ -11,8 +11,18 @@ from veil.engine.tools.toolbox import Toolbox
 from veil.engine.workspace.working_copy import WorkingCopy
 
 
-def attempt(context: Context, ticket: Ticket, report: RunReport) -> None:
-    """Try to fix one Gozu Ticket. Raise FailedFix if the Engine cannot fix it within its limits."""
+def attempt(
+    context: Context,
+    ticket: Ticket,
+    report: RunReport,
+    model: str,
+    failure: str | None = None,
+) -> None:
+    """Try to fix one Gozu Ticket with one model.
+
+    Raise AttemptFailed if the attempt fails after the model started.
+    Raise FailedFix if the Engine cannot read the file of the ticket.
+    """
     settings = context.settings
     workspace = context.repo_provider.open_workspace(ticket.repo)
     working_copy = WorkingCopy(workspace, settings)
@@ -24,9 +34,10 @@ def attempt(context: Context, ticket: Ticket, report: RunReport) -> None:
         raise FailedFix(
             f"The file {ticket.file} is not a text file in {ticket.repo}."
         ) from None
-    messages = [{"role": "user", "content": first_prompt(ticket, source)}]
+    messages = [{"role": "user", "content": first_prompt(ticket, source, failure)}]
     converse(
         context.model_client,
+        model,
         Toolbox(working_copy, settings),
         messages,
         settings,

@@ -3,6 +3,7 @@ import pytest
 from tests.fakes import edit_file, finish
 from tests.support.scenario import (
     assert_failed_fix,
+    both_attempts,
     make_context,
 )
 from veil.engine import run
@@ -22,7 +23,7 @@ def test_edited_file_that_no_longer_parses_is_a_failed_fix(
 ):
     context, tracker, repos, _ = make_context(
         tmp_path,
-        [[edit_file(path, old, new)], [finish("Edited.")]],
+        both_attempts([[edit_file(path, old, new)], [finish("Edited.")]]),
         files={path: before},
         file=path,
         line=1,
@@ -70,10 +71,12 @@ def test_deeply_nested_json_is_a_failed_fix_not_a_crash(tmp_path):
     depth = 100_000
     context, tracker, repos, _ = make_context(
         tmp_path,
-        [
-            [edit_file("data.json", "[]", "[" * depth + "]" * depth)],
-            [finish("Edited.")],
-        ],
+        both_attempts(
+            [
+                [edit_file("data.json", "[]", "[" * depth + "]" * depth)],
+                [finish("Edited.")],
+            ]
+        ),
         files={"data.json": "[]\n"},
         file="data.json",
         line=1,

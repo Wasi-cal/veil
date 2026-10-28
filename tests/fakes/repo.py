@@ -70,6 +70,10 @@ class FakeRepoProvider:
             _git(origin, "add", "-A")
             _git(origin, "commit", "-m", "init")
 
+    @property
+    def workspaces_opened(self) -> int:
+        return len(self._clones)
+
     def open_workspace(self, repo: str) -> FakeWorkspace:
         clone = self._root / "clone" / f"{len(self._clones)}" / repo
         _git(self._root, "clone", str(self._root / "origin" / repo), str(clone))

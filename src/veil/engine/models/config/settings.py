@@ -5,8 +5,10 @@ from veil.engine.constants.limits import (
     READ_FILE_MAX_LINES,
     SEARCH_MAX_MATCHES,
     STEP_CAP,
+    TOKEN_CEILING,
     TOOL_RESULT_MAX_BYTES,
 )
+from veil.engine.constants.models import CHEAP_MODEL, STRONG_MODEL
 
 
 class Settings(BaseModel):
@@ -14,6 +16,9 @@ class Settings(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    cheap_model: str = Field(default=CHEAP_MODEL, min_length=1)
+    strong_model: str = Field(default=STRONG_MODEL, min_length=1)
+    token_ceiling: int = Field(default=TOKEN_CEILING, ge=1)
     step_cap: int = Field(default=STEP_CAP, ge=1)
     diff_limit: int = Field(default=DIFF_LIMIT, ge=0)
     tool_result_max_bytes: int = Field(default=TOOL_RESULT_MAX_BYTES, ge=256)

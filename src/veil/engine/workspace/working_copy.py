@@ -1,5 +1,5 @@
+from veil.engine.errors.attempt_failed import AttemptFailed
 from veil.engine.errors.edit_rejected import EditRejected
-from veil.engine.errors.failed_fix import FailedFix
 from veil.engine.errors.rule_violation import RuleViolation
 from veil.engine.interfaces.workspace import Workspace
 from veil.engine.models.config.settings import Settings
@@ -53,12 +53,12 @@ class WorkingCopy:
         self._originals, self._current = originals, currents
 
     def verify(self) -> None:
-        """Run the checks at `finish`. Raise FailedFix if the change is empty, too large or does not parse."""
+        """Run the checks at `finish`. Raise AttemptFailed if the change is empty, too large or does not parse."""
         changed = changed_lines(self._originals, self._current)
         if changed == 0:
-            raise FailedFix("The model finished and made no change.")
+            raise AttemptFailed("The model finished and made no change.")
         if changed > self._settings.diff_limit:
-            raise FailedFix(
+            raise AttemptFailed(
                 f"The change has more than {self._settings.diff_limit} changed lines. This crosses the diff limit."
             )
         check_parses(self._current)

@@ -23,6 +23,15 @@ def toggle_edits(count):
     return [[edit_file("app.py", *pairs[n % 2])] for n in range(count)]
 
 
+def both_attempts(script):
+    """Give the cheap model and the strong model the same script. Use it when both attempts fail."""
+    defaults = Settings()
+    return {
+        defaults.cheap_model: list(script),
+        defaults.strong_model: list(script),
+    }
+
+
 def make_context(
     tmp_path,
     model_script,

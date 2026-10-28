@@ -13,4 +13,4 @@ The `engine` package has one folder for each concern. A folder imports only from
 
 We chose this so that a file has one reason to change and a reader can find code by its concern. The `tools` and `context` folders do not import each other. The `errors` and `constants` folders do not import each other.
 
-A contract in `pyproject.toml` enforces the order. The tests mirror the folders: `flow`, `limits`, `edits`, `reads`, `failures` and `settings`.
+A contract in `pyproject.toml` enforces the order. The tests mirror the concerns: `flow`, `escalation`, `budget`, `limits`, `edits`, `reads`, `failures` and `settings`.
