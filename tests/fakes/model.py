@@ -58,6 +58,15 @@ class FakeModelClient:
             for m in call
         )
 
+    def sent_by_the_engine(self) -> str:
+        """Every message that the Engine wrote for the model. The tool calls of the model are not in it."""
+        return "\n".join(
+            m["content"] or ""
+            for call in self.received
+            for m in call
+            if m["role"] != "assistant"
+        )
+
     def first_prompt(self) -> str:
         return next(m["content"] for m in self.received[0] if m["role"] == "user")
 

@@ -5,6 +5,7 @@ from tests.support.scenario import (
     CREDENTIAL,
     EDIT_THEN_FINISH,
     FIXED,
+    VULNERABLE,
     assert_failed_fix,
     assert_nowhere,
     both_attempts,
@@ -24,7 +25,7 @@ def edit_that_adds(text):
 def test_a_credential_of_this_run_in_an_added_line_fails_the_attempt_and_the_strong_attempt_gets_one_try(
     tmp_path,
 ):
-    context, tracker, repos, _ = make_context(
+    context, tracker, repos, model = make_context(
         tmp_path,
         {"cheap-model": edit_that_adds(CREDENTIAL), "strong-model": EDIT_THEN_FINISH},
         credentials=(CREDENTIAL,),
@@ -35,13 +36,13 @@ def test_a_credential_of_this_run_in_an_added_line_fails_the_attempt_and_the_str
     assert report.outcomes == {"GR-100": "fixed"}
     [pr] = repos.pull_requests
     assert repos.file_on(pr, "app.py") == FIXED
-    assert_nowhere(CREDENTIAL, tracker, repos, report)
+    assert_nowhere(CREDENTIAL, tracker, repos, report, model=model)
 
 
 def test_if_both_attempts_add_the_credential_the_ticket_is_a_failed_fix_and_the_comment_names_no_value(
     tmp_path,
 ):
-    context, tracker, repos, _ = make_context(
+    context, tracker, repos, model = make_context(
         tmp_path,
         both_attempts(edit_that_adds(CREDENTIAL)),
         credentials=(CREDENTIAL,),
@@ -51,7 +52,7 @@ def test_if_both_attempts_add_the_credential_the_ticket_is_a_failed_fix_and_the_
 
     comment = assert_failed_fix(tracker, repos, report)
     assert "credential" in comment.lower()
-    assert_nowhere(CREDENTIAL, tracker, repos, report)
+    assert_nowhere(CREDENTIAL, tracker, repos, report, model=model)
 
 
 # Fake keys. Each one is built from pieces, so no key-like text sits in this file.
@@ -69,7 +70,7 @@ KEY_LIKE = {
 
 @pytest.mark.parametrize("secret", list(KEY_LIKE.values()), ids=list(KEY_LIKE))
 def test_a_secret_pattern_in_an_added_line_fails_the_attempt(tmp_path, secret):
-    context, tracker, repos, _ = make_context(
+    context, tracker, repos, model = make_context(
         tmp_path,
         {"cheap-model": edit_that_adds(secret), "strong-model": EDIT_THEN_FINISH},
     )
@@ -79,7 +80,7 @@ def test_a_secret_pattern_in_an_added_line_fails_the_attempt(tmp_path, secret):
     assert report.outcomes == {"GR-100": "fixed"}
     [pr] = repos.pull_requests
     assert repos.file_on(pr, "app.py") == FIXED
-    assert_nowhere(secret, tracker, repos, report)
+    assert_nowhere(secret, tracker, repos, report, model=model)
 
 
 def test_secret_like_text_that_is_already_in_the_file_does_not_block_the_fix(tmp_path):
@@ -128,7 +129,7 @@ def test_a_secret_in_the_explanation_or_the_commit_message_fails_the_attempt(
         if where == "explanation"
         else finish("Fixed.", commit_message=f"Remove {secret}")
     )
-    context, tracker, repos, _ = make_context(
+    context, tracker, repos, model = make_context(
         tmp_path,
         {
             "cheap-model": [
@@ -143,13 +144,13 @@ def test_a_secret_in_the_explanation_or_the_commit_message_fails_the_attempt(
     report = run(context)
 
     assert report.outcomes == {"GR-100": "fixed"}
-    assert_nowhere(secret, tracker, repos, report)
+    assert_nowhere(secret, tracker, repos, report, model=model)
 
 
 def test_the_redaction_net_hides_a_credential_in_a_ticket_field_in_the_failed_fix_comment(
     tmp_path,
 ):
-    context, tracker, repos, _ = make_context(
+    context, tracker, repos, model = make_context(
         tmp_path,
         [[finish("Nothing.")]],
         file=f"{CREDENTIAL}.py",
@@ -160,7 +161,7 @@ def test_the_redaction_net_hides_a_credential_in_a_ticket_field_in_the_failed_fi
 
     comment = assert_failed_fix(tracker, repos, report)
     assert "[redacted].py" in comment
-    assert_nowhere(CREDENTIAL, tracker, repos, report)
+    assert_nowhere(CREDENTIAL, tracker, repos, report, model=model)
 
 
 def test_the_redaction_net_hides_a_credential_in_the_pr_body_and_the_ticket_comment(
@@ -168,7 +169,7 @@ def test_the_redaction_net_hides_a_credential_in_the_pr_body_and_the_ticket_comm
 ):
     two_bugs = "first = eval(input())\nsecond = eval(input())\n"
     path = f"{CREDENTIAL}.py"
-    context, tracker, repos, _ = make_context(
+    context, tracker, repos, model = make_context(
         tmp_path,
         [
             [edit_file(path, "first = eval(input())", "first = int(input())")],
@@ -189,7 +190,18 @@ def test_the_redaction_net_hides_a_credential_in_the_pr_body_and_the_ticket_comm
     assert report.outcomes == {"GR-100": "fixed", "GR-101": "fixed"}
     [pr] = repos.pull_requests
     assert "[redacted].py" in pr.body
-    assert_nowhere(CREDENTIAL, tracker, repos, report, keys=("GR-100", "GR-101"))
+    assert "Fixed first." in pr.body
+    assert "Fixed second." in pr.body
+    for key in ("GR-100", "GR-101"):
+        assert any("Fixed" in comment for comment in tracker.comments_on(key))
+    assert_nowhere(
+        CREDENTIAL,
+        tracker,
+        repos,
+        report,
+        keys=("GR-100", "GR-101"),
+        model=model,
+    )
 
 
 def test_a_key_that_is_already_on_an_edited_line_does_not_block_the_fix(tmp_path):
@@ -261,3 +273,24 @@ def test_the_run_report_never_holds_a_credential_even_in_a_ticket_key(tmp_path):
 
     assert CREDENTIAL not in report.model_dump_json()
     assert report.outcomes == {"GR-[redacted]": "failed"}
+
+
+def test_the_model_never_gets_a_credential_from_the_ticket_or_the_file(tmp_path):
+    github_key = KEY_LIKE["github-token"]
+    source = f'{VULNERABLE}token = "{CREDENTIAL}"\nkey = "{github_key}"\n'
+    context, _, _, model = make_context(
+        tmp_path,
+        EDIT_THEN_FINISH,
+        files={"app.py": source},
+        finding=f"Avoid eval. A leak of {CREDENTIAL} was seen.",
+        credentials=(CREDENTIAL,),
+    )
+
+    report = run(context)
+
+    assert report.outcomes == {"GR-100": "fixed"}
+    received = model.sent_by_the_engine()
+    assert CREDENTIAL not in received
+    assert github_key not in received
+    assert "value = eval(input())" in received
+    assert "[redacted]" in model.first_prompt()

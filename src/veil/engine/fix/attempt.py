@@ -42,7 +42,10 @@ def attempt(
         ) from None
     messages = [
         {"role": "system", "content": system_prompt(settings)},
-        {"role": "user", "content": first_prompt(ticket, source, failure)},
+        {
+            "role": "user",
+            "content": context.redact(first_prompt(ticket, source, failure)),
+        },
     ]
     finish = converse(
         context.model_client,

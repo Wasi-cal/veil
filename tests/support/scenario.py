@@ -100,14 +100,24 @@ def assert_untouched(tracker, repos, model, key="GR-100"):
 CREDENTIAL = "hunter2-credential-value-42"
 
 
-def assert_nowhere(secret, tracker, repos, report, keys=("GR-100",)):
-    """Check that a secret is in no output of the run: report, comments, PR title and body, commits and files."""
+def assert_nowhere(secret, tracker, repos, report, keys=("GR-100",), model=None):
+    """Check that a secret is in no output of the run.
+
+    The outputs are the report, comments, labels, status, PR title, body and branches, commit messages and files.
+    Give the model to check every message that the Engine wrote for it.
+    """
     assert secret not in report.model_dump_json()
+    if model is not None:
+        assert secret not in model.sent_by_the_engine()
     for key in keys:
         assert all(secret not in comment for comment in tracker.comments_on(key))
+        assert all(secret not in label for label in tracker.labels_on(key))
+        assert secret not in tracker.status_of(key)
     for pr in repos.pull_requests:
         assert secret not in pr.title
         assert secret not in pr.body
-        assert all(secret not in subject for subject in repos.commit_subjects_on(pr))
+        assert secret not in pr.head
+        assert secret not in pr.base
+        assert all(secret not in message for message in repos.commit_messages_on(pr))
         for path in repos.changed_paths_on(pr):
             assert secret not in repos.file_on(pr, path)

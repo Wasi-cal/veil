@@ -23,14 +23,17 @@ class Context(BaseModel):
     @field_validator("credentials")
     @classmethod
     def _long_enough(cls, credentials: tuple[SecretStr, ...]) -> tuple[SecretStr, ...]:
-        """A short value would change normal text when the Engine redacts. The message never shows a value."""
-        if any(
-            len(credential.get_secret_value()) < MIN_SECRET_LENGTH
-            for credential in credentials
-        ):
+        """A short value or a blank value would change normal text when the Engine redacts.
+
+        The message never shows a value.
+        """
+        values = [credential.get_secret_value() for credential in credentials]
+        if any(len(value) < MIN_SECRET_LENGTH for value in values):
             raise ValueError(
                 f"A credential value must have at least {MIN_SECRET_LENGTH} characters."
             )
+        if any(not value.strip() for value in values):
+            raise ValueError("A credential value must not be only white space.")
         return credentials
 
     def redact(self, text: str) -> str:

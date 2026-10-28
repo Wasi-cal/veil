@@ -137,11 +137,11 @@ A tool never raises an error. If a call is wrong, the tool returns text that sta
 No secret may reach a commit, a PR, a Jira comment or a run report. The Engine uses two guards:
 
 1. **The scan.** Before the Engine commits a Fix, it checks the files that the Fix edits, the commit message and the explanation. It looks for the credential values of this run. It also looks for these patterns. They are private key headers, AWS key ids, GitHub tokens, Google API keys, Slack tokens, keys that start with `sk-` and Atlassian API tokens. A match fails the attempt. The strong model gets one more try. The reason names the kind of secret and where it is. It never holds the value. The scan runs before the syntax check, so a parser error cannot repeat a secret. A secret that was already in a file does not count, because the Fix did not add it. So a Fix that edits a line next to an old key can pass.
-2. **The redaction.** The Engine replaces each credential value and each text that matches a secret pattern with `[redacted]`. It does this in every text that it sends. These texts are the PR title and body, the commit message, every Jira comment, the reason of a Failed Fix and the run report. The Engine exports the function `redact`. Adapters and Shells use it for their own logs and errors.
+2. **The redaction.** The Engine replaces each credential value and each text that matches a secret pattern with `[redacted]`. It does this in every text that it sends. These texts are the first prompt to the model and the PR title and body. They are also the commit message, every Jira comment, the reason of a Failed Fix and the run report. Two matches that overlap become one `[redacted]`. The Engine exports the function `redact`. Adapters and Shells use it for their own logs and errors.
 
 The Engine does not change errors that leave `run()`, for example a git error with a token in it. The repo provider must redact those errors before it raises them. The real repo provider does this and raises `RepoProviderError`. See ADR 0007.
 
-A credential value must have at least 8 characters. A shorter value would change normal text when the Engine redacts, so the Context refuses it. The error message never shows the value.
+A credential value must have at least 8 characters and must not be only white space. A shorter or blank value would change normal text when the Engine redacts, so the Context refuses it. The error message never shows the value.
 
 ## The safety rules
 

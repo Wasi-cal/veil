@@ -246,6 +246,18 @@ class FakeRepoProvider:
         )
         return out.splitlines()
 
+    def commit_messages_on(self, pr: FakePullRequest) -> list[str]:
+        """The whole message of each Fix commit on the PR branch, subject and body, oldest first."""
+        clone = self._clone_with_branch(pr.repo, pr.head)
+        out = _git(
+            clone.path,
+            "log",
+            "--reverse",
+            "--format=%B%x00",
+            f"{clone.start_branch}..{pr.head}",
+        )
+        return [message for message in out.split("\0") if message.strip()]
+
     def file_on(self, pr: FakePullRequest, path: str) -> str:
         clone = self._clone_with_branch(pr.repo, pr.head)
         return _git(clone.path, "show", f"{pr.head}:{path}")
