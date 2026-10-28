@@ -190,3 +190,39 @@ def test_a_ticket_that_the_tracker_lists_twice_is_fixed_once(tmp_path):
     assert report.skipped == {}
     assert len(repos.pull_requests) == 1
     assert len(tracker.comments_on("GR-100")) == 1
+
+
+def test_the_same_issue_label_on_two_source_prs_is_fixed_on_each(tmp_path):
+    context, _, repos, _ = make_context(
+        tmp_path,
+        [*EDIT_THEN_FINISH, *EDIT_THEN_FINISH],
+        labels=("issue-same",),
+        extra_tickets=[{"key": "GR-101", "branch": "feature-b"}],
+    )
+
+    report = run(context)
+
+    assert report.outcomes == {"GR-100": "fixed", "GR-101": "fixed"}
+    assert len(repos.pull_requests) == 2
+
+
+def test_a_fix_pr_on_one_source_pr_does_not_block_another_source_pr(tmp_path):
+    context, _, repos, _ = make_context(
+        tmp_path, EDIT_THEN_FINISH, labels=("issue-gr-100",)
+    )
+    repos.seed_pull_request(
+        "acme/app", "gozu/fix-elsewhere", labels=("issue-gr-100",), base="other"
+    )
+
+    report = run(context)
+
+    assert report.outcomes == {"GR-100": "fixed"}
+
+
+def test_a_fix_branch_with_another_prefix_does_not_block_the_ticket(tmp_path):
+    context, _, repos, _ = make_context(tmp_path, EDIT_THEN_FINISH)
+    repos.seed_branch("acme/app", "unrelated/branch", labels=("issue-gr-100",))
+
+    report = run(context)
+
+    assert report.outcomes == {"GR-100": "fixed"}

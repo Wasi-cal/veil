@@ -83,6 +83,24 @@ def test_the_branch_prefix_is_a_setting_and_the_no_loop_rule_uses_it(tmp_path):
     assert report.skipped == {"raised_against_fix_branch": ["GR-101"]}
 
 
+def test_a_custom_prefix_does_not_weaken_the_no_loop_rule_for_the_fixed_prefix(
+    tmp_path,
+):
+    context, _, repos, _ = make_context(
+        tmp_path,
+        [*fix_of("a.py", "Fix a")],
+        files={"a.py": BUGGY},
+        file="a.py",
+        settings=Settings(branch_prefix="veil/"),
+        extra_tickets=[{"key": "GR-101", "file": "a.py", "branch": "gozu/fix-earlier"}],
+    )
+
+    report = run(context)
+
+    assert report.skipped == {"raised_against_fix_branch": ["GR-101"]}
+    assert len(repos.pull_requests) == 1
+
+
 def test_a_partial_severity_map_changes_only_its_words_and_keeps_the_defaults(tmp_path):
     settings = Settings(severity_map={"MAJOR": "high"})
     context, _, repos, _ = three_tickets(tmp_path, ("MAJOR", "MINOR", "INFO"), settings)
@@ -92,7 +110,22 @@ def test_a_partial_severity_map_changes_only_its_words_and_keeps_the_defaults(tm
     assert pr_sizes(repos) == [1, 2]
 
 
-@pytest.mark.parametrize("bad", ["", "a", "gozu", "x/", "gozu fix/"])
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "",
+        "a",
+        "gozu",
+        "x/",
+        "gozu fix/",
+        "---",
+        "../",
+        "-x-",
+        "a..b/",
+        "a//b/",
+        "a/.b/",
+    ],
+)
 def test_the_branch_prefix_must_be_long_enough_and_end_with_a_separator(bad):
     with pytest.raises(ValidationError):
         Settings(branch_prefix=bad)

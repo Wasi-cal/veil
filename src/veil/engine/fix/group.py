@@ -4,7 +4,7 @@ from veil.engine.errors.failed_fix import FailedFix
 from veil.engine.fix.budget import ensure_budget
 from veil.engine.fix.escalation import fix_ticket
 from veil.engine.fix.failures import record_failed_fix
-from veil.engine.fix.publish import branch_name, publish
+from veil.engine.fix.publish import publish
 from veil.engine.models.fix.fix import Fix
 from veil.engine.models.group.fix_group import FixGroup
 from veil.engine.models.report.run_report import RunReport
@@ -20,6 +20,7 @@ def fix_group(context: Context, group: FixGroup, report: RunReport) -> None:
     workspace = context.repo_provider.open_workspace(group.repo, group.branch)
     fixes: list[Fix] = []
     branch: str | None = None
+    budget_error: BudgetExhausted | None = None
     try:
         for ticket in group.tickets:
             try:
@@ -28,13 +29,15 @@ def fix_group(context: Context, group: FixGroup, report: RunReport) -> None:
                 record_failed_fix(context, ticket, failed, report)
                 continue
             if branch is None:
-                branch = branch_name(group, fix, context.settings.branch_prefix)
+                branch = group.branch_name(
+                    fix.ticket.key, context.settings.branch_prefix
+                )
             workspace.commit(branch, context.redact(fix.commit_message))
             fixes.append(fix)
-    except BudgetExhausted:
+    except BudgetExhausted as exhausted:
         workspace.discard_changes()
-        if branch is not None:
-            publish(context, group, fixes, branch, report)
-        raise
+        budget_error = exhausted
     if branch is not None:
         publish(context, group, fixes, branch, report)
+    if budget_error is not None:
+        raise budget_error

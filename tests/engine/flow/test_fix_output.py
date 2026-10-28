@@ -41,11 +41,19 @@ def test_the_commit_gets_the_message_of_the_model_and_the_pr_and_ticket_get_the_
             finish("Short explanation.", commit_message="Replace eval"),
         ),
         (
+            finish("One. two. three. four."),
+            finish("Short explanation.", commit_message="Replace eval"),
+        ),
+        (
             finish("Short explanation.", commit_message="Line one\nLine two"),
             finish("Short explanation.", commit_message="Replace eval"),
         ),
     ],
-    ids=["explanation-over-3-sentences", "commit-message-with-two-lines"],
+    ids=[
+        "explanation-over-3-sentences",
+        "sentences-that-start-in-lower-case",
+        "commit-message-with-two-lines",
+    ],
 )
 def test_a_finish_that_breaks_the_format_is_refused_and_the_model_can_finish_again(
     tmp_path, bad_finish, good_finish

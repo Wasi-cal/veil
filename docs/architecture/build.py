@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = Path(__file__).resolve().parent / "index.html"
 
 DESCRIPTIONS = {
-    "src/veil/engine/__init__.py": "The public door of the Engine. It exports run, Context and the main models.",
+    "src/veil/engine/__init__.py": "The public door of the Engine. It exports run, Context, the main models and the four interfaces.",
     "src/veil/engine/run.py": "The entry point, run(context). It skips tickets that have a fix, makes groups, fixes each group and stops at the token ceiling.",
     "src/veil/engine/eligibility/select.py": "Decides if the Engine may fix a ticket. The rules are the no-loop rule, the Failed Fix label, the issue label, the open Source PR and an existing Fix.",
     "src/veil/engine/context.py": "The Context: settings, tracker, repo provider, model client and the credential values. The caller builds it.",
@@ -23,7 +23,7 @@ DESCRIPTIONS = {
     "src/veil/engine/grouping/severity.py": "Gives the Severity Bucket of a severity word from the severity map. An unknown word is High.",
     "src/veil/engine/constants/severity.py": "The three Severity Buckets and the default severity map.",
     "src/veil/engine/models/fix/fix.py": "A Fix that passed: the ticket, the commit message and the explanation.",
-    "src/veil/engine/models/group/fix_group.py": "The tickets that go into one Fix PR, with their repository, Source PR branch and the reason for the group.",
+    "src/veil/engine/models/group/fix_group.py": "The tickets that go into one Fix PR, with their repository, Source PR branch and the reason for the group. It gives the branch name and the title of the PR.",
     "src/veil/engine/models/group/group_plan.py": "The groups for this run and the tickets that wait for a later run.",
     "src/veil/engine/models/tool_args/finish_args.py": "The arguments of finish: a one-line commit message and an explanation.",
     "src/veil/engine/fix/secret_check.py": "Fails the attempt if a Fix adds a secret to a file, or if the commit message or the explanation holds one.",
@@ -33,9 +33,9 @@ DESCRIPTIONS = {
     "src/veil/engine/fix/attempt.py": "One attempt to fix one ticket with one model, in the workspace of the group. It returns the Fix.",
     "src/veil/engine/fix/escalation.py": "Tries the cheap model. If the attempt fails, it discards the edits and tries the strong model once.",
     "src/veil/engine/fix/conversation.py": "The loop with the model. It runs the tool calls, enforces the step cap and checks the token ceiling.",
-    "src/veil/engine/fix/prompt.py": "Builds the first message to the model: ticket facts and the code around the flagged line.",
+    "src/veil/engine/fix/prompt.py": "Builds the system message and the first message to the model. Text from tickets and files cannot end its untrusted block.",
     "src/veil/engine/fix/publish.py": "Opens one draft Fix PR for a group. It comments on each ticket and sets In Review.",
-    "src/veil/engine/fix/failures.py": "Records a Failed Fix: the reason comment, the marker label and the outcome. Also marks tickets as left for the next run.",
+    "src/veil/engine/fix/failures.py": "Records a Failed Fix: the marker label first, then the reason comment, and the outcome.",
     "src/veil/engine/tools/toolbox.py": "Finds the tool by name, checks the arguments, runs the handler and cuts the result.",
     "src/veil/engine/tools/result_cap.py": "Cuts a tool result to 8 KB and adds the note that tells the model to narrow the request.",
     "src/veil/engine/tools/handlers/edit_file.py": "The edit_file tool. It asks the working copy to replace text in a file.",
@@ -48,16 +48,21 @@ DESCRIPTIONS = {
     "src/veil/engine/workspace/diff.py": "Counts the changed lines. Each changed line counts once.",
     "src/veil/engine/workspace/syntax.py": "Checks that edited .py, .json and .toml files still parse.",
     "src/veil/engine/interfaces/__init__.py": "Exports the four interfaces.",
-    "src/veil/engine/interfaces/tracker.py": "Interface: list the open tickets, add a comment, set a status and add a label.",
-    "src/veil/engine/interfaces/repo_provider.py": "Interface: open a workspace on a branch, ask if a branch has an open PR, find an existing Fix and open a draft pull request.",
+    "src/veil/engine/interfaces/tracker.py": "Interface: list the candidate tickets, add a comment, set a status and add a label.",
+    "src/veil/engine/interfaces/repo_provider.py": "Interface: open a workspace on a branch, ask if a branch has an open PR, find an existing Fix for a query and open a draft pull request.",
     "src/veil/engine/interfaces/workspace.py": "Interface: read, list, write, commit and discard changes in one checkout of a repository.",
-    "src/veil/engine/interfaces/model_client.py": "Interface: send the messages and the model name to the model and get the next tool calls.",
-    "src/veil/engine/models/__init__.py": "Exports the five main models.",
+    "src/veil/engine/interfaces/model_client.py": "Interface: send the messages, the model name and the tools to the model. Get the next tool calls and the tokens used.",
+    "src/veil/engine/models/__init__.py": "Exports the main models.",
     "src/veil/engine/models/ticket/ticket.py": "A Gozu Ticket: key, repository, file, line, severity, finding, branch and labels.",
-    "src/veil/engine/models/provider/existing_fix.py": "A Fix that the repo provider already has for a ticket: an open PR or a fix branch.",
-    "src/veil/engine/models/llm/tool_call.py": "One tool call from the model: a name and arguments.",
+    "src/veil/engine/models/provider/fix_query.py": "The question for the repo provider: is there a Fix for this ticket? It holds the repository, the issue label, the Source PR branch and the branch prefix.",
+    "src/veil/engine/models/llm/tool_definition.py": "A tool that the model can call: a name, a description and a JSON schema of the arguments.",
+    "src/veil/engine/tools/definitions.py": "Builds the tool definitions for the model from the argument models and the finish arguments.",
+    "src/veil/engine/fix/pr_text.py": "The text of the PR body and of the comment on a ticket.",
+    "src/veil/engine/fix/left_over.py": "Marks tickets as left for the next run. It does not touch them in the tracker.",
+    "tests/engine/flow/test_model_contract.py": "The model gets the tools and a system message. Each tool result answers a call of the model.",
+    "src/veil/engine/models/llm/tool_call.py": "One tool call from the model: a name, arguments and the id that the answer must name.",
     "src/veil/engine/models/llm/model_reply.py": "One reply from the model: the tool calls and the tokens used.",
-    "src/veil/engine/models/config/settings.py": "The settings: the two model names, the token ceiling and the limits. Each has a default and a bound. Unknown settings are not allowed.",
+    "src/veil/engine/models/config/settings.py": "The settings: the two model names, the token ceiling, the cap of the Shared PR, the branch prefix, the severity map, the limits and extra refused read patterns. Each has a default and a bound. Unknown settings are not allowed.",
     "src/veil/engine/models/report/run_report.py": "The run report: the pull requests, the outcome of each ticket, the skipped tickets with their reasons and the tokens used.",
     "src/veil/engine/models/tool_args/edit_file_args.py": "The arguments of edit_file: path, old text and new text.",
     "src/veil/engine/models/tool_args/read_file_args.py": "The arguments of read_file: path and start line.",
@@ -71,7 +76,7 @@ DESCRIPTIONS = {
     "src/veil/engine/constants/limits.py": "The default limits: 25 steps, 200 changed lines, 300 lines, 50 matches, 8 KB and 100,000 tokens.",
     "src/veil/engine/constants/models.py": "The default names of the cheap model and the strong model.",
     "src/veil/engine/constants/paths.py": "Protected folders, lockfile names and the patterns of secret files.",
-    "src/veil/engine/constants/tools.py": "The names of the five tools.",
+    "src/veil/engine/constants/tools.py": "The names of the five tools and their descriptions.",
     "src/veil/engine/constants/outcomes.py": "The outcome words of the run report: fixed, failed, skipped and left for the next run.",
     "src/veil/engine/constants/branches.py": "The prefix of the branches that the Engine makes: gozu/fix-.",
     "src/veil/engine/constants/labels.py": "The label names: the issue label prefix and the Failed Fix marker.",
@@ -79,7 +84,7 @@ DESCRIPTIONS = {
     "src/veil/engine/models/provider/draft_pr.py": "What the repo provider needs to open a draft Fix PR. The base is the branch of the Source PR.",
     "src/veil/engine/fix/budget.py": "Checks the token ceiling before an attempt and before each model call.",
     "src/veil/engine/constants/statuses.py": "The ticket status that the Engine sets: In Review.",
-    "src/veil/engine/constants/prompt.py": "Prompt values: 20 lines on each side of the flagged line and the names of the untrusted tags.",
+    "src/veil/engine/constants/prompt.py": "Prompt values: the system message, 20 lines on each side of the flagged line and the names of the untrusted tags.",
     "tests/architecture/test_layers.py": "Checks the folder order, the rule for adapters and shells, and that the Engine reads no environment variables.",
     "tests/engine/flow/test_fix_flow.py": "The normal path: one commit, one draft PR, a ticket comment, In Review and the report.",
     "tests/engine/escalation/test_escalation.py": "A failed cheap attempt leads to one strong attempt. A failed strong attempt is a Failed Fix.",
@@ -334,11 +339,17 @@ def sequence_svg() -> str:
         (1, 3, "4  WorkingCopy(workspace, settings)", False, "created here"),
         (1, 3, "5  read(ticket.file)", False, ""),
         (1, 4, "6  converse(...)", False, ""),
-        (4, 5, "7  next(messages)", False, "tool calls"),
+        (4, 5, "7  next(messages, model, tools)", False, "tool calls"),
         (4, 6, "8  run(call)", False, "one result text"),
         (6, 3, "9  edit / read / list_files", False, ""),
         (1, 3, "10  verify()", False, "at finish"),
-        (1, 2, "11  commit + draft PR", False, "publish.py"),
+        (
+            1,
+            2,
+            "11  open_draft_pr(draft)",
+            False,
+            "publish.py, after one commit for each Fix",
+        ),
         (1, 7, "12  add_comment + set_status", False, "In Review"),
     ]
     row, y0 = 46, top + 30
@@ -376,7 +387,7 @@ def sequence_svg() -> str:
     y += row + 18
     out.append(
         f'<rect x="20" y="{y}" width="{width - 40}" height="44" rx="8" class="fail"/>'
-        f'<text x="36" y="{y + 27}" class="failtext">A failed cheap attempt leads to one strong attempt on a fresh checkout. If that fails too, run.py records a Failed Fix and goes on. At the token ceiling the run stops and leaves the rest.</text>'
+        f'<text x="36" y="{y + 27}" class="failtext">A failed cheap attempt leads to one strong attempt on a fresh checkout. If that fails too, group.py records a Failed Fix and goes on. At the token ceiling the run stops and leaves the rest.</text>'
     )
     out.append("</svg>")
     return "".join(out)

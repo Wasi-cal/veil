@@ -1,6 +1,6 @@
 from tests.engine.grouping.test_shared_pr import BUGGY, FIXED_LINE, fix_of
 from tests.fakes import edit_file, finish
-from tests.support.scenario import make_context
+from tests.support.scenario import both_attempts, make_context
 from veil.engine import run
 
 
@@ -94,3 +94,31 @@ def test_high_tickets_of_the_same_file_group_even_if_the_path_is_written_differe
 
     [pr] = repos.pull_requests
     assert repos.commit_subjects_on(pr) == ["Fix first", "Fix second"]
+
+
+def test_the_body_gives_no_same_file_reason_if_only_one_high_fix_passed(tmp_path):
+    two_bugs = "first = eval(input())\nsecond = eval(input())\n"
+    context, _, repos, _ = make_context(
+        tmp_path,
+        both_attempts(
+            [
+                [
+                    edit_file_a("first = eval(input())", "first = int(input())"),
+                    finish_message("Fix first"),
+                ],
+                [finish("Nothing to do.")],
+                [finish("Nothing to do.")],
+            ]
+        ),
+        files={"a.py": two_bugs},
+        file="a.py",
+        severity="High",
+        extra_tickets=[{"key": "GR-101", "line": 2}],
+        line=1,
+    )
+
+    report = run(context)
+
+    assert report.outcomes == {"GR-100": "fixed", "GR-101": "failed"}
+    [pr] = repos.pull_requests
+    assert "same file" not in pr.body

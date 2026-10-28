@@ -41,7 +41,7 @@ def make_context(
     extra_tickets=(),
     source_files=None,
     open_source_pr=True,
-    secrets=(),
+    credentials=(),
     **ticket_fields,
 ):
     fields = {
@@ -68,7 +68,7 @@ def make_context(
     model = FakeModelClient(model_script, tokens_per_call=tokens_per_call)
     context = Context(
         settings=settings,
-        secrets=secrets,
+        credentials=credentials,
         tracker=tracker,
         repo_provider=repos,
         model_client=model,

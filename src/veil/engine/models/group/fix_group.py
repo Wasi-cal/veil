@@ -18,3 +18,17 @@ class FixGroup(BaseModel):
     branch: str
     tickets: tuple[Ticket, ...]
     reason: str | None = None
+
+    def branch_name(self, first_fixed_key: str, prefix: str) -> str:
+        """The branch of the Fix PR. It starts with the prefix and names the first Fix that passed.
+
+        A ticket that failed gives no name. A later run can then make a new PR for that ticket without a branch clash.
+        """
+        key = first_fixed_key.lower()
+        return f"{prefix}{key}" if self.kind == "high" else f"{prefix}shared-{key}"
+
+    def title(self, keys: list[str]) -> str:
+        """The title of the Fix PR. A high group names its tickets. A shared group gives the count."""
+        if self.kind == "high":
+            return f"Fix {', '.join(keys)}"
+        return f"Fix {len(keys)} tickets"

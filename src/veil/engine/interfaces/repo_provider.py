@@ -1,8 +1,9 @@
 from typing import Protocol, runtime_checkable
 
+from veil.engine.constants.skip_reasons import FixKind
 from veil.engine.interfaces.workspace import Workspace
 from veil.engine.models.provider.draft_pr import DraftPr
-from veil.engine.models.provider.existing_fix import ExistingFix
+from veil.engine.models.provider.fix_query import FixQuery
 
 
 @runtime_checkable
@@ -21,18 +22,19 @@ class RepoProvider(Protocol):
         """
         ...
 
-    def find_existing_fix(self, repo: str, issue_label: str) -> ExistingFix | None:
-        """Return the Fix that exists for this issue label in this repository, or None.
+    def find_existing_fix(self, query: FixQuery) -> FixKind | None:
+        """Return the kind of the Fix that exists for the issue label of the query, or None.
 
-        An open PR that carries the label counts as `open_pr`. A gozu/fix-* branch that carries the label counts as `fix_branch`.
-        If both exist, return the open PR.
+        An open PR that carries the label counts as `open_pr`. It must have the Source PR branch as its base.
+        A branch that starts with the branch prefix and carries the label counts as `fix_branch`.
+        If both exist, return `open_pr`.
         """
         ...
 
     def open_draft_pr(self, draft: DraftPr) -> str:
         """Push the branch of the draft and open a draft PR against its base. Return the URL.
 
-        Push only the gozu/fix-* branch. Never push to the base branch or to the default branch.
+        Push only the Fix branch. It starts with the branch prefix. Never push to the base branch or to the default branch.
         Never make a second PR for a branch. If a PR for the branch exists, return its URL.
         """
         ...

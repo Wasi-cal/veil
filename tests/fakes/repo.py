@@ -3,7 +3,8 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from veil.engine import DraftPr, ExistingFix
+from veil.engine import DraftPr, FixQuery
+from veil.engine.constants.skip_reasons import FixKind
 
 
 def _git(cwd: Path, *args: str) -> str:
@@ -42,10 +43,12 @@ class FakeClone(BaseModel):
 
 
 class FakeRemoteFix(BaseModel):
-    """A Fix that the fake remote knows: an open PR or a gozu/fix-* branch, with its labels."""
+    """A Fix that the fake remote knows: an open PR or a Fix branch, with its labels."""
 
     repo: str
-    fix: ExistingFix
+    kind: FixKind
+    branch: str
+    base: str | None
     labels: tuple[str, ...]
 
 
@@ -129,20 +132,32 @@ class FakeRepoProvider:
             self._open_source_prs.add((repo, branch))
 
     def seed_pull_request(
-        self, repo: str, branch: str, labels: tuple[str, ...]
+        self,
+        repo: str,
+        branch: str,
+        labels: tuple[str, ...],
+        base: str | None = None,
     ) -> None:
-        """Put an open PR in the fake remote. An earlier run or a person made it."""
-        fix = ExistingFix(kind="open_pr", branch=branch)
-        self._remote.append(FakeRemoteFix(repo=repo, fix=fix, labels=labels))
+        """Put an open PR in the fake remote. An earlier run or a person made it. No base means any base."""
+        self._remote.append(
+            FakeRemoteFix(
+                repo=repo, kind="open_pr", branch=branch, base=base, labels=labels
+            )
+        )
 
     def seed_branch(self, repo: str, branch: str, labels: tuple[str, ...]) -> None:
-        """Put a gozu/fix-* branch that carries these labels in the fake remote. No PR is open."""
-        fix = ExistingFix(kind="fix_branch", branch=branch)
-        self._remote.append(FakeRemoteFix(repo=repo, fix=fix, labels=labels))
+        """Put a Fix branch that carries these labels in the fake remote. No PR is open."""
+        self._remote.append(
+            FakeRemoteFix(
+                repo=repo, kind="fix_branch", branch=branch, base=None, labels=labels
+            )
+        )
 
     # ---- the RepoProvider interface ----
 
     def open_workspace(self, repo: str, branch: str) -> FakeWorkspace:
+        if branch.startswith("-"):
+            raise ValueError(f"Refused the branch name {branch}.")
         path = self._root / "clone" / f"{len(self._clones)}" / repo
         origin = str(self._root / "origin" / repo)
         _git(self._root, "clone", "--branch", branch, origin, str(path))
@@ -152,13 +167,21 @@ class FakeRepoProvider:
     def has_open_pr(self, repo: str, branch: str) -> bool:
         return (repo, branch) in self._open_source_prs
 
-    def find_existing_fix(self, repo: str, issue_label: str) -> ExistingFix | None:
-        found = [
-            r.fix for r in self._remote if r.repo == repo and issue_label in r.labels
+    def find_existing_fix(self, query: FixQuery) -> FixKind | None:
+        kinds = [
+            r.kind
+            for r in self._remote
+            if r.repo == query.repo
+            and query.issue_label in r.labels
+            and self._matches(r, query)
         ]
-        return next(
-            (f for f in found if f.kind == "open_pr"), found[0] if found else None
-        )
+        return "open_pr" if "open_pr" in kinds else (kinds[0] if kinds else None)
+
+    @staticmethod
+    def _matches(remote: FakeRemoteFix, query: FixQuery) -> bool:
+        if remote.kind == "open_pr":
+            return remote.base is None or remote.base == query.source_branch
+        return remote.branch.startswith(query.branch_prefix)
 
     def open_draft_pr(self, draft: DraftPr) -> str:
         """Push the head branch to the fake origin and open a PR. Refuse any other push, as a real provider does."""
@@ -172,9 +195,14 @@ class FakeRepoProvider:
         clone = self._clone_with_branch(draft.repo, draft.head)
         _git(clone.path, "push", "origin", draft.head)
         url = f"https://github.example.invalid/{draft.repo}/pull/{len(self.pull_requests) + 1}"
-        fix = ExistingFix(kind="open_pr", branch=draft.head)
         self._remote.append(
-            FakeRemoteFix(repo=draft.repo, fix=fix, labels=draft.labels)
+            FakeRemoteFix(
+                repo=draft.repo,
+                kind="open_pr",
+                branch=draft.head,
+                base=draft.base,
+                labels=draft.labels,
+            )
         )
         self.pull_requests.append(
             FakePullRequest(

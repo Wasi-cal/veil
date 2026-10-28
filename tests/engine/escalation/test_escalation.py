@@ -41,10 +41,10 @@ def test_strong_attempt_gets_only_the_failure_reason_of_the_cheap_attempt(tmp_pa
     run(context)
 
     cheap_calls = 3
-    strong_start = model.received[cheap_calls]
-    assert len(strong_start) == 1
-    assert "step cap" in strong_start[0]["content"].lower()
-    assert "acme/app" in strong_start[0]["content"]
+    system, user = model.received[cheap_calls]
+    assert system["role"] == "system"
+    assert "step cap" in user["content"].lower()
+    assert "acme/app" in user["content"]
 
 
 @pytest.mark.parametrize(

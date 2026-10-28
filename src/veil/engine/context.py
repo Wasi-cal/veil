@@ -18,28 +18,29 @@ class Context(BaseModel):
     tracker: Tracker
     repo_provider: RepoProvider
     model_client: ModelClient
-    secrets: tuple[SecretStr, ...] = ()
+    credentials: tuple[SecretStr, ...] = ()
 
-    @field_validator("secrets")
+    @field_validator("credentials")
     @classmethod
-    def _long_enough(cls, secrets: tuple[SecretStr, ...]) -> tuple[SecretStr, ...]:
+    def _long_enough(cls, credentials: tuple[SecretStr, ...]) -> tuple[SecretStr, ...]:
         """A short value would change normal text when the Engine redacts. The message never shows a value."""
         if any(
-            len(secret.get_secret_value()) < MIN_SECRET_LENGTH for secret in secrets
+            len(credential.get_secret_value()) < MIN_SECRET_LENGTH
+            for credential in credentials
         ):
             raise ValueError(
                 f"A credential value must have at least {MIN_SECRET_LENGTH} characters."
             )
-        return secrets
+        return credentials
 
     def redact(self, text: str) -> str:
         """Replace the credential values of this run, and the known secret patterns, in a text.
 
         Use it on every text that leaves the Engine.
         """
-        return redact(text, self.secret_values)
+        return redact(text, self.credential_values)
 
     @property
-    def secret_values(self) -> tuple[str, ...]:
+    def credential_values(self) -> tuple[str, ...]:
         """The credential values of this run, as plain text. Use them only to scan and to redact."""
-        return tuple(secret.get_secret_value() for secret in self.secrets)
+        return tuple(value.get_secret_value() for value in self.credentials)

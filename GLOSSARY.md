@@ -5,7 +5,7 @@ An agent that takes the Jira tickets that Gozu creates from scan findings. It fi
 ## Language
 
 **Gozu Ticket**:
-An open Jira ticket that Gozu creates from a scan finding. It carries the repository, file, line, severity and branch of that finding. The branch is the branch of the Source PR. The agent never picks up a Gozu Ticket about a `gozu/fix-*` branch. A human decides what happens to it.
+An open Jira ticket that Gozu creates from a scan finding. It carries the repository, file, line, severity and branch of that finding. The branch is the branch of the Source PR. The agent never picks up a Gozu Ticket about a Fix branch. A human decides what happens to it.
 _Avoid_: Issue, finding (a finding is the scanner's record, and the ticket is Jira's)
 
 **Fix**:
@@ -39,6 +39,10 @@ _Avoid_: Password, key (a key can also be a ticket key)
 **Secret**:
 A credential value of the run, or a text that matches a known secret pattern, for example a private key header. A Fix must never hold a secret, and the Engine never sends one.
 _Avoid_: Sensitive data
+
+**Token ceiling**:
+The most tokens that one run may use. The code also calls it the budget. At the ceiling the run stops. The Engine publishes the Fixes that passed and leaves the other tickets for the next run.
+_Avoid_: Quota, limit (the diff limit is another rule)
 
 **Failed Fix**:
 A Gozu Ticket that the agent could not fix safely. The ticket stays open with a comment and a marker label. It stays open until a human asks for another attempt.

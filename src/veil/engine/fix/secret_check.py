@@ -13,7 +13,7 @@ def ensure_no_secret(
     A secret that was already in a file does not count.
     The reason names the kind of secret and where it is. It never holds the value.
     """
-    values = context.secret_values
+    values = context.credential_values
     for before, after in working_copy.edits():
         found = find_new_secret(before, after, values)
         if found:

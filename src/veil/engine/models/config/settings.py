@@ -25,7 +25,9 @@ class Settings(BaseModel):
     token_ceiling: int = Field(default=TOKEN_CEILING, ge=1)
     shared_pr_max: int = Field(default=SHARED_PR_MAX, ge=1)
     branch_prefix: str = Field(
-        default=FIX_BRANCH_PREFIX, min_length=3, pattern=r"^[A-Za-z0-9._/-]*[/-]$"
+        default=FIX_BRANCH_PREFIX,
+        min_length=3,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._/-]*[/-]$",
     )
     severity_map: dict[str, Bucket] = Field(
         default_factory=lambda: dict(DEFAULT_SEVERITY_MAP)
@@ -37,6 +39,14 @@ class Settings(BaseModel):
     read_file_max_lines: int = Field(default=READ_FILE_MAX_LINES, ge=1)
     search_max_matches: int = Field(default=SEARCH_MAX_MATCHES, ge=1)
     extra_refused_read_patterns: tuple[str, ...] = ()
+
+    @field_validator("branch_prefix")
+    @classmethod
+    def _safe_branch_prefix(cls, value: str) -> str:
+        """Refuse a prefix that Git can read as a path trick or as an option."""
+        if any(part in value for part in ("..", "//", "/.")):
+            raise ValueError("branch_prefix must not hold '..', '//' or '/.'.")
+        return value
 
     @field_validator("severity_map")
     @classmethod

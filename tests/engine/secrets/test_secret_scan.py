@@ -27,7 +27,7 @@ def test_a_credential_of_this_run_in_an_added_line_fails_the_attempt_and_the_str
     context, tracker, repos, _ = make_context(
         tmp_path,
         {"cheap-model": edit_that_adds(CREDENTIAL), "strong-model": EDIT_THEN_FINISH},
-        secrets=(CREDENTIAL,),
+        credentials=(CREDENTIAL,),
     )
 
     report = run(context)
@@ -44,7 +44,7 @@ def test_if_both_attempts_add_the_credential_the_ticket_is_a_failed_fix_and_the_
     context, tracker, repos, _ = make_context(
         tmp_path,
         both_attempts(edit_that_adds(CREDENTIAL)),
-        secrets=(CREDENTIAL,),
+        credentials=(CREDENTIAL,),
     )
 
     report = run(context)
@@ -137,7 +137,7 @@ def test_a_secret_in_the_explanation_or_the_commit_message_fails_the_attempt(
             ],
             "strong-model": EDIT_THEN_FINISH,
         },
-        secrets=(CREDENTIAL,),
+        credentials=(CREDENTIAL,),
     )
 
     report = run(context)
@@ -153,7 +153,7 @@ def test_the_redaction_net_hides_a_credential_in_a_ticket_field_in_the_failed_fi
         tmp_path,
         [[finish("Nothing.")]],
         file=f"{CREDENTIAL}.py",
-        secrets=(CREDENTIAL,),
+        credentials=(CREDENTIAL,),
     )
 
     report = run(context)
@@ -181,7 +181,7 @@ def test_the_redaction_net_hides_a_credential_in_the_pr_body_and_the_ticket_comm
         severity="High",
         line=1,
         extra_tickets=[{"key": "GR-101", "line": 2}],
-        secrets=(CREDENTIAL,),
+        credentials=(CREDENTIAL,),
     )
 
     report = run(context)
@@ -254,7 +254,7 @@ def test_the_run_report_never_holds_a_credential_even_in_a_ticket_key(tmp_path):
         tmp_path,
         both_attempts([[finish("Nothing.")]]),
         key=f"GR-{CREDENTIAL}",
-        secrets=(CREDENTIAL,),
+        credentials=(CREDENTIAL,),
     )
 
     report = run(context)

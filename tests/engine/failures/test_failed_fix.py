@@ -68,3 +68,21 @@ def test_failed_fix_does_not_stop_the_next_ticket(tmp_path):
     assert len(repos.pull_requests) == 1
     assert tracker.labels_on("GR-101") == []
     assert tracker.status_of("GR-101") == "In Review"
+
+
+def test_a_failed_comment_write_does_not_make_the_next_run_try_the_ticket_again(
+    tmp_path,
+):
+    context, tracker, repos, model = make_context(
+        tmp_path, both_attempts([[finish("Nothing to do.")]])
+    )
+    tracker.explode_on_next_comment()
+    with pytest.raises(RuntimeError):
+        run(context)
+    calls_after_first_run = len(model.models_used)
+
+    report = run(context)
+
+    assert report.skipped == {"failed_fix": ["GR-100"]}
+    assert len(model.models_used) == calls_after_first_run
+    assert repos.pull_requests == []

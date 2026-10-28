@@ -1,6 +1,6 @@
 from tests.fakes import edit_file, finish
 from tests.support.scenario import make_context
-from veil.engine import Settings, run
+from veil.engine import FixQuery, Settings, run
 
 BUGGY = "value = eval(input())\n"
 FIXED_LINE = "value = int(input())\n"
@@ -40,7 +40,13 @@ def test_low_and_medium_fixes_of_one_source_pr_go_into_one_shared_pr(tmp_path):
     for key, label in (("GR-100", "issue-gr-100"), ("GR-101", "issue-gr-101")):
         assert pr.url in tracker.comments_on(key)[0]
         assert tracker.status_of(key) == "In Review"
-        assert repos.find_existing_fix("acme/app", label) is not None
+        query = FixQuery(
+            repo="acme/app",
+            issue_label=label,
+            source_branch="feature",
+            branch_prefix="gozu/fix-",
+        )
+        assert repos.find_existing_fix(query) == "open_pr"
 
 
 def toggles(path, count):

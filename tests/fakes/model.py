@@ -1,4 +1,6 @@
-from veil.engine import ModelReply, ToolCall
+import json
+
+from veil.engine import ModelReply, ToolCall, ToolDefinition
 
 
 def edit_file(path: str, old: str, new: str) -> ToolCall:
@@ -45,16 +47,41 @@ class FakeModelClient:
         self._shared = None if isinstance(script, dict) else list(script)
         self._tokens_per_call = tokens_per_call
         self.received: list[list[dict]] = []
+        self.tools_received: list[list[ToolDefinition]] = []
         self.models_used: list[str] = []
+        self._call_count = 0
 
     def everything_received(self) -> str:
-        return "\n".join(m["content"] for call in self.received for m in call)
+        return "\n".join(
+            m["content"] or json.dumps(m["tool_calls"])
+            for call in self.received
+            for m in call
+        )
 
     def first_prompt(self) -> str:
-        return self.received[0][0]["content"]
+        return next(m["content"] for m in self.received[0] if m["role"] == "user")
 
-    def next(self, messages: list[dict], model: str) -> ModelReply:
+    def next(
+        self, messages: list[dict], model: str, tools: list[ToolDefinition]
+    ) -> ModelReply:
+        """Check the conversation as a real API does. Then return the next scripted reply."""
+        _check_conversation(messages)
         self.models_used.append(model)
         self.received.append([dict(m) for m in messages])
+        self.tools_received.append(list(tools))
         queue = self._shared if self._by_model is None else self._by_model[model]
-        return ModelReply(tool_calls=queue.pop(0), tokens=self._tokens_per_call)
+        calls = []
+        for call in queue.pop(0):
+            self._call_count += 1
+            calls.append(call.model_copy(update={"id": f"call_{self._call_count}"}))
+        return ModelReply(tool_calls=calls, tokens=self._tokens_per_call)
+
+
+def _check_conversation(messages: list[dict]) -> None:
+    """Refuse a conversation that a real API refuses: a tool message without a call that it answers."""
+    asked: set[str] = set()
+    for message in messages:
+        if message["role"] == "assistant":
+            asked.update(call["id"] for call in message.get("tool_calls", []))
+        if message["role"] == "tool" and message.get("tool_call_id") not in asked:
+            raise ValueError("A tool message must answer a call of the model.")
