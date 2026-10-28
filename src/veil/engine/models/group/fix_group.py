@@ -1,7 +1,6 @@
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict
 
+from veil.engine.constants.group_kinds import HIGH_GROUP, GroupKind
 from veil.engine.models.ticket.ticket import Ticket
 
 
@@ -13,7 +12,7 @@ class FixGroup(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    kind: Literal["shared", "high"]
+    kind: GroupKind
     repo: str
     branch: str
     tickets: tuple[Ticket, ...]
@@ -25,10 +24,10 @@ class FixGroup(BaseModel):
         A ticket that failed gives no name. A later run can then make a new PR for that ticket without a branch clash.
         """
         key = first_fixed_key.lower()
-        return f"{prefix}{key}" if self.kind == "high" else f"{prefix}shared-{key}"
+        return f"{prefix}{key}" if self.kind == HIGH_GROUP else f"{prefix}shared-{key}"
 
     def title(self, keys: list[str]) -> str:
         """The title of the Fix PR. A high group names its tickets. A shared group gives the count."""
-        if self.kind == "high":
+        if self.kind == HIGH_GROUP:
             return f"Fix {', '.join(keys)}"
         return f"Fix {len(keys)} tickets"

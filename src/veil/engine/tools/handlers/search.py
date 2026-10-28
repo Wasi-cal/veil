@@ -1,9 +1,9 @@
 import re
 
+from veil.engine.constants.tool_messages import NARROW_NOTE
 from veil.engine.models.config.settings import Settings
 from veil.engine.models.tool_args.search_args import SearchArgs
 from veil.engine.tools.handlers.readable import readable_files
-from veil.engine.tools.result_cap import NARROW_NOTE
 from veil.engine.workspace.working_copy import WorkingCopy
 
 

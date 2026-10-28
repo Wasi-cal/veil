@@ -1,5 +1,6 @@
 import posixpath
 
+from veil.engine.constants.group_kinds import HIGH_GROUP, SHARED_GROUP
 from veil.engine.constants.severity import HIGH
 from veil.engine.grouping.severity import bucket_of
 from veil.engine.models.config.settings import Settings
@@ -27,7 +28,7 @@ def plan_groups(tickets: list[Ticket], settings: Settings) -> GroupPlan:
             shared.setdefault((ticket.repo, ticket.branch), []).append(ticket)
     high_groups = [
         FixGroup(
-            kind="high",
+            kind=HIGH_GROUP,
             repo=repo,
             branch=branch,
             tickets=tuple(group),
@@ -41,7 +42,9 @@ def plan_groups(tickets: list[Ticket], settings: Settings) -> GroupPlan:
     ]
     cap = settings.shared_pr_max
     shared_groups = [
-        FixGroup(kind="shared", repo=repo, branch=branch, tickets=tuple(group[:cap]))
+        FixGroup(
+            kind=SHARED_GROUP, repo=repo, branch=branch, tickets=tuple(group[:cap])
+        )
         for (repo, branch), group in shared.items()
     ]
     left = tuple(ticket for group in shared.values() for ticket in group[cap:])

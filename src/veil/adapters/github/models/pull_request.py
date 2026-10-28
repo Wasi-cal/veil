@@ -1,6 +1,6 @@
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict
+
+from veil.adapters.github.constants.pr_states import PrState
 
 
 class PullRequest(BaseModel):
@@ -13,7 +13,7 @@ class PullRequest(BaseModel):
     head_repo: str
     head_branch: str
     base_branch: str
-    state: Literal["open", "closed", "merged"]
+    state: PrState
     labels: tuple[str, ...]
     title: str
     body: str

@@ -4,6 +4,7 @@ from veil.engine.constants.branches import FIX_BRANCH_PREFIX
 from veil.engine.constants.limits import (
     DIFF_LIMIT,
     EXPLANATION_MAX_SENTENCES,
+    MIN_TOOL_RESULT_MAX_BYTES,
     READ_FILE_MAX_LINES,
     SEARCH_MAX_MATCHES,
     SHARED_PR_MAX,
@@ -11,7 +12,7 @@ from veil.engine.constants.limits import (
     TOKEN_CEILING,
     TOOL_RESULT_MAX_BYTES,
 )
-from veil.engine.constants.models import CHEAP_MODEL, STRONG_MODEL
+from veil.engine.constants.model_names import CHEAP_MODEL, STRONG_MODEL
 from veil.engine.constants.severity import DEFAULT_SEVERITY_MAP, Bucket
 
 
@@ -35,7 +36,9 @@ class Settings(BaseModel):
     step_cap: int = Field(default=STEP_CAP, ge=1)
     explanation_max_sentences: int = Field(default=EXPLANATION_MAX_SENTENCES, ge=1)
     diff_limit: int = Field(default=DIFF_LIMIT, ge=0)
-    tool_result_max_bytes: int = Field(default=TOOL_RESULT_MAX_BYTES, ge=256)
+    tool_result_max_bytes: int = Field(
+        default=TOOL_RESULT_MAX_BYTES, ge=MIN_TOOL_RESULT_MAX_BYTES
+    )
     read_file_max_lines: int = Field(default=READ_FILE_MAX_LINES, ge=1)
     search_max_matches: int = Field(default=SEARCH_MAX_MATCHES, ge=1)
     extra_refused_read_patterns: tuple[str, ...] = ()

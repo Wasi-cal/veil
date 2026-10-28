@@ -10,7 +10,7 @@ No secret may reach a commit, a pull request, a Jira comment, a log or a run rep
 - **Only new secrets count.** A secret counts only if the new text holds it more often than the old text. A secret that was in the file before does not block a Fix, even if the Fix edits the same line.
 - **The scan runs before the syntax check.** A parser error can quote text from the edit, for example the name of a key. The scan finds the secret first, so the error never reaches a comment or a prompt.
 - **The redaction covers the rest.** The Engine replaces each credential value and each text that matches a secret pattern with `[redacted]`. It does this in every text that it sends. These texts are the PR title and body, the commit message and the Jira comments. They are also the reasons of Failed Fixes, the reason that goes to the strong model and the run report. The Engine exports `redact` for adapters and Shells.
-- **The patterns.** Private key headers, AWS key ids, GitHub tokens, Google API keys, Slack tokens, keys that start with `sk-` and Atlassian API tokens. The list is in `constants/secret_patterns.py`. We left out rules for text such as `password = "..."`, because they fail honest Fixes.
+- **The patterns.** Private key headers, AWS key ids, GitHub tokens, Google API keys, Slack tokens, keys that start with `sk-` and Atlassian API tokens. The list is in `constants/secrets.py`. The marker `[redacted]` and the name of the credential kind are there too. We left out rules for text such as `password = "..."`, because they fail honest Fixes.
 
 ## What we accept for now
 

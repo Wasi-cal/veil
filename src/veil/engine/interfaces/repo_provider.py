@@ -1,6 +1,6 @@
 from typing import Protocol, runtime_checkable
 
-from veil.engine.constants.skip_reasons import FixKind
+from veil.engine.constants.fix_kinds import FixKind
 from veil.engine.interfaces.workspace import Workspace
 from veil.engine.models.provider.draft_pr import DraftPr
 from veil.engine.models.provider.fix_query import FixQuery

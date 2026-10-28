@@ -1,5 +1,10 @@
 import re
 
+# The text that replaces a credential value or a text that matches a secret pattern.
+REDACTED = "[redacted]"
+# The kind of secret that the scan reports when it finds a credential value of the run.
+CREDENTIAL_KIND = "a credential of this run"
+
 # The kind of secret and a pattern that finds it. The kind goes in the reason of a failed attempt.
 SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     (

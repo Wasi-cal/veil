@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from veil.adapters.github.constants.git import REF_PREFIX
 from veil.adapters.github.git_command import refuse_option_like, run_git
 from veil.engine.errors.repo_provider_error import RepoProviderError
 
@@ -46,7 +47,7 @@ class GitWorkspace:
     def push(self, branch: str) -> None:
         """Push one local branch to the branch of the same name. Never force. Never push another ref."""
         refuse_option_like(branch)
-        ref = f"refs/heads/{branch}"
+        ref = f"{REF_PREFIX}{branch}"
         self._git("push", "origin", f"{ref}:{ref}")
 
     def discard_changes(self) -> None:

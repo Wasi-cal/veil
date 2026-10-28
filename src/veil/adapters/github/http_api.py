@@ -1,19 +1,22 @@
 import json
-import re
 import urllib.error
 import urllib.request
-from typing import Literal
 from urllib.parse import quote, urlencode
 
 from pydantic import SecretStr
 
+from veil.adapters.github.constants.http import (
+    API_URL,
+    API_VERSION,
+    ERROR_DETAIL_MAX_CHARS,
+    PAGE_SIZE,
+    TIMEOUT_SECONDS,
+)
+from veil.adapters.github.constants.pr_states import MERGED, PrState
+from veil.adapters.github.constants.repo_name import REPO_NAME
 from veil.adapters.github.models.pull_request import PullRequest
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.secrets.redact import redact
-
-API_URL = "https://api.github.com"
-PAGE_SIZE = 100
-TIMEOUT_SECONDS = 30
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -24,7 +27,6 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 _OPENER = urllib.request.build_opener(_NoRedirect)
-REPO_NAME = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 
 
 class HttpGitHubApi:
@@ -96,9 +98,7 @@ class HttpGitHubApi:
     @staticmethod
     def _pull_request(item: dict) -> PullRequest:
         head_repo = (item["head"].get("repo") or {}).get("full_name", "")
-        state: Literal["open", "closed", "merged"] = (
-            "merged" if item.get("merged_at") else item["state"]
-        )
+        state: PrState = MERGED if item.get("merged_at") else item["state"]
         return PullRequest(
             url=item["html_url"],
             base_repo=item["base"]["repo"]["full_name"],
@@ -130,7 +130,7 @@ class HttpGitHubApi:
                 "Authorization": f"Bearer {self._token.get_secret_value()}",
                 "Accept": "application/vnd.github+json",
                 "Content-Type": "application/json",
-                "X-GitHub-Api-Version": "2022-11-28",
+                "X-GitHub-Api-Version": API_VERSION,
             },
         )
         secrets = (self._token.get_secret_value(),)
@@ -138,7 +138,7 @@ class HttpGitHubApi:
             with _OPENER.open(request, timeout=TIMEOUT_SECONDS) as response:
                 return json.load(response)
         except urllib.error.HTTPError as failure:
-            detail = failure.read().decode(errors="replace")[:500]
+            detail = failure.read().decode(errors="replace")[:ERROR_DETAIL_MAX_CHARS]
             raise RepoProviderError(
                 redact(
                     f"GitHub {method} {path} failed with {failure.code}. {detail}",

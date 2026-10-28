@@ -7,6 +7,9 @@ from typing import Self
 from pydantic import SecretStr
 
 from veil.adapters.github.api import GitHubApi
+from veil.adapters.github.constants.git import REF_PREFIX
+from veil.adapters.github.constants.modes import DIR_MODE
+from veil.adapters.github.constants.pr_states import CLOSED, OPEN
 from veil.adapters.github.git_command import (
     git_environment,
     refuse_option_like,
@@ -15,7 +18,7 @@ from veil.adapters.github.git_command import (
 )
 from veil.adapters.github.workspace import GitWorkspace
 from veil.engine.constants.branches import FIX_BRANCH_PREFIX
-from veil.engine.constants.skip_reasons import FixKind
+from veil.engine.constants.fix_kinds import FIX_BRANCH, OPEN_PR, FixKind
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.models.provider.draft_pr import DraftPr
 from veil.engine.models.provider.fix_query import FixQuery
@@ -46,7 +49,7 @@ class GitHubRepoProvider:
         self._branch_prefix = branch_prefix
         self._temp_root = temp_root
         if temp_root is not None:
-            temp_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+            temp_root.mkdir(mode=DIR_MODE, parents=True, exist_ok=True)
         self._directories: list[Path] = []
         self._workspaces: dict[tuple[str, Path], GitWorkspace] = {}
 
@@ -65,7 +68,7 @@ class GitHubRepoProvider:
 
     def has_open_pr(self, repo: str, branch: str) -> bool:
         return any(
-            pr.state == "open" and _same_repo(pr.head_repo, repo)
+            pr.state == OPEN and _same_repo(pr.head_repo, repo)
             for pr in self._api.find_pull_requests(repo, head=branch)
         )
 
@@ -76,15 +79,15 @@ class GitHubRepoProvider:
             if _same_repo(pr.head_repo, query.repo)
             and pr.base_branch == query.source_branch
         ]
-        if any(pr.state == "open" for pr in found):
-            return "open_pr"
+        if any(pr.state == OPEN for pr in found):
+            return OPEN_PR
         if any(
-            pr.state == "closed"
+            pr.state == CLOSED
             and pr.head_branch.startswith(query.branch_prefix)
             and self._branch_exists(query.repo, pr.head_branch)
             for pr in found
         ):
-            return "fix_branch"
+            return FIX_BRANCH
         return None
 
     def _branch_exists(self, repo: str, branch: str) -> bool:
@@ -99,7 +102,7 @@ class GitHubRepoProvider:
                 "--heads",
                 "--",
                 self._remote_url(repo),
-                f"refs/heads/{branch}",
+                f"{REF_PREFIX}{branch}",
             )
         return bool(listing.strip())
 
@@ -140,7 +143,7 @@ class GitHubRepoProvider:
                 f"Refused to push {draft.head} for a PR against {draft.base}."
             )
         for pr in self._api.find_pull_requests(draft.repo, head=draft.head):
-            if pr.state == "open" and _same_repo(pr.head_repo, draft.repo):
+            if pr.state == OPEN and _same_repo(pr.head_repo, draft.repo):
                 return pr.url
         for (repo, _), workspace in self._workspaces.items():
             if repo == draft.repo and workspace.has_branch(draft.head):

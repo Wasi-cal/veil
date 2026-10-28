@@ -1,7 +1,7 @@
 import re
 from collections import Counter
 
-from veil.engine.constants.secret_patterns import SECRET_PATTERNS
+from veil.engine.constants.secrets import CREDENTIAL_KIND, SECRET_PATTERNS
 
 
 def _secrets_in(text: str, values: tuple[str, ...]) -> list[tuple[str, str]]:
@@ -10,7 +10,7 @@ def _secrets_in(text: str, values: tuple[str, ...]) -> list[tuple[str, str]]:
     for value in values:
         if value:
             found += [
-                ("a credential of this run", match.group())
+                (CREDENTIAL_KIND, match.group())
                 for match in re.finditer(re.escape(value), text)
             ]
     for kind, pattern in SECRET_PATTERNS:

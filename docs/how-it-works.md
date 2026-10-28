@@ -166,7 +166,7 @@ These rules are code. Settings cannot turn them off.
 | How the Engine finds and hides secrets | `secrets/` |
 | What the Engine needs from Jira, GitHub or the model | `interfaces/` |
 | The shape of a ticket, a setting or the report | `models/` |
-| A fixed value, such as a limit or a tool name | `constants/` |
+| A fixed value, such as a limit or a tool name | `constants/` (an adapter has its own `constants/`) |
 
 A folder imports only from the folders below it. The file `run.py` is at the top. The folders `errors/` and `constants/` are at the bottom. A contract in `pyproject.toml` checks this.
 

@@ -1,8 +1,8 @@
+from veil.engine.constants.tool_messages import NARROW_NOTE
 from veil.engine.errors.rule_violation import RuleViolation
 from veil.engine.models.config.settings import Settings
 from veil.engine.models.tool_args.read_file_args import ReadFileArgs
 from veil.engine.tools.handlers.readable import readable_path
-from veil.engine.tools.result_cap import NARROW_NOTE
 from veil.engine.workspace.working_copy import WorkingCopy
 
 

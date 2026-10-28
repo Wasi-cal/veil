@@ -5,26 +5,15 @@ from pathlib import Path
 
 from pydantic import SecretStr
 
+from veil.adapters.github.constants.git import (
+    AUTHOR_EMAIL,
+    AUTHOR_NAME,
+    GITHUB_URL,
+    NETWORK_VARIABLES,
+    TOKEN_USER,
+)
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.secrets.redact import redact
-
-GITHUB_URL = "https://github.com/"
-AUTHOR_NAME = "Gozu Veil"
-AUTHOR_EMAIL = "veil@gozu.invalid"
-# Git needs these to reach GitHub through a proxy or with a company certificate.
-NETWORK_VARIABLES = (
-    "HTTP_PROXY",
-    "HTTPS_PROXY",
-    "ALL_PROXY",
-    "NO_PROXY",
-    "http_proxy",
-    "https_proxy",
-    "all_proxy",
-    "no_proxy",
-    "SSL_CERT_FILE",
-    "SSL_CERT_DIR",
-    "GIT_SSL_CAINFO",
-)
 
 
 def refuse_option_like(name: str) -> None:
@@ -37,7 +26,7 @@ def refuse_option_like(name: str) -> None:
 
 def _basic_credential(token: SecretStr) -> str:
     return base64.b64encode(
-        f"x-access-token:{token.get_secret_value()}".encode()
+        f"{TOKEN_USER}:{token.get_secret_value()}".encode()
     ).decode()
 
 

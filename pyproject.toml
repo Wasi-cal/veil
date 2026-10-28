@@ -42,3 +42,14 @@ layers = [
   "veil.engine.models",
   "veil.engine.errors | veil.engine.constants",
 ]
+
+[[tool.importlinter.contracts]]
+name = "github adapter folders import only from the folders below them"
+type = "layers"
+layers = [
+  "veil.adapters.github.provider",
+  "veil.adapters.github.http_api | veil.adapters.github.workspace",
+  "veil.adapters.github.git_command | veil.adapters.github.api",
+  "veil.adapters.github.models",
+  "veil.adapters.github.constants",
+]

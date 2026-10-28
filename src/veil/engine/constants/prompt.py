@@ -2,6 +2,8 @@ CONTEXT_LINES_EACH_SIDE = 20
 UNTRUSTED_TICKET_TAG = "untrusted_ticket_data"
 UNTRUSTED_FILE_TAG = "untrusted_file_data"
 UNTRUSTED_FAILURE_TAG = "untrusted_failure_reason"
+# The tags that wrap text that the model must treat as data.
+ALL_UNTRUSTED_TAGS = (UNTRUSTED_TICKET_TAG, UNTRUSTED_FILE_TAG, UNTRUSTED_FAILURE_TAG)
 SYSTEM_PROMPT = (
     "You fix one security finding in one repository. "
     "Use the tools to read and edit the files. "

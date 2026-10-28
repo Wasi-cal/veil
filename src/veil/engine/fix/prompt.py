@@ -1,4 +1,5 @@
 from veil.engine.constants.prompt import (
+    ALL_UNTRUSTED_TAGS,
     CONTEXT_LINES_EACH_SIDE,
     SYSTEM_PROMPT,
     UNTRUSTED_FAILURE_TAG,
@@ -8,12 +9,10 @@ from veil.engine.constants.prompt import (
 from veil.engine.models.config.settings import Settings
 from veil.engine.models.ticket.ticket import Ticket
 
-_ALL_TAGS = (UNTRUSTED_TICKET_TAG, UNTRUSTED_FILE_TAG, UNTRUSTED_FAILURE_TAG)
-
 
 def _inert(text: str) -> str:
     """Break each closing tag of an untrusted block, so that the text cannot end the block."""
-    for tag in _ALL_TAGS:
+    for tag in ALL_UNTRUSTED_TAGS:
         text = text.replace(f"</{tag}", f"<\\/{tag}")
     return text
 

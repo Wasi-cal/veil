@@ -1,4 +1,4 @@
-NARROW_NOTE = "The result is incomplete. Make the request narrower. For example, use a later start line or a more exact pattern."
+from veil.engine.constants.tool_messages import NARROW_NOTE
 
 
 def cap_result(text: str, limit: int) -> str:
