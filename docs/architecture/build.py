@@ -131,6 +131,19 @@ DESCRIPTIONS = {
     "tests/adapters/jira/test_gateway.py": "Tests that find the gateway URL from the cloud ID of a site.",
     "tests/adapters/jira/test_settings.py": "Tests that the settings refuse a project key or a label that could change the search.",
     "tests/fakes/github_fixtures.py": "Pull request answers in the shape of the GitHub API.",
+    "src/veil/adapters/openai/api.py": "The OpenAIApi interface: send items and tools, get function calls and tokens.",
+    "src/veil/adapters/openai/client.py": "The real model client. Turns chat messages into Responses API items and the reply into a ModelReply.",
+    "src/veil/adapters/openai/constants/http.py": "API values: the URL, the path, the 120 second time-out and which failures a retry can help or cannot help.",
+    "src/veil/adapters/openai/constants/messages.py": "The error text for a reply that has no usage.",
+    "src/veil/adapters/openai/constants/items.py": "The kinds of item and the roles in the Responses API.",
+    "src/veil/adapters/openai/http_api.py": "The OpenAI Responses API over HTTP. Stateless. Hides the key in errors and says if a retry can help.",
+    "src/veil/adapters/openai/models/api_function_call.py": "One function call in a reply: the call id, the name and the JSON text of the arguments.",
+    "src/veil/adapters/openai/models/api_response.py": "What the client needs from a reply: the function calls and the tokens that the API counted.",
+    "src/veil/engine/errors/model_client_error.py": "Error type: the model client got no reply. It says if a retry can help.",
+    "tests/adapters/openai/test_client.py": "Client tests: conversion of messages and replies, bad arguments, tokens and a full run of the Engine.",
+    "tests/adapters/openai/test_http_api.py": "HTTP tests against a stub server: the request, the reply, the tokens, the errors and the retry flag.",
+    "tests/fakes/openai_api.py": "An OpenAIApi that plays a list of replies or errors.",
+    "tests/fakes/openai_fixtures.py": "Responses API answers in the shape of the public API reference.",
     "src/veil/engine/constants/statuses.py": "The ticket status that the Engine sets: In Review.",
     "src/veil/engine/constants/prompt.py": "Prompt values: the system message, 20 lines on each side of the flagged line and the untrusted tags.",
     "tests/architecture/test_layers.py": "Checks the folder order, the rule for adapters and shells, and that the Engine reads no environment variables.",
@@ -164,6 +177,7 @@ DESCRIPTIONS = {
 }
 
 GROUP_NOTES = {
+    "tests/adapters/openai": "Tests of the real model client against a stub API and a stub HTTP server.",
     "tests/adapters/jira": "Tests of the real tracker for Jira against a stub HTTP server.",
     "adapters": "The real parts that fit the interfaces of the Engine. The Engine never imports them.",
     "tests/adapters/github": "Tests of the real repo provider against a local git remote and a stub GitHub server.",
@@ -227,6 +241,7 @@ SRC_ORDER = [
 TEST_ORDER = [
     "tests/adapters/github",
     "tests/adapters/jira",
+    "tests/adapters/openai",
     "tests/engine/flow",
     "tests/engine/escalation",
     "tests/engine/budget",

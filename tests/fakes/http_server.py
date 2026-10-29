@@ -1,5 +1,6 @@
 import json
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Self
 from urllib.parse import parse_qs, urlsplit
@@ -25,6 +26,7 @@ class StubHttpServer:
     def __init__(self):
         self.routes: dict[tuple[str, str], tuple | list] = {}
         self.seen: list[SeenRequest] = []
+        self.delay_seconds = 0.0
         server = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -41,6 +43,7 @@ class StubHttpServer:
                         body=json.loads(raw) if raw else None,
                     )
                 )
+                time.sleep(server.delay_seconds)
                 answer = server.routes.get(
                     (self.command, parts.path), (404, {"message": "Not Found"})
                 )

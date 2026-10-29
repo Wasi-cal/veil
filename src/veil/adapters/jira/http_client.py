@@ -1,12 +1,8 @@
 import base64
 from typing import Any, TypeVar, overload
-from urllib.parse import urlsplit
 
-from veil.adapters.jira.constants.http import (
-    LOCAL_HOSTS,
-)
 from veil.adapters.jira.models.jira_credentials import JiraCredentials
-from veil.adapters.json_http import call_json
+from veil.adapters.json_http import call_json, plain_error, require_https
 from veil.engine.errors.tracker_error import TrackerError
 
 T = TypeVar("T")
@@ -16,11 +12,7 @@ class JiraHttp:
     """Calls the Jira REST API with JSON. The credentials go in the Authorization header and nowhere else."""
 
     def __init__(self, api_base: str, credentials: JiraCredentials | None):
-        parts = urlsplit(api_base)
-        if parts.scheme != "https" and not (
-            parts.scheme == "http" and parts.hostname in LOCAL_HOSTS
-        ):
-            raise TrackerError("Refused the Jira URL. It must use https.")
+        require_https(api_base, TrackerError, "Jira")
         self._api_base = api_base.rstrip("/")
         self._authorization: str | None = None
         self._secrets: tuple[str, ...] = ()
@@ -66,7 +58,7 @@ class JiraHttp:
     ) -> Any:
         reply = call_json(
             service="Jira",
-            error=TrackerError,
+            error=plain_error(TrackerError),
             secrets=self._secrets,
             base_url=self._api_base,
             method=method,

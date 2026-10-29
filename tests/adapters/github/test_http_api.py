@@ -122,3 +122,9 @@ def test_a_redirect_never_carries_the_token_to_another_host():
             api_for(server).find_pull_requests("acme/app", head="feature-x")
 
     assert elsewhere.seen == []
+
+
+@pytest.mark.parametrize("url", ["http://api.example.invalid", "file:///x", "api"])
+def test_the_adapter_refuses_a_url_that_is_not_https(url):
+    with pytest.raises(RepoProviderError):
+        HttpGitHubApi(SecretStr(TOKEN), base_url=url)

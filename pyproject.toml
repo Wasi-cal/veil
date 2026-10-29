@@ -73,4 +73,18 @@ source_modules = [
   "veil.adapters.no_redirect",
   "veil.adapters.constants",
 ]
-forbidden_modules = ["veil.adapters.github", "veil.adapters.jira"]
+forbidden_modules = [
+  "veil.adapters.github",
+  "veil.adapters.jira",
+  "veil.adapters.openai",
+]
+
+[[tool.importlinter.contracts]]
+name = "openai adapter folders import only from the folders below them"
+type = "layers"
+layers = [
+  "veil.adapters.openai.client | veil.adapters.openai.http_api",
+  "veil.adapters.openai.api",
+  "veil.adapters.openai.models",
+  "veil.adapters.openai.constants",
+]

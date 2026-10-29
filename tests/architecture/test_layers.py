@@ -38,12 +38,23 @@ def test_engine_reads_no_environment_variables():
 REGISTRIES = {"TOOLS", "PARSERS", "_OPENER"}
 
 
+def _is_type_variable(node: ast.stmt) -> bool:
+    """A line such as `T = TypeVar("T")` names a type. It is not a constant."""
+    return (
+        isinstance(node, ast.Assign)
+        and isinstance(node.value, ast.Call)
+        and getattr(node.value.func, "id", "") == "TypeVar"
+    )
+
+
 def constants_outside_the_constants_folders(allowed: set[str]) -> list[str]:
     offenders = []
     for path in (ROOT / "src").rglob("*.py"):
         if "constants" in path.parts:
             continue
         for node in ast.parse(path.read_text()).body:
+            if _is_type_variable(node):
+                continue
             targets = (
                 node.targets
                 if isinstance(node, ast.Assign)

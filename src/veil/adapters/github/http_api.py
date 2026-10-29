@@ -10,7 +10,7 @@ from veil.adapters.github.constants.http import (
 from veil.adapters.github.constants.pr_states import MERGED, PrState
 from veil.adapters.github.constants.repo_name import REPO_NAME
 from veil.adapters.github.models.pull_request import PullRequest
-from veil.adapters.json_http import call_json
+from veil.adapters.json_http import call_json, plain_error, require_https
 from veil.engine.errors.repo_provider_error import RepoProviderError
 
 
@@ -21,6 +21,7 @@ class HttpGitHubApi:
     """
 
     def __init__(self, token: SecretStr, base_url: str = API_URL):
+        require_https(base_url, RepoProviderError, "GitHub")
         self._token = token
         self._base_url = base_url.rstrip("/")
 
@@ -106,7 +107,7 @@ class HttpGitHubApi:
     ) -> Any:
         reply = call_json(
             service="GitHub",
-            error=RepoProviderError,
+            error=plain_error(RepoProviderError),
             secrets=(self._token.get_secret_value(),),
             base_url=self._base_url,
             method=method,

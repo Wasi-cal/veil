@@ -25,4 +25,4 @@ Every fixed value lives in a `constants/` folder. A file in `constants/` holds o
 - **A type that names a set of values**, such as `FixKind` or `PrState`, sits next to its values.
 - **A registry stays in its module.** `TOOLS`, `PARSERS` and the HTTP opener of the GitHub adapter hold functions or objects that come from code. A constants folder cannot import that code.
 
-A test in `tests/architecture` fails if a module outside a `constants/` folder defines an upper-case name. The three registries are the only exceptions.
+A test in `tests/architecture` fails if a module outside a `constants/` folder defines an upper-case name. The registries are the only exceptions. A type variable such as `T = TypeVar("T")` is not a constant, so the test skips it.
