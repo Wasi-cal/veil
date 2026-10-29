@@ -6,6 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from pydantic_core import PydanticCustomError
 
 from veil.engine.constants.branches import FIX_BRANCH_PREFIX
+from veil.engine.constants.credential_names import (
+    DEFAULT_JIRA_EMAIL_ENV,
+    DEFAULT_JIRA_TOKEN_ENV,
+    DEFAULT_OPENAI_KEY_ENV,
+)
 from veil.engine.constants.labels import DEFAULT_ELIGIBLE_LABEL, FAILED_FIX_LABEL
 from veil.engine.constants.limits import (
     DIFF_LIMIT,
@@ -41,6 +46,7 @@ from veil.engine.constants.settings_bounds import (
 from veil.engine.constants.settings_patterns import (
     BRANCH_PREFIX,
     CRON,
+    ENV_NAME,
     LABEL,
     PROJECT_KEY,
     REPO,
@@ -173,6 +179,28 @@ class Settings(BaseModel):
     )
     jira_project_keys: tuple[str, ...] = _setting(
         (), TIGHTEN_LOCKED, READER_SHELL, max_length=MAX_LIST_ENTRIES
+    )
+    # The names of the environment variables that hold the credentials. A value is never a setting.
+    jira_email_env: str = _setting(
+        DEFAULT_JIRA_EMAIL_ENV,
+        TIGHTEN_FREE,
+        READER_SHELL,
+        pattern=ENV_NAME,
+        max_length=MAX_NAME_CHARS,
+    )
+    jira_token_env: str = _setting(
+        DEFAULT_JIRA_TOKEN_ENV,
+        TIGHTEN_FREE,
+        READER_SHELL,
+        pattern=ENV_NAME,
+        max_length=MAX_NAME_CHARS,
+    )
+    openai_key_env: str = _setting(
+        DEFAULT_OPENAI_KEY_ENV,
+        TIGHTEN_FREE,
+        READER_SHELL,
+        pattern=ENV_NAME,
+        max_length=MAX_NAME_CHARS,
     )
     repos_allow: tuple[str, ...] = _setting(
         (), TIGHTEN_LOCKED, READER_SHELL, max_length=MAX_LIST_ENTRIES

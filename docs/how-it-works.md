@@ -118,6 +118,18 @@ Before each model call, the Engine checks the count. If the count is at the ceil
 
 The cheap model name, the strong model name and the ceiling are settings.
 
+## The GitHub Action Shell
+
+The Action is the first Shell (ADR 0013). It runs the Engine once for the repo of the workflow. `run_action(environ)` is its entry point.
+
+1. It reads the repo, the workspace and the event from the runner. It loads `.gozu/jira-to-pr.yml` as the repo settings.
+2. It checks the event. `schedule`, `workflow_dispatch` and `repository_dispatch` may run. Each one needs its setting to be on. Any other event fails.
+3. It reads the Jira and OpenAI credentials from the variables that the settings name. It masks them in the log.
+4. It mints a GitHub App installation token for this repo alone. It checks the token and masks it.
+5. It builds the context, runs the Engine, closes the checkouts and writes the run report to the step summary.
+
+Any failure before step 5 stops the run with one error line and exit code 1. No ticket changes. A Failed Fix is not a failure.
+
 ## Settings
 
 Every number and every name that the Engine uses is a setting. Each setting has a default in code, a type, a minimum and a maximum. `docs/settings-catalog.md` lists them all. The declaration of the settings makes it. A test fails if the file is old.

@@ -1,0 +1,5 @@
+name: Veil
+description: Fix the open Gozu Tickets of this repo and open draft Fix PRs for human review.
+runs:
+  using: docker
+  image: docker://ghcr.io/calfus/veil:v1

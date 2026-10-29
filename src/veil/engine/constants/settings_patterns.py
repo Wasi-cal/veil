@@ -8,3 +8,5 @@ BRANCH_PREFIX = r"^[A-Za-z0-9][A-Za-z0-9._/-]*[/-]$"
 SITE_URL = r"^(https://[^\s/@]+(/[^\s@]*)?)?$"
 # Five fields that a space separates.
 CRON = r"^\S+( \S+){4}$"
+# The name of an environment variable. It has capital letters, digits and underscores.
+ENV_NAME = r"^[A-Z][A-Z0-9_]*$"

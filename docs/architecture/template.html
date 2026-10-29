@@ -124,7 +124,7 @@
   <div class="stat" id="stat"></div>
   <h2>What is outside the Engine</h2>
   <div class="grid">
-    <div class="card"><h3><code>adapters/</code> and <code>shells/</code></h3><p>These folders are empty today. The real Jira, GitHub and OpenAI parts go in <code>adapters/</code> (tickets GR-18 to GR-20). The two ways to run the Engine go in <code>shells/</code>.</p></div>
+    <div class="card"><h3><code>adapters/</code> and <code>shells/</code></h3><p><code>adapters/</code> holds the real Jira, GitHub, OpenAI, PostgreSQL and Redis parts. <code>shells/</code> holds the two ways to run the Engine. The GitHub Action is built (GR-24). The service comes in GR-25.</p></div>
     <div class="card"><h3><code>tests/</code></h3><p>Almost every test calls <code>run(context)</code> with three fakes. Open the tab "Files and links" and choose "Tests" to see them.</p></div>
     <div class="card"><h3><code>docs/</code></h3><p>The decisions (ADR 0001 to 0003) and this page.</p></div>
   </div>

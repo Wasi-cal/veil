@@ -13,6 +13,41 @@ ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = Path(__file__).resolve().parent / "index.html"
 
 DESCRIPTIONS = {
+    "src/veil/shells/github_action/models/app_credentials.py": "The GitHub App id and private key that the Action reads.",
+    "src/veil/shells/github_action/own_repo_tracker.py": "Wraps the tracker so the Engine sees only the tickets of the repo of the workflow.",
+    "tests/shells/github_action/test_own_repo.py": "Tests that the Engine never sees a ticket of another repo.",
+    "src/veil/adapters/github/app_token.py": "Mints a GitHub App installation token for one repo. It signs a JWT, finds the installation and checks the repos and permissions of the token.",
+    "src/veil/adapters/github/constants/app.py": "The JWT settings, the two token permissions and the messages of the token source.",
+    "src/veil/adapters/github/token_source.py": "The TokenSource interface: give a short-lived GitHub token for one repo.",
+    "src/veil/engine/constants/credential_names.py": "The default names of the environment variables that hold the Jira and OpenAI credentials.",
+    "src/veil/shells/github_action/constants/credential_env.py": "The variable prefixes that a setting may not name for a credential.",
+    "src/veil/shells/github_action/constants/environment.py": "The names of the runner variables and the App variables.",
+    "src/veil/shells/github_action/constants/events.py": "The events that may start a run and the setting that turns on each one.",
+    "src/veil/shells/github_action/constants/messages.py": "The messages and the summary titles of the Action.",
+    "src/veil/shells/github_action/constants/urls.py": "The address that git clones from.",
+    "src/veil/shells/github_action/context_builder.py": "Builds the Engine context from the real adapters. It gives each credential to one adapter only.",
+    "src/veil/shells/github_action/credentials.py": "Reads the Jira and OpenAI credentials from the variables that the settings name, and the App id and key. It refuses reserved and shared names.",
+    "src/veil/shells/github_action/environment.py": "Reads the repo, the workspace and the event from the runner variables.",
+    "src/veil/shells/github_action/errors/action_failure.py": "The error for a stop that has a safe message.",
+    "src/veil/shells/github_action/main.py": "Starts the Action from the container.",
+    "src/veil/shells/github_action/masking.py": "Asks the runner to hide a value in the log. It does this line by line.",
+    "src/veil/shells/github_action/models/action_credentials.py": "The Jira and OpenAI credentials that the Action read.",
+    "src/veil/shells/github_action/models/run_environment.py": "The repo, the workspace, the event and the summary file of one run.",
+    "src/veil/shells/github_action/models/service_urls.py": "The addresses of the services. A test points them at stubs.",
+    "src/veil/shells/github_action/run_action.py": "The Action entry point. It checks first, mints and masks the token, runs the Engine once, closes the checkouts and writes the summary.",
+    "src/veil/shells/github_action/summary.py": "Writes the run report to the step summary of the runner.",
+    "src/veil/shells/github_action/triggers.py": "Decides if an event may start a run. It refuses any event that is not on the list.",
+    "tests/adapters/github/test_app_token.py": "Tests the token source against a stub GitHub: the mint, the repo check, the permission check and the errors.",
+    "tests/engine/settings/test_credential_names.py": "Tests the three settings that name the credential variables.",
+    "tests/shells/github_action/conftest.py": "The world fixture with a stub Jira and a stub GitHub.",
+    "tests/shells/github_action/support.py": "Builds the world of an Action test: the environment, the settings file and a spy for the Engine.",
+    "tests/shells/github_action/test_app_token_wiring.py": "Tests that the Action mints its token from the App variables.",
+    "tests/shells/github_action/test_credential_names.py": "Tests reserved, shared, missing and short credentials.",
+    "tests/shells/github_action/test_failures.py": "Tests Engine errors, settings errors, the cleanup of checkouts and the step summary.",
+    "tests/shells/github_action/test_package_files.py": "Tests action.yml, the example workflow and the Dockerfile.",
+    "tests/shells/github_action/test_token_failure.py": "Tests a failed mint, missing App variables and the order of the mask commands.",
+    "tests/shells/github_action/test_triggers.py": "Tests that each event runs only when its trigger is on and that other events are refused.",
+    "tests/shells/github_action/test_wiring.py": "Tests that the settings, the credentials and the token reach the Engine context.",
     "src/veil/engine/__init__.py": "The public door of the Engine. It exports run, Context, the main models and the four interfaces.",
     "src/veil/engine/run.py": "The entry point, run(context). It skips tickets that have a fix, makes groups, fixes each group and stops at the token ceiling.",
     "src/veil/engine/eligibility/select.py": "Decides if the Engine may fix a ticket. The rules are the no-loop rule, the Failed Fix label, the issue label, the open Source PR and an existing Fix.",
@@ -174,6 +209,7 @@ DESCRIPTIONS = {
     "src/veil/adapters/postgres/migrations/env.py": "The Alembic environment. It uses the connection that a caller gives, or the URL in a variable.",
     "src/veil/adapters/postgres/migrations/versions/0001_settings_tables.py": "Migration 1: the settings table, the audit table and the version counter.",
     "src/veil/adapters/postgres/migrations/versions/0002_guards_and_audit.py": "Migration 2: the guard that needs an actor and refuses secrets, the audit trail and the version counter.",
+    "src/veil/adapters/postgres/migrations/versions/0004_seed_credential_names.py": "Migration 4: the org rows of the three settings that name the credential variables.",
     "src/veil/adapters/postgres/migrations/versions/0003_seed_catalog.py": "Migration 3: one org row for each setting of the catalog, with its default and bounds.",
     "src/veil/adapters/postgres/models/settings_snapshot.py": "The settings rows at one point in time. Plain data that a workflow can carry.",
     "src/veil/adapters/postgres/orm/__init__.py": "Lists the tables of the settings store, so that their metadata is complete.",
@@ -285,6 +321,7 @@ GROUP_NOTES = {
 
 # From top to bottom. A folder imports only from the rows below it.
 LAYERS = [
+    ["shells"],
     ["adapters"],
     ["run"],
     ["fix", "eligibility", "grouping"],
@@ -295,6 +332,7 @@ LAYERS = [
     ["errors", "constants"],
 ]
 SRC_ORDER = [
+    "shells",
     "adapters",
     "engine",
     "run",
@@ -318,6 +356,7 @@ TEST_ORDER = [
     "tests/adapters/settings",
     "tests/adapters/postgres",
     "tests/adapters/redis",
+    "tests/shells/github_action",
     "tests/engine/flow",
     "tests/engine/escalation",
     "tests/engine/budget",
@@ -355,6 +394,8 @@ def group_of(rel: str) -> str:
             or "/architecture/" in rel
             else "tests"
         )
+    if rel.startswith("src/veil/shells/"):
+        return "shells"
     if rel.startswith("src/veil/adapters/"):
         return "adapters"
     inner = rel.removeprefix("src/veil/engine/")

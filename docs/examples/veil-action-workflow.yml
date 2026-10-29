@@ -1,0 +1,36 @@
+# Example workflow for the Veil GitHub Action. Copy it to .github/workflows/veil.yml in your repo.
+# Pin the Action to a full tag or a commit SHA when you copy it.
+name: veil
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+  # To start a run from Jira, send a repository_dispatch event, then add it here:
+  # repository_dispatch:
+  #   types: [veil-run]
+  # Never add pull_request. A run on a fork pull request must not get secrets.
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# One run for each repo. An event during a run makes one more run after it.
+concurrency:
+  group: veil-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  veil:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: calfus/veil@v1
+        env:
+          GOZU_APP_ID: ${{ secrets.GOZU_APP_ID }}
+          GOZU_APP_PRIVATE_KEY: ${{ secrets.GOZU_APP_PRIVATE_KEY }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -16,7 +16,7 @@ AUDIT = "SELECT actor, action, scope, key, old_value, new_value, at FROM setting
 def test_the_seed_is_in_the_audit_trail_with_the_migration_as_the_actor(engine):
     [(count,)] = read(
         engine,
-        "SELECT count(*) FROM settings_audit WHERE actor = 'migration 0003_seed_catalog' AND action = 'insert'",
+        "SELECT count(*) FROM settings_audit WHERE actor LIKE 'migration %' AND action = 'insert'",
     )
 
     assert count == len(settings_catalog())

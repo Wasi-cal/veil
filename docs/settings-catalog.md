@@ -30,6 +30,9 @@ The last column names the setting that holds the cache lifetime.
 | `in_review_status` | str | In Review | - | - | locked | engine | `cache_settings_ttl_seconds` |
 | `jira_site_url` | str | (empty) | - | - | locked | shell | `cache_settings_ttl_seconds` |
 | `jira_project_keys` | list | (none) | - | - | locked | shell | `cache_settings_ttl_seconds` |
+| `jira_email_env` | str | JIRA_EMAIL | - | - | free | shell | `cache_settings_ttl_seconds` |
+| `jira_token_env` | str | JIRA_API_TOKEN | - | - | free | shell | `cache_settings_ttl_seconds` |
+| `openai_key_env` | str | OPENAI_API_KEY | - | - | free | shell | `cache_settings_ttl_seconds` |
 | `repos_allow` | list | (none) | - | - | locked | shell | `cache_settings_ttl_seconds` |
 | `repos_deny` | list | (none) | - | - | locked | shell | `cache_settings_ttl_seconds` |
 | `schedule_enabled` | bool | false | - | - | disable_only | shell | `cache_settings_ttl_seconds` |
