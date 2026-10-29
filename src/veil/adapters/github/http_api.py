@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import SecretStr
 
 from veil.adapters.github.constants.http import (
@@ -101,8 +103,8 @@ class HttpGitHubApi:
         path: str,
         params: dict[str, str | int] | None = None,
         body: dict | None = None,
-    ):
-        return call_json(
+    ) -> Any:
+        reply = call_json(
             service="GitHub",
             error=RepoProviderError,
             secrets=(self._token.get_secret_value(),),
@@ -117,3 +119,6 @@ class HttpGitHubApi:
                 "X-GitHub-Api-Version": API_VERSION,
             },
         )
+        if reply is None:
+            raise RepoProviderError(f"GitHub {method} {path} gave an empty reply.")
+        return reply
