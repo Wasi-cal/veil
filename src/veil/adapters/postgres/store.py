@@ -8,11 +8,11 @@ from sqlalchemy import Engine, or_, select, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
+from veil.adapters.constants.repo_name import REPO_NAME_PATTERN
 from veil.adapters.postgres.constants.database import SNAPSHOT_ISOLATION_LEVEL
 from veil.adapters.postgres.constants.scopes import (
     ACTOR_VARIABLE,
     ORG_SCOPE,
-    REPO_NAME_PATTERN,
     REPO_SCOPE_PREFIX,
 )
 from veil.adapters.postgres.models.settings_snapshot import SettingsSnapshot
@@ -41,6 +41,11 @@ class PostgresSettingsStore:
 
     def __init__(self, engine: Engine):
         self._engine = engine
+
+    def read_version(self) -> int:
+        """The number of the changes of the settings. It is one small read. A cache uses it to find a stale entry."""
+        with Session(self._engine) as session:
+            return session.execute(select(SettingsVersionRow.version)).scalar_one()
 
     def read_snapshot(self, repos: Sequence[str] = ()) -> SettingsSnapshot:
         """Read the org rows and the rows of these repos, and the version, at one point in time."""

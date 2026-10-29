@@ -8,6 +8,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "pydantic>=2.14.1",
     "pyyaml>=6",
+    "redis>=5.0",
     "sqlalchemy>=2.0",
 ]
 
@@ -104,3 +105,38 @@ layers = [
   "veil.adapters.postgres.orm",
   "veil.adapters.postgres.constants",
 ]
+
+[[tool.importlinter.contracts]]
+name = "redis adapter folders import only from the folders below them"
+type = "layers"
+layers = [
+  "veil.adapters.redis.settings_cache | veil.adapters.redis.jira_cache | veil.adapters.redis.repo_list_cache | veil.adapters.redis.rate_limiter",
+  "veil.adapters.redis.snapshot_source | veil.adapters.redis.guarded_redis | veil.adapters.redis.cache_keys",
+  "veil.adapters.redis.constants",
+]
+
+[[tool.importlinter.contracts]]
+name = "the redis adapter uses no other adapter except the snapshot model"
+type = "forbidden"
+source_modules = ["veil.adapters.redis"]
+forbidden_modules = [
+  "veil.adapters.github",
+  "veil.adapters.jira",
+  "veil.adapters.openai",
+  "veil.adapters.postgres.store",
+  "veil.adapters.postgres.orm",
+  "veil.adapters.postgres.migrate",
+  "veil.adapters.postgres.migrations",
+  "veil.adapters.postgres.constants",
+]
+
+[[tool.importlinter.contracts]]
+name = "no adapter uses the redis adapter, so a cache stays a choice of the Shell"
+type = "forbidden"
+source_modules = [
+  "veil.adapters.github",
+  "veil.adapters.jira",
+  "veil.adapters.openai",
+  "veil.adapters.postgres",
+]
+forbidden_modules = ["veil.adapters.redis"]

@@ -49,6 +49,7 @@ def test_an_error_names_the_status_and_never_holds_a_credential():
             make_tracker(server).open_tickets()
 
     assert "401" in str(error.value)
+    assert error.value.status == 401
     assert API_TOKEN not in str(error.value)
     assert basic not in str(error.value)
 
@@ -70,6 +71,7 @@ def test_a_server_that_is_down_is_an_error_without_the_token():
     with pytest.raises(TrackerError) as error:
         tracker.open_tickets()
 
+    assert error.value.status is None
     assert API_TOKEN not in str(error.value)
 
 

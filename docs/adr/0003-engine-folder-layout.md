@@ -21,7 +21,7 @@ Every fixed value lives in a `constants/` folder. A file in `constants/` holds o
 
 - **The Engine** has `engine/constants/`. The adapters may import from it.
 - **An adapter** has its own `constants/` folder, for example `adapters/github/constants/`. The Engine must not import an adapter, so an adapter cannot use `engine/constants/` for its own values. A contract in `pyproject.toml` keeps the adapter constants at the bottom of the adapter.
-- **Code that adapters share** has `adapters/constants/`. It holds the values that more than one adapter uses, for example the time-out.
+- **Code that adapters share** has `adapters/constants/`. It holds the values that more than one adapter uses, for example the time-out and the pattern of a repo name.
 - **A type that names a set of values**, such as `FixKind` or `PrState`, sits next to its values.
 - **A registry stays in its module.** `TOOLS`, `PARSERS` and the HTTP opener of the GitHub adapter hold functions or objects that come from code. A constants folder cannot import that code.
 

@@ -15,6 +15,7 @@ The real tracker is `JiraTracker` in `veil/adapters/jira/`. It satisfies the `Tr
 - **Https only.** The adapter refuses a site URL that is not https. Only local hosts may use http, so that tests can run against a local server.
 - **Answers in a wrong shape.** A missing key or a wrong kind of value in an answer raises `TrackerError`. It never raises a raw `KeyError`.
 - **Shared code.** Both adapters call `veil/adapters/json_http.py`. It builds the request, hides credential values in errors and follows no redirect. A contract keeps that shared code free of any adapter.
+- **Metadata cache.** The tracker takes an optional `MetadataCache` for the custom field ids and the transitions of a project, an issue type and a status. The default keeps nothing. When Jira calls a move with a cached transition not valid, the tracker reads Jira once and tries again. `TrackerError` carries the HTTP status for this. ADR 0012 describes the Redis version.
 - **Credentials.** The Shell passes an email and a token as `SecretStr` values, or a token alone for a bearer token. They never come from settings. They go in one header. The adapter never follows a redirect. It hides them in every error.
 - **The gateway.** A scoped token works only through the cloud ID gateway of Atlassian. `resolve_api_base` finds that URL. A Shell calls it once and passes the result in.
 - **Errors.** The adapter raises `TrackerError` (in `engine/errors`). `run()` still stops on it, as ADR 0005 accepts for the repo provider.

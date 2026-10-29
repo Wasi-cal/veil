@@ -2,10 +2,14 @@ import base64
 from typing import Any, TypeVar, overload
 
 from veil.adapters.jira.models.jira_credentials import JiraCredentials
-from veil.adapters.json_http import call_json, plain_error, require_https
+from veil.adapters.json_http import call_json, require_https
 from veil.engine.errors.tracker_error import TrackerError
 
 T = TypeVar("T")
+
+
+def _tracker_error(message: str, status: int | None) -> TrackerError:
+    return TrackerError(message, status)
 
 
 class JiraHttp:
@@ -58,7 +62,7 @@ class JiraHttp:
     ) -> Any:
         reply = call_json(
             service="Jira",
-            error=plain_error(TrackerError),
+            error=_tracker_error,
             secrets=self._secrets,
             base_url=self._api_base,
             method=method,

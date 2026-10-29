@@ -1,33 +1,15 @@
 import pytest
 
-from tests.adapters.jira.support import make_tracker
+from tests.adapters.jira.support import (
+    DO_TRANSITION,
+    EDIT,
+    make_tracker,
+    sent,
+    serve_status,
+    transition,
+)
 from tests.fakes.http_server import StubHttpServer
 from veil.engine.errors.tracker_error import TrackerError
-
-ISSUE = ("GET", "/rest/api/3/issue/SEC-7")
-EDIT = ("PUT", "/rest/api/3/issue/SEC-7")
-TRANSITIONS = ("GET", "/rest/api/3/issue/SEC-7/transitions")
-DO_TRANSITION = ("POST", "/rest/api/3/issue/SEC-7/transitions")
-
-
-def transition(identifier: str, target: str, category: str = "indeterminate") -> dict:
-    return {
-        "id": identifier,
-        "name": f"Move to {target}",
-        "to": {"name": target, "statusCategory": {"key": category}},
-    }
-
-
-def serve_status(
-    server: StubHttpServer, current: str, transitions: list[dict] | None = None
-) -> None:
-    server.routes[ISSUE] = (200, {"fields": {"status": {"name": current}}})
-    server.routes[TRANSITIONS] = (200, {"transitions": transitions or []})
-    server.routes[DO_TRANSITION] = (204, None)
-
-
-def sent(server: StubHttpServer, route: tuple[str, str]):
-    return [r for r in server.seen if (r.method, r.path) == route]
 
 
 def test_add_label_asks_jira_to_add_the_label_without_a_read_first():

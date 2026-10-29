@@ -133,7 +133,7 @@ A repo can only tighten a value that the org set. The catalog gives a rule for e
 
 `resolve_settings(org, repo, overrides)` checks every layer. These fail: a key that is not a setting, a value of the wrong type and a value outside the bounds. A repo value that loosens the org value fails too. It also refuses a value that looks like a secret. The failure comes before the Engine touches any ticket. The message lists every problem and never repeats a value. The Engine reads no file. A Shell reads the YAML with `load_settings_file` and passes plain mappings.
 
-The org service keeps its settings in PostgreSQL (ADR 0011). It reads one settings snapshot at the start of a run, and the whole run uses it. A change in the database applies to the next run.
+The org service keeps its settings in PostgreSQL (ADR 0011). Redis caches the slow reads, and a Redis outage never stops a run (ADR 0012). It reads one settings snapshot at the start of a run, and the whole run uses it. A change in the database applies to the next run.
 
 The safety rules are code. They are not settings. A setting with the name of a safety rule is an unknown key.
 

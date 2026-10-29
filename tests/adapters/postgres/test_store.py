@@ -260,3 +260,13 @@ def test_a_repo_write_waits_for_a_change_of_the_org_row_that_is_in_progress(
         holder.rollback()
         holder.close()
         patient.dispose()
+
+
+def test_the_version_is_the_version_of_the_snapshot_and_grows_with_each_change(store):
+    first = store.read_version()
+
+    assert first == store.read_snapshot().version
+    store.set_org("step_cap", 40, actor=ACTOR)
+    assert store.read_version() == first + 1
+    store.set_org("step_cap", 40, actor=ACTOR)
+    assert store.read_version() == first + 1

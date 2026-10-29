@@ -5,6 +5,3 @@ REPO_SCOPE_PREFIX = "repo:"
 ACTOR_VARIABLE = "veil.actor"
 # The URL of the database for the `alembic` program. A Shell passes an engine instead.
 DATABASE_URL_VARIABLE = "VEIL_DATABASE_URL"
-
-# The name of one repo in a scope: owner/name, with no star.
-REPO_NAME_PATTERN = r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
