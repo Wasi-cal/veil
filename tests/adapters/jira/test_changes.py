@@ -65,18 +65,6 @@ def test_set_status_does_nothing_when_the_ticket_is_already_in_that_status():
     assert sent(server, DO_TRANSITION) == []
 
 
-def test_set_status_uses_the_status_name_of_the_settings():
-    with StubHttpServer() as server:
-        serve_status(server, "To Do", [transition("41", "Code Review")])
-
-        make_tracker(server, status_names={"In Review": "Code Review"}).set_status(
-            "SEC-7", "In Review"
-        )
-
-    [post] = sent(server, DO_TRANSITION)
-    assert post.body == {"transition": {"id": "41"}}
-
-
 def test_the_adapter_never_closes_a_ticket():
     with StubHttpServer() as server:
         serve_status(server, "To Do", [transition("51", "Closed", category="done")])

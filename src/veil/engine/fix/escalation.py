@@ -1,3 +1,4 @@
+from veil.engine.constants.limits import STRONG_MODEL_ATTEMPT
 from veil.engine.context import Context
 from veil.engine.errors.attempt_failed import AttemptFailed
 from veil.engine.errors.failed_fix import FailedFix
@@ -14,13 +15,16 @@ def fix_ticket(
     """Try the cheap model. If the attempt fails, try the strong model once from the last commit.
 
     A failed attempt discards its edits, so the next attempt starts from clean files.
-    Raise FailedFix if both attempts fail.
+    With the setting `max_attempts` at 1, the Engine tries the cheap model only.
+    Raise FailedFix if every attempt fails.
     """
     settings = context.settings
     try:
         return attempt(context, ticket, report, settings.cheap_model, workspace)
     except AttemptFailed as first:
         workspace.discard_changes()
+        if settings.max_attempts < STRONG_MODEL_ATTEMPT:
+            raise FailedFix(f"The attempt failed. {first.reason}") from None
         try:
             return attempt(
                 context,

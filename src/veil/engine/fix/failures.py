@@ -1,4 +1,3 @@
-from veil.engine.constants.labels import FAILED_FIX_LABEL
 from veil.engine.constants.outcomes import FAILED
 from veil.engine.context import Context
 from veil.engine.errors.failed_fix import FailedFix
@@ -13,7 +12,7 @@ def record_failed_fix(
 
     The label comes first. If the comment fails, the next run still skips the ticket and writes no second comment.
     """
-    context.tracker.add_label(ticket.key, FAILED_FIX_LABEL)
+    context.tracker.add_label(ticket.key, context.settings.failed_fix_label)
     context.tracker.add_comment(
         ticket.key, context.redact(f"Failed Fix. {failed.reason}")
     )

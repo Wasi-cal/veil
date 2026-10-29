@@ -8,6 +8,9 @@ from tests.fakes import (
 )
 from veil.engine import Context, Settings
 
+# The names of the default models. A script of the fake model is keyed by one of them.
+CHEAP = Settings().cheap_model
+STRONG = Settings().strong_model
 VULNERABLE = "import os\n\nvalue = eval(input())\n"
 FIXED = "import os\n\nvalue = int(input())\n"
 GOOD_EDIT = edit_file("app.py", "eval(input())", "int(input())")

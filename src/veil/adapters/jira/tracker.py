@@ -125,13 +125,12 @@ class JiraTracker:
     def set_status(self, key: str, status: str) -> None:
         """Move the ticket to the status. Do nothing if it is there. Never move it to a done status."""
         self._check_key(key)
-        target = self._settings.status_names.get(status, status)
         issue = self._http.call(
             "GET", f"{ISSUE_PATH}/{key}", params={"fields": "status"}
         )
         with _expected_shape("the status of the ticket"):
             current = issue["fields"]["status"]["name"]
-        if current.casefold() == target.casefold():
+        if current.casefold() == status.casefold():
             return
         reply = self._http.call(
             "GET", f"{ISSUE_PATH}/{key}/{TRANSITIONS_SEGMENT}", shape=dict
@@ -141,17 +140,17 @@ class JiraTracker:
                 (
                     t
                     for t in reply["transitions"]
-                    if t["to"]["name"].casefold() == target.casefold()
+                    if t["to"]["name"].casefold() == status.casefold()
                 ),
                 None,
             )
         if chosen is None:
-            raise TrackerError(f"The workflow of {key} has no transition to {target}.")
+            raise TrackerError(f"The workflow of {key} has no transition to {status}.")
         with _expected_shape("the transitions"):
             category = chosen["to"]["statusCategory"]["key"]
         if category == DONE_CATEGORY:
             raise TrackerError(
-                f"Refused to move {key} to {target}. The status is in the {DONE_CATEGORY} "
+                f"Refused to move {key} to {status}. The status is in the {DONE_CATEGORY} "
                 "category, and the adapter never closes a ticket."
             )
         self._http.call(

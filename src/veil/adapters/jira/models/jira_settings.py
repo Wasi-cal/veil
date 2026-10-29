@@ -1,7 +1,9 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from veil.adapters.jira.constants.patterns import PROJECT_KEY, SAFE_LABEL
-from veil.adapters.jira.constants.workflow import DEFAULT_ELIGIBLE_LABEL
+from veil.engine.constants.labels import DEFAULT_ELIGIBLE_LABEL
+from veil.engine.errors.settings_error import SettingsError
+from veil.engine.models.config.settings import Settings
 
 
 class JiraSettings(BaseModel):
@@ -15,8 +17,25 @@ class JiraSettings(BaseModel):
     site_url: str
     project_keys: tuple[str, ...] = Field(min_length=1)
     eligible_label: str = DEFAULT_ELIGIBLE_LABEL
-    # The Engine says "In Review". A workflow can name that status another way. Map the name here.
-    status_names: dict[str, str] = Field(default_factory=dict)
+
+    @classmethod
+    def from_settings(cls, settings: Settings) -> "JiraSettings":
+        """The Jira settings of a run. The site and the project keys must be set."""
+        problems = [
+            f"{key} is empty. The Jira tracker needs it."
+            for key, value in (
+                ("jira_site_url", settings.jira_site_url),
+                ("jira_project_keys", settings.jira_project_keys),
+            )
+            if not value
+        ]
+        if problems:
+            raise SettingsError(problems)
+        return cls(
+            site_url=settings.jira_site_url,
+            project_keys=settings.jira_project_keys,
+            eligible_label=settings.eligible_label,
+        )
 
     @field_validator("project_keys")
     @classmethod

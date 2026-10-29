@@ -1,5 +1,4 @@
 from veil.engine.constants.outcomes import FIXED
-from veil.engine.constants.statuses import IN_REVIEW
 from veil.engine.context import Context
 from veil.engine.fix.pr_text import pr_body, ticket_comment
 from veil.engine.models.fix.fix import Fix
@@ -36,6 +35,6 @@ def publish(
         context.tracker.add_comment(
             fix.ticket.key, context.redact(ticket_comment(pr_url, fix))
         )
-        context.tracker.set_status(fix.ticket.key, IN_REVIEW)
+        context.tracker.set_status(fix.ticket.key, context.settings.in_review_status)
         report.outcomes[fix.ticket.key] = FIXED
     report.pull_requests.append(pr_url)

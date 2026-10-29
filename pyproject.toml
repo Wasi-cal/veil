@@ -5,6 +5,7 @@ description = "Agent that fixes Gozu Tickets and opens draft Fix PRs for human r
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.14.1",
+    "pyyaml>=6",
 ]
 
 [dependency-groups]
@@ -37,7 +38,7 @@ layers = [
   "veil.engine.run",
   "veil.engine.fix | veil.engine.eligibility | veil.engine.grouping",
   "veil.engine.tools | veil.engine.context",
-  "veil.engine.workspace | veil.engine.secrets",
+  "veil.engine.workspace | veil.engine.secrets | veil.engine.config",
   "veil.engine.interfaces",
   "veil.engine.models",
   "veil.engine.errors | veil.engine.constants",
@@ -71,6 +72,7 @@ type = "forbidden"
 source_modules = [
   "veil.adapters.json_http",
   "veil.adapters.no_redirect",
+  "veil.adapters.yaml_settings",
   "veil.adapters.constants",
 ]
 forbidden_modules = [

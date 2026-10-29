@@ -1,0 +1,19 @@
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict
+
+from veil.engine.constants.settings_rules import Reader, TightenRule
+
+
+class CatalogEntry(BaseModel):
+    """One row of the settings catalog. The row comes from the declaration of the setting."""
+
+    model_config = ConfigDict(frozen=True)
+
+    key: str
+    default: Any
+    minimum: int | None
+    maximum: int | None
+    repo_rule: TightenRule
+    read_by: Reader
+    cache_lifetime: str

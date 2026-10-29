@@ -17,7 +17,6 @@ from veil.adapters.github.git_command import (
     secret_values,
 )
 from veil.adapters.github.workspace import GitWorkspace
-from veil.engine.constants.branches import FIX_BRANCH_PREFIX
 from veil.engine.constants.fix_kinds import FIX_BRANCH, OPEN_PR, FixKind
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.models.provider.draft_pr import DraftPr
@@ -40,7 +39,7 @@ class GitHubRepoProvider:
         token: SecretStr,
         api: GitHubApi,
         remote_url: Callable[[str], str],
-        branch_prefix: str = FIX_BRANCH_PREFIX,
+        branch_prefix: str,
         temp_root: Path | None = None,
     ):
         self._token = token

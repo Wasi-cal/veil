@@ -2,9 +2,11 @@ import pytest
 
 from tests.fakes import edit_file, finish
 from tests.support.scenario import (
+    CHEAP,
     CREDENTIAL,
     EDIT_THEN_FINISH,
     FIXED,
+    STRONG,
     VULNERABLE,
     assert_failed_fix,
     assert_nowhere,
@@ -27,7 +29,7 @@ def test_a_credential_of_this_run_in_an_added_line_fails_the_attempt_and_the_str
 ):
     context, tracker, repos, model = make_context(
         tmp_path,
-        {"cheap-model": edit_that_adds(CREDENTIAL), "strong-model": EDIT_THEN_FINISH},
+        {CHEAP: edit_that_adds(CREDENTIAL), STRONG: EDIT_THEN_FINISH},
         credentials=(CREDENTIAL,),
     )
 
@@ -72,7 +74,7 @@ KEY_LIKE = {
 def test_a_secret_pattern_in_an_added_line_fails_the_attempt(tmp_path, secret):
     context, tracker, repos, model = make_context(
         tmp_path,
-        {"cheap-model": edit_that_adds(secret), "strong-model": EDIT_THEN_FINISH},
+        {CHEAP: edit_that_adds(secret), STRONG: EDIT_THEN_FINISH},
     )
 
     report = run(context)
@@ -132,11 +134,11 @@ def test_a_secret_in_the_explanation_or_the_commit_message_fails_the_attempt(
     context, tracker, repos, model = make_context(
         tmp_path,
         {
-            "cheap-model": [
+            CHEAP: [
                 [edit_file("app.py", "eval(input())", "int(input())")],
                 [bad_finish],
             ],
-            "strong-model": EDIT_THEN_FINISH,
+            STRONG: EDIT_THEN_FINISH,
         },
         credentials=(CREDENTIAL,),
     )

@@ -1,5 +1,5 @@
 from tests.fakes import edit_file, finish
-from tests.support.scenario import make_context
+from tests.support.scenario import CHEAP, STRONG, make_context
 from veil.engine import FixQuery, Settings, run
 
 BUGGY = "value = eval(input())\n"
@@ -59,12 +59,12 @@ def test_a_failed_fix_stays_out_of_the_shared_pr_and_leaves_no_edit_in_it(tmp_pa
     context, tracker, repos, _ = make_context(
         tmp_path,
         {
-            "cheap-model": [
+            CHEAP: [
                 *fix_of("a.py", "Fix a"),
                 *toggles("b.py", 3),
                 *fix_of("c.py", "Fix c"),
             ],
-            "strong-model": toggles("b.py", 3),
+            STRONG: toggles("b.py", 3),
         },
         files={"a.py": BUGGY, "b.py": BUGGY, "c.py": BUGGY},
         file="a.py",
@@ -206,12 +206,12 @@ def test_the_branch_names_the_first_fix_that_passed_so_a_retry_does_not_collide(
     context, tracker, repos, _ = make_context(
         tmp_path,
         {
-            "cheap-model": [
+            CHEAP: [
                 *toggles("a.py", 3),
                 *fix_of("b.py", "Fix b"),
                 *fix_of("a.py", "Fix a"),
             ],
-            "strong-model": toggles("a.py", 3),
+            STRONG: toggles("a.py", 3),
         },
         files={"a.py": BUGGY, "b.py": BUGGY},
         file="a.py",

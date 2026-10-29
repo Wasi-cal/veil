@@ -12,7 +12,7 @@ The part that does this work is the Engine. You start it with one function call:
 
 The `context` holds five parts:
 
-- **settings**: the limits, for example 25 steps and 200 changed lines.
+- **settings**: the limits and the names, for example 25 steps, 200 changed lines and the label of a Failed Fix. `resolve_settings` makes them from four layers. See the section on settings and ADR 0010.
 - **tracker**: the place where the tickets are. In real use this is Jira.
 - **repo provider**: gives a copy of the repository and opens pull requests. In real use this is GitHub.
 - **model client**: talks to the AI model.
@@ -118,6 +118,23 @@ Before each model call, the Engine checks the count. If the count is at the ceil
 
 The cheap model name, the strong model name and the ceiling are settings.
 
+## Settings
+
+Every number and every name that the Engine uses is a setting. Each setting has a default in code, a type, a minimum and a maximum. `docs/settings-catalog.md` lists them all. The declaration of the settings makes it. A test fails if the file is old.
+
+Four layers make the settings of one run. A later layer wins:
+
+1. The defaults in code.
+2. The org settings.
+3. The repo settings. The Action reads them from `.gozu/jira-to-pr.yml`.
+4. The overrides of one run.
+
+A repo can only tighten a value that the org set. The catalog gives a rule for each setting. A repo can lower a limit and add refused file patterns. It can raise a severity bucket and turn a trigger off. It can choose its own models and labels. It cannot change anything else that the org set.
+
+`resolve_settings(org, repo, overrides)` checks every layer. These fail: a key that is not a setting, a value of the wrong type and a value outside the bounds. A repo value that loosens the org value fails too. It also refuses a value that looks like a secret. The failure comes before the Engine touches any ticket. The message lists every problem and never repeats a value. The Engine reads no file. A Shell reads the YAML with `load_settings_file` and passes plain mappings.
+
+The safety rules are code. They are not settings. A setting with the name of a safety rule is an unknown key.
+
 ## The five tools
 
 The model can call five tools:
@@ -164,6 +181,7 @@ These rules are code. Settings cannot turn them off.
 | What a tool does | `tools/handlers/` |
 | A rule about paths, the diff limit or the syntax check | `workspace/` |
 | How the Engine finds and hides secrets | `secrets/` |
+| How the layers of settings merge, and the settings catalog | `config/` |
 | What the Engine needs from Jira, GitHub or the model | `interfaces/` |
 | The shape of a ticket, a setting or the report | `models/` |
 | A fixed value, such as a limit or a tool name | `constants/` (an adapter has its own `constants/`) |

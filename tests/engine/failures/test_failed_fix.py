@@ -2,7 +2,9 @@ import pytest
 
 from tests.fakes import finish
 from tests.support.scenario import (
+    CHEAP,
     EDIT_THEN_FINISH,
+    STRONG,
     assert_failed_fix,
     both_attempts,
     make_context,
@@ -55,8 +57,8 @@ def test_failed_fix_does_not_stop_the_next_ticket(tmp_path):
     context, tracker, repos, _ = make_context(
         tmp_path,
         {
-            "cheap-model": [*toggle_edits(3), *EDIT_THEN_FINISH],
-            "strong-model": toggle_edits(3),
+            CHEAP: [*toggle_edits(3), *EDIT_THEN_FINISH],
+            STRONG: toggle_edits(3),
         },
         settings=Settings(step_cap=3),
         extra_tickets=[{"key": "GR-101"}],

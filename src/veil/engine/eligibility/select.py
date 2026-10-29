@@ -1,5 +1,4 @@
 from veil.engine.constants.branches import FIX_BRANCH_PREFIX
-from veil.engine.constants.labels import FAILED_FIX_LABEL
 from veil.engine.constants.outcomes import SKIPPED
 from veil.engine.constants.skip_reasons import (
     DUPLICATE_ISSUE,
@@ -61,7 +60,7 @@ def _skip_reason(
     """Return why the Engine must not fix this ticket. Return None if it may. Cheap rules come first."""
     if ticket.branch.startswith((FIX_BRANCH_PREFIX, settings.branch_prefix)):
         return RAISED_AGAINST_FIX_BRANCH
-    if FAILED_FIX_LABEL in ticket.labels:
+    if settings.failed_fix_label in ticket.labels:
         return FAILED_FIX
     if ticket.issue_label is None:
         return NO_ISSUE_LABEL
