@@ -1,5 +1,5 @@
 import hashlib
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 
 from veil.adapters.jira.adf import comment_body
@@ -25,7 +25,7 @@ from veil.engine.models.ticket.ticket import Ticket
 
 
 @contextmanager
-def _expected_shape(what: str) -> Iterator[None]:
+def _expected_shape(what: str) -> Generator[None]:
     """Turn a missing key or a wrong kind of value in a Jira answer into a TrackerError."""
     try:
         yield

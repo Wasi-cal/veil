@@ -1,4 +1,5 @@
 import base64
+from typing import Any, TypeVar, overload
 from urllib.parse import urlsplit
 
 from veil.adapters.jira.constants.http import (
@@ -7,6 +8,8 @@ from veil.adapters.jira.constants.http import (
 from veil.adapters.jira.models.jira_credentials import JiraCredentials
 from veil.adapters.json_http import call_json
 from veil.engine.errors.tracker_error import TrackerError
+
+T = TypeVar("T")
 
 
 class JiraHttp:
@@ -32,6 +35,27 @@ class JiraHttp:
             self._authorization = f"Bearer {token}"
             self._secrets = (token,)
 
+    @overload
+    def call(
+        self,
+        method: str,
+        path: str,
+        params: dict[str, str | int] | None = None,
+        body: dict | None = None,
+        *,
+        shape: type[T],
+    ) -> T: ...
+
+    @overload
+    def call(
+        self,
+        method: str,
+        path: str,
+        params: dict[str, str | int] | None = None,
+        body: dict | None = None,
+        shape: None = None,
+    ) -> Any: ...
+
     def call(
         self,
         method: str,
@@ -39,7 +63,7 @@ class JiraHttp:
         params: dict[str, str | int] | None = None,
         body: dict | None = None,
         shape: type | None = None,
-    ):
+    ) -> Any:
         reply = call_json(
             service="Jira",
             error=TrackerError,
