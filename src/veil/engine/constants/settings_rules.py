@@ -4,6 +4,9 @@ from typing import Literal
 TightenRule = Literal[
     "lower", "add_only", "raise_only", "disable_only", "locked", "free"
 ]
+# The kind of value that a setting holds. A list is a tuple of texts. A map is a dictionary of texts.
+ValueType = Literal["int", "str", "bool", "list", "map"]
+
 # Who reads a setting. The settings catalog shows it.
 Reader = Literal["engine", "shell"]
 

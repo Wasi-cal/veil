@@ -12,6 +12,7 @@ CATALOG_INTRO = (
 )
 CATALOG_COLUMNS = (
     "Key",
+    "Type",
     "Default",
     "Minimum",
     "Maximum",

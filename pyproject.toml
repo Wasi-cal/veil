@@ -4,8 +4,11 @@ version = "0.1.0"
 description = "Agent that fixes Gozu Tickets and opens draft Fix PRs for human review."
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.13",
+    "psycopg[binary]>=3.2",
     "pydantic>=2.14.1",
     "pyyaml>=6",
+    "sqlalchemy>=2.0",
 ]
 
 [dependency-groups]
@@ -89,4 +92,15 @@ layers = [
   "veil.adapters.openai.api",
   "veil.adapters.openai.models",
   "veil.adapters.openai.constants",
+]
+
+[[tool.importlinter.contracts]]
+name = "postgres adapter folders import only from the folders below them"
+type = "layers"
+layers = [
+  "veil.adapters.postgres.store | veil.adapters.postgres.migrate",
+  "veil.adapters.postgres.migrations",
+  "veil.adapters.postgres.models",
+  "veil.adapters.postgres.orm",
+  "veil.adapters.postgres.constants",
 ]

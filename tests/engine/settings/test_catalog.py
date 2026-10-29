@@ -33,6 +33,14 @@ def test_a_number_has_its_default_its_minimum_and_its_maximum():
     )
 
 
+def test_every_setting_has_a_value_type():
+    assert entry("step_cap").value_type == "int"
+    assert entry("cheap_model").value_type == "str"
+    assert entry("schedule_enabled").value_type == "bool"
+    assert entry("repos_allow").value_type == "list"
+    assert entry("severity_map").value_type == "map"
+
+
 def test_a_name_has_a_default_and_no_bounds():
     model = entry("cheap_model")
 
@@ -67,7 +75,7 @@ def test_the_rendered_table_has_one_row_for_each_setting():
 
     for key in Settings.model_fields:
         assert f"| `{key}` |" in text
-    assert "| `step_cap` | 25 | 1 | 100 |" in text
+    assert "| `step_cap` | int | 25 | 1 | 100 |" in text
 
 
 def test_the_catalog_file_in_docs_is_the_current_catalog():

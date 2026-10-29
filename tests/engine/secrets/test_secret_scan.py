@@ -13,6 +13,7 @@ from tests.support.scenario import (
     both_attempts,
     make_context,
 )
+from tests.support.secret_samples import KEY_LIKE
 from veil.engine import run
 
 
@@ -58,18 +59,6 @@ def test_if_both_attempts_add_the_credential_the_ticket_is_a_failed_fix_and_the_
 
 
 # Fake keys. Each one is built from pieces, so no key-like text sits in this file.
-KEY_LIKE = {
-    "rsa-private-key-header": "-----BEGIN " + "RSA PRIVATE KEY-----",
-    "openssh-private-key-header": "-----BEGIN " + "OPENSSH PRIVATE KEY-----",
-    "aws-access-key-id": "AK" + "IA" + "IOSFODNN7EXAMPLE",
-    "github-token": "gh" + "p_" + "A1" * 18,
-    "google-api-key": "AI" + "za" + "SyA-" + "x" * 31,
-    "slack-token": "xo" + "xb-" + "123456789012-abcdefghijkl",
-    "sk-key": "s" + "k-" + "proj" + "a1" * 12,
-    "atlassian-token": "AT" + "ATT3" + "xFfGF0" + "b" * 24,
-}
-
-
 @pytest.mark.parametrize("secret", list(KEY_LIKE.values()), ids=list(KEY_LIKE))
 def test_a_secret_pattern_in_an_added_line_fails_the_attempt(tmp_path, secret):
     context, tracker, repos, model = make_context(

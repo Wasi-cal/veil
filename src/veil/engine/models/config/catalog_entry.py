@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from veil.engine.constants.settings_rules import Reader, TightenRule
+from veil.engine.constants.settings_rules import Reader, TightenRule, ValueType
 
 
 class CatalogEntry(BaseModel):
@@ -11,6 +11,7 @@ class CatalogEntry(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     key: str
+    value_type: ValueType
     default: Any
     minimum: int | None
     maximum: int | None

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, get_origin
 
 from veil.engine.config.meta import setting_meta
 from veil.engine.constants.catalog_text import (
@@ -11,7 +11,7 @@ from veil.engine.constants.catalog_text import (
     CATALOG_RULES_TITLE,
     CATALOG_TITLE,
 )
-from veil.engine.constants.settings_rules import CACHE_LIFETIME_SETTING
+from veil.engine.constants.settings_rules import CACHE_LIFETIME_SETTING, ValueType
 from veil.engine.models.config.catalog_entry import CatalogEntry
 from veil.engine.models.config.settings import Settings
 
@@ -24,6 +24,7 @@ def settings_catalog() -> list[CatalogEntry]:
         entries.append(
             CatalogEntry(
                 key=key,
+                value_type=_value_type(field.annotation),
                 default=field.get_default(call_default_factory=True),
                 minimum=_bound(field.metadata, "ge"),
                 maximum=_bound(field.metadata, "le"),
@@ -40,7 +41,7 @@ def render_settings_catalog() -> str:
     header = "| " + " | ".join(CATALOG_COLUMNS) + " |"
     divider = "| " + " | ".join("---" for _ in CATALOG_COLUMNS) + " |"
     rows = [
-        f"| `{e.key}` | {_show(e.default)} | {_show_bound(e.minimum)} | "
+        f"| `{e.key}` | {e.value_type} | {_show(e.default)} | {_show_bound(e.minimum)} | "
         f"{_show_bound(e.maximum)} | {e.repo_rule} | {e.read_by} | `{e.cache_lifetime}` |"
         for e in settings_catalog()
     ]
@@ -52,6 +53,17 @@ def render_settings_catalog() -> str:
         )
         + "\n"
     )
+
+
+def _value_type(annotation: Any) -> ValueType:
+    kinds: dict[Any, ValueType] = {
+        bool: "bool",
+        int: "int",
+        str: "str",
+        tuple: "list",
+        dict: "map",
+    }
+    return kinds[get_origin(annotation) or annotation]
 
 
 def _bound(metadata: list[Any], name: str) -> int | None:

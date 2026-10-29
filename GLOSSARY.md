@@ -55,3 +55,7 @@ _Avoid_: Core, library
 **Shell**:
 A way to run the Engine. It is either the org-wide service or the GitHub Action in a single repository.
 _Avoid_: Mode, wrapper
+
+**Settings snapshot**:
+The settings rows of the org and of the repos of one run, read from the database at one point in time. The service reads it once at the start of a run, and the whole run uses it. A change in the database applies to the next run.
+_Avoid_: Config cache, settings copy
