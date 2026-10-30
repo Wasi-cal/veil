@@ -3,9 +3,6 @@ BAD_REPOSITORY = "The variable {name} does not hold a repository name."
 NO_WORKSPACE = "The variable {name} is not set. Run actions/checkout first."
 UNSUPPORTED_EVENT = "The event {event} cannot start a run. Use schedule, workflow_dispatch or repository_dispatch."
 TRIGGER_OFF = "Skipped the run. The event {event} is off. Turn on the setting {setting} to allow it."
-APP_VARIABLE_MISSING = (
-    "The variable {name} is not set. The Action needs the GitHub App."
-)
 CREDENTIAL_MISSING = "The variable {name} is not set or is empty."
 CREDENTIAL_TOO_SHORT = "The variable {name} is too short to be a credential."
 RESERVED_NAME = (

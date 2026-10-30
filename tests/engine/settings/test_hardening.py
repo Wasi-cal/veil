@@ -57,7 +57,10 @@ def test_an_https_address_is_allowed():
     ("layer", "words"),
     [
         ({"cheap_model": "m" * 101}, "cheap_model is too long."),
-        ({"repos_allow": ["acme/app"] * 201}, "repos_allow has too many entries."),
+        (
+            {"jira_project_keys": ["SEC"] * 201},
+            "jira_project_keys has too many entries.",
+        ),
         (
             {"extra_refused_read_patterns": ["x" * 201]},
             "extra_refused_read_patterns has an entry that is too long.",

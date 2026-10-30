@@ -5,12 +5,11 @@ from tests.shells.github_action.support import (
     JIRA_EMAIL,
     JIRA_TOKEN,
     OPENAI_KEY,
-    FakeTokenSource,
     SpyRun,
 )
 
 
-def test_it_runs_the_engine_once_with_the_repo_settings_and_the_minted_token(world):
+def test_it_runs_the_engine_once_with_the_repo_settings_and_the_github_token(world):
     world.write_settings(
         {
             "jira_site_url": "https://acme.example.invalid",
@@ -19,10 +18,9 @@ def test_it_runs_the_engine_once_with_the_repo_settings_and_the_minted_token(wor
         }
     )
 
-    code, spy, source = world.run_action()
+    code, spy = world.run_action()
 
     assert code == 0
-    assert source.minted == ["acme/app"]
     [context] = spy.contexts
     assert context.settings.token_ceiling == 5000
     assert context.settings.jira_project_keys == ("SEC",)
@@ -32,7 +30,7 @@ def test_it_runs_the_engine_once_with_the_repo_settings_and_the_minted_token(wor
 def test_defaults_apply_when_the_repo_has_no_settings_file_except_the_jira_site(world):
     (world.workspace / ".gozu" / "jira-to-pr.yml").unlink()
 
-    code, spy, _ = world.run_action()
+    code, spy = world.run_action()
 
     assert code == 1
     assert spy.contexts == []
@@ -46,14 +44,14 @@ def test_the_tracker_logs_in_with_the_jira_email_and_token_from_the_environment(
             return super().__call__(context)
 
     caller = Caller(world.out)
-    code, _, _ = world.run_action(run=caller)
+    code, _ = world.run_action(run=caller)
 
     assert code == 0
     basic = base64.b64encode(f"{JIRA_EMAIL}:{JIRA_TOKEN}".encode()).decode()
     assert {r.authorization for r in world.jira.seen} == {f"Basic {basic}"}
 
 
-def test_the_repo_provider_uses_the_minted_token_and_asks_only_about_this_repo(world):
+def test_the_repo_provider_uses_the_github_token_and_asks_only_about_this_repo(world):
     world.github.routes[("GET", "/repos/acme/app/pulls")] = (200, [])
 
     class Caller(SpyRun):
@@ -61,7 +59,7 @@ def test_the_repo_provider_uses_the_minted_token_and_asks_only_about_this_repo(w
             context.repo_provider.has_open_pr("acme/app", "feature-x")
             return super().__call__(context)
 
-    code, _, _ = world.run_action(run=Caller(world.out))
+    code, _ = world.run_action(run=Caller(world.out))
 
     assert code == 0
     assert {r.authorization for r in world.github.seen} == {f"Bearer {TOKEN}"}
@@ -84,7 +82,7 @@ def test_the_settings_can_name_other_variables_for_the_credentials(world):
     world.environ["ACME_JIRA_USER"] = JIRA_EMAIL
     world.environ["ACME_OPENAI_KEY"] = OPENAI_KEY
 
-    code, spy, _ = world.run_action(token_source=FakeTokenSource())
+    code, spy = world.run_action()
 
     assert code == 0
     assert set(spy.contexts[0].credential_values) == {TOKEN, JIRA_TOKEN, OPENAI_KEY}

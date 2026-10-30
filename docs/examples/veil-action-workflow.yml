@@ -29,8 +29,7 @@ jobs:
           persist-credentials: false
       - uses: calfus/veil@v1
         env:
-          GOZU_APP_ID: ${{ secrets.GOZU_APP_ID }}
-          GOZU_APP_PRIVATE_KEY: ${{ secrets.GOZU_APP_PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

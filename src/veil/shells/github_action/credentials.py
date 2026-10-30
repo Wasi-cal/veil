@@ -5,19 +5,14 @@ from pydantic import SecretStr
 from veil.engine.constants.limits import MIN_SECRET_LENGTH
 from veil.engine.models.config.settings import Settings
 from veil.shells.github_action.constants.credential_env import RESERVED_PREFIXES
-from veil.shells.github_action.constants.environment import (
-    APP_ID_VARIABLE,
-    APP_KEY_VARIABLE,
-)
+from veil.shells.github_action.constants.environment import GITHUB_TOKEN_VARIABLE
 from veil.shells.github_action.constants.messages import (
-    APP_VARIABLE_MISSING,
     CREDENTIAL_MISSING,
     CREDENTIAL_TOO_SHORT,
     RESERVED_NAME,
     SHARED_NAME,
 )
 from veil.shells.github_action.errors.action_failure import ActionFailure
-from veil.shells.github_action.models.app_credentials import AppCredentials
 from veil.shells.shared.models.run_credentials import RunCredentials
 
 
@@ -53,14 +48,6 @@ def _secret(environ: Mapping[str, str], name: str) -> SecretStr:
     return SecretStr(value)
 
 
-def read_app_credentials(environ: Mapping[str, str]) -> AppCredentials:
-    """Read the GitHub App id and private key. A missing value raises ActionFailure that names the variable."""
-    values = {}
-    for name in (APP_ID_VARIABLE, APP_KEY_VARIABLE):
-        values[name] = environ.get(name, "")
-        if not values[name].strip():
-            raise ActionFailure(APP_VARIABLE_MISSING.format(name=name))
-    return AppCredentials(
-        app_id=values[APP_ID_VARIABLE],
-        private_key=SecretStr(values[APP_KEY_VARIABLE]),
-    )
+def read_github_token(environ: Mapping[str, str]) -> SecretStr:
+    """Read the GitHub token of the workflow. A missing or short value raises ActionFailure that names the variable."""
+    return _secret(environ, GITHUB_TOKEN_VARIABLE)

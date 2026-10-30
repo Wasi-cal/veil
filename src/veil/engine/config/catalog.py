@@ -11,7 +11,7 @@ from veil.engine.constants.catalog_text import (
     CATALOG_RULES_TITLE,
     CATALOG_TITLE,
 )
-from veil.engine.constants.settings_rules import CACHE_LIFETIME_SETTING, ValueType
+from veil.engine.constants.settings_rules import ValueType
 from veil.engine.models.config.catalog_entry import CatalogEntry
 from veil.engine.models.config.settings import Settings
 
@@ -30,7 +30,6 @@ def settings_catalog() -> list[CatalogEntry]:
                 maximum=_bound(field.metadata, "le"),
                 repo_rule=meta.tighten,
                 read_by=meta.reader,
-                cache_lifetime=CACHE_LIFETIME_SETTING,
             )
         )
     return entries
@@ -42,7 +41,7 @@ def render_settings_catalog() -> str:
     divider = "| " + " | ".join("---" for _ in CATALOG_COLUMNS) + " |"
     rows = [
         f"| `{e.key}` | {e.value_type} | {_show(e.default)} | {_show_bound(e.minimum)} | "
-        f"{_show_bound(e.maximum)} | {e.repo_rule} | {e.read_by} | `{e.cache_lifetime}` |"
+        f"{_show_bound(e.maximum)} | {e.repo_rule} | {e.read_by} |"
         for e in settings_catalog()
     ]
     rules = [f"- `{rule}`: {words}" for rule, words in CATALOG_RULES.items()]

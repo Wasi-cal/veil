@@ -19,6 +19,3 @@ TIGHTEN_FREE: TightenRule = "free"
 
 READER_ENGINE: Reader = "engine"
 READER_SHELL: Reader = "shell"
-
-# The setting that holds how long a Shell may keep a snapshot of the settings in its cache.
-CACHE_LIFETIME_SETTING = "cache_settings_ttl_seconds"

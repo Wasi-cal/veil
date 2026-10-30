@@ -124,15 +124,15 @@ The Action is the first Shell (ADR 0013). It runs the Engine once for the repo o
 
 1. It reads the repo, the workspace and the event from the runner. It loads `.gozu/jira-to-pr.yml` as the repo settings.
 2. It checks the event. `schedule`, `workflow_dispatch` and `repository_dispatch` may run. Each one needs its setting to be on. Any other event fails.
-3. It reads the Jira and OpenAI credentials from the variables that the settings name. It masks them in the log.
-4. It mints a GitHub App installation token for this repo alone. It checks the token and masks it.
+3. It reads the Jira and OpenAI credentials from the variables that the settings name. It reads the `GITHUB_TOKEN` of the workflow. It masks all three in the log.
+4. It builds the context from them. The token covers this repo for this job only.
 5. It builds the context, runs the Engine, closes the checkouts and writes the run report to the step summary.
 
 Any failure before step 5 stops the run with one error line and exit code 1. No ticket changes. A Failed Fix is not a failure.
 
 ## The service Shell (deferred)
 
-The org-wide service is the second Shell (ADR 0014). It is not in the code now. veil runs on one repo through the GitHub Action. The decisions of the service stay in ADRs 0011, 0012, 0014 and 0015. The code was removed on purpose, and git history keeps it (commit `0bcf11c`).
+The org-wide service is the second Shell (ADR 0014). It is not in the code now. veil runs on one repo through the GitHub Action. The decisions of the service stay in ADRs 0011, 0012, 0014 and 0015. The code is deleted on purpose, and git history keeps it (commit `0bcf11c`).
 
 ## Settings
 

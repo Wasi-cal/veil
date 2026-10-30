@@ -53,14 +53,12 @@ def test_the_example_workflow_checks_out_without_keeping_a_token_and_maps_secret
 
     assert checkout["with"]["persist-credentials"] is False
     assert set(action["env"]) >= {
-        "GOZU_APP_ID",
-        "GOZU_APP_PRIVATE_KEY",
+        "GITHUB_TOKEN",
         "JIRA_EMAIL",
         "JIRA_API_TOKEN",
         "OPENAI_API_KEY",
     }
     assert all("secrets." in value for value in action["env"].values())
-    assert "GITHUB_TOKEN" not in str(job)
 
 
 def test_the_image_installs_nothing_when_it_starts():

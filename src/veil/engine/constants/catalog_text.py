@@ -7,8 +7,7 @@ CATALOG_INTRO = (
     "\n"
     "Each setting has a default in code. Four layers can change it. A later layer wins:\n"
     "defaults, org settings, repo settings, per-run overrides.\n"
-    "Settings hold no secrets. The safety rules are code and are not settings.\n"
-    "The last column names the setting that holds the cache lifetime."
+    "Settings hold no secrets. The safety rules are code and are not settings."
 )
 CATALOG_COLUMNS = (
     "Key",
@@ -18,7 +17,6 @@ CATALOG_COLUMNS = (
     "Maximum",
     "Repo rule",
     "Read by",
-    "Cache lifetime",
 )
 CATALOG_RULES_TITLE = "## What a repo may do with a value that the org set"
 CATALOG_RULES: dict[TightenRule, str] = {

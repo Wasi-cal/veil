@@ -37,7 +37,7 @@ def test_every_setting_has_a_value_type():
     assert entry("step_cap").value_type == "int"
     assert entry("cheap_model").value_type == "str"
     assert entry("schedule_enabled").value_type == "bool"
-    assert entry("repos_allow").value_type == "list"
+    assert entry("jira_project_keys").value_type == "list"
     assert entry("severity_map").value_type == "map"
 
 
@@ -54,7 +54,7 @@ def test_every_setting_says_what_a_repo_may_do_and_who_reads_it():
         assert item.read_by in get_args(Reader)
     assert entry("step_cap").repo_rule == "lower"
     assert entry("branch_prefix").repo_rule == "locked"
-    assert entry("model_calls_per_minute").read_by == "shell"
+    assert entry("jira_token_env").read_by == "shell"
 
 
 def test_the_catalog_file_explains_every_rule():
@@ -62,12 +62,6 @@ def test_the_catalog_file_explains_every_rule():
 
     for rule in get_args(TightenRule):
         assert f"- `{rule}`:" in text
-
-
-def test_every_setting_names_the_setting_that_holds_its_cache_lifetime():
-    assert {e.cache_lifetime for e in settings_catalog()} == {
-        "cache_settings_ttl_seconds"
-    }
 
 
 def test_the_rendered_table_has_one_row_for_each_setting():

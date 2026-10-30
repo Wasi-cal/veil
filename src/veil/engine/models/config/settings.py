@@ -17,7 +17,6 @@ from veil.engine.constants.limits import (
     EXPLANATION_MAX_SENTENCES,
     MAX_ATTEMPTS,
     MIN_TOOL_RESULT_MAX_BYTES,
-    MODEL_CALLS_PER_MINUTE,
     READ_FILE_MAX_LINES,
     SEARCH_MAX_MATCHES,
     SHARED_PR_MAX,
@@ -27,16 +26,6 @@ from veil.engine.constants.limits import (
 )
 from veil.engine.constants.model_names import CHEAP_MODEL, STRONG_MODEL
 from veil.engine.constants.secrets import SECRET_PATTERNS
-from veil.engine.constants.service_limits import (
-    CACHE_JIRA_METADATA_TTL_SECONDS,
-    CACHE_REPO_LIST_TTL_SECONDS,
-    CACHE_SETTINGS_TTL_SECONDS,
-    CHECKOUT_SWEEP_MINUTES,
-    HEARTBEAT_SECONDS,
-    MAX_CONCURRENT_RUNS,
-    QUIET_WINDOW_MINUTES,
-    RUN_TIMEOUT_MINUTES,
-)
 from veil.engine.constants.settings_bounds import (
     MAX_ENTRY_CHARS,
     MAX_LIST_ENTRIES,
@@ -45,11 +34,9 @@ from veil.engine.constants.settings_bounds import (
 )
 from veil.engine.constants.settings_patterns import (
     BRANCH_PREFIX,
-    CRON,
     ENV_NAME,
     LABEL,
     PROJECT_KEY,
-    REPO,
     SITE_URL,
 )
 from veil.engine.constants.settings_rules import (
@@ -67,7 +54,6 @@ from veil.engine.constants.statuses import IN_REVIEW
 from veil.engine.constants.triggers import (
     EVENT_ENABLED,
     ON_DEMAND_ENABLED,
-    SCHEDULE_CRON,
     SCHEDULE_ENABLED,
 )
 
@@ -132,9 +118,6 @@ class Settings(BaseModel):
     # The budget
     token_ceiling: int = _setting(
         TOKEN_CEILING, TIGHTEN_LOWER, READER_ENGINE, ge=1, le=5_000_000
-    )
-    model_calls_per_minute: int = _setting(
-        MODEL_CALLS_PER_MINUTE, TIGHTEN_LOWER, READER_SHELL, ge=1, le=600
     )
 
     # Grouping and the names that the Engine writes
@@ -202,56 +185,15 @@ class Settings(BaseModel):
         pattern=ENV_NAME,
         max_length=MAX_NAME_CHARS,
     )
-    repos_allow: tuple[str, ...] = _setting(
-        (), TIGHTEN_LOCKED, READER_SHELL, max_length=MAX_LIST_ENTRIES
-    )
-    repos_deny: tuple[str, ...] = _setting(
-        (), TIGHTEN_LOCKED, READER_SHELL, max_length=MAX_LIST_ENTRIES
-    )
 
     # The triggers
     schedule_enabled: bool = _setting(
         SCHEDULE_ENABLED, TIGHTEN_DISABLE_ONLY, READER_SHELL
     )
-    schedule_cron: str = _setting(
-        SCHEDULE_CRON,
-        TIGHTEN_LOCKED,
-        READER_SHELL,
-        pattern=CRON,
-        max_length=MAX_NAME_CHARS,
-    )
     on_demand_enabled: bool = _setting(
         ON_DEMAND_ENABLED, TIGHTEN_DISABLE_ONLY, READER_SHELL
     )
     event_enabled: bool = _setting(EVENT_ENABLED, TIGHTEN_DISABLE_ONLY, READER_SHELL)
-
-    # The timings of the service
-    quiet_window_minutes: int = _setting(
-        QUIET_WINDOW_MINUTES, TIGHTEN_LOCKED, READER_SHELL, ge=0, le=120
-    )
-    run_timeout_minutes: int = _setting(
-        RUN_TIMEOUT_MINUTES, TIGHTEN_LOWER, READER_SHELL, ge=1, le=240
-    )
-    heartbeat_seconds: int = _setting(
-        HEARTBEAT_SECONDS, TIGHTEN_LOCKED, READER_SHELL, ge=10, le=600
-    )
-    max_concurrent_runs: int = _setting(
-        MAX_CONCURRENT_RUNS, TIGHTEN_LOWER, READER_SHELL, ge=1, le=20
-    )
-    checkout_sweep_minutes: int = _setting(
-        CHECKOUT_SWEEP_MINUTES, TIGHTEN_LOCKED, READER_SHELL, ge=10, le=1440
-    )
-
-    # The cache lifetimes
-    cache_settings_ttl_seconds: int = _setting(
-        CACHE_SETTINGS_TTL_SECONDS, TIGHTEN_LOCKED, READER_SHELL, ge=1, le=86_400
-    )
-    cache_jira_metadata_ttl_seconds: int = _setting(
-        CACHE_JIRA_METADATA_TTL_SECONDS, TIGHTEN_LOCKED, READER_SHELL, ge=1, le=86_400
-    )
-    cache_repo_list_ttl_seconds: int = _setting(
-        CACHE_REPO_LIST_TTL_SECONDS, TIGHTEN_LOCKED, READER_SHELL, ge=1, le=86_400
-    )
 
     @field_validator("branch_prefix")
     @classmethod
@@ -272,9 +214,7 @@ class Settings(BaseModel):
         merged.update(dict(zip(words, value.values(), strict=True)))
         return merged
 
-    @field_validator(
-        "extra_refused_read_patterns", "jira_project_keys", "repos_allow", "repos_deny"
-    )
+    @field_validator("extra_refused_read_patterns", "jira_project_keys")
     @classmethod
     def _short_entries(cls, entries: tuple[str, ...]) -> tuple[str, ...]:
         if any(len(entry) > MAX_ENTRY_CHARS for entry in entries):
@@ -295,11 +235,6 @@ class Settings(BaseModel):
     @classmethod
     def _project_keys(cls, keys: tuple[str, ...]) -> tuple[str, ...]:
         return _each_matches(keys, PROJECT_KEY, "a project key")
-
-    @field_validator("repos_allow", "repos_deny")
-    @classmethod
-    def _repo_names(cls, names: tuple[str, ...]) -> tuple[str, ...]:
-        return _each_matches(names, REPO, "a repository name")
 
 
 def secret_kind_in(value: Any) -> str | None:

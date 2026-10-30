@@ -4,8 +4,6 @@ from collections.abc import Callable, Mapping
 from typing import TextIO
 
 from veil.adapters.constants.settings_file import REPO_SETTINGS_PATH
-from veil.adapters.github.app_token import GitHubAppTokenSource
-from veil.adapters.github.token_source import TokenSource
 from veil.adapters.jira.models.jira_settings import JiraSettings
 from veil.adapters.yaml_settings import load_settings_file
 from veil.engine.config.resolve import resolve_settings
@@ -21,8 +19,8 @@ from veil.shells.github_action.constants.messages import (
     UNEXPECTED_ERROR,
 )
 from veil.shells.github_action.credentials import (
-    read_app_credentials,
     read_credentials,
+    read_github_token,
 )
 from veil.shells.github_action.environment import read_run_environment
 from veil.shells.github_action.errors.action_failure import ActionFailure
@@ -37,13 +35,12 @@ def run_action(
     environ: Mapping[str, str],
     *,
     urls: ServiceUrls | None = None,
-    token_source: TokenSource | None = None,
     run: Callable[[Context], RunReport] = run_engine,
     out: TextIO | None = None,
 ) -> int:
     """Run the Engine once for the repo of the workflow. Return the exit code of the Action.
 
-    Every check that needs no token comes first. Then the Action mints the GitHub token.
+    Every check that needs no credential comes first. Then the Action reads the credentials.
     It masks each credential in the log before it uses the value. A failure prints one error line and returns 1.
     A failure never touches a ticket. The message hides the credential values of the run.
     """
@@ -51,7 +48,7 @@ def run_action(
     urls = urls or ServiceUrls()
     known: list[str] = []
     try:
-        return _run(environ, urls, token_source, run, stream, known)
+        return _run(environ, urls, run, stream, known)
     except Exception as failure:  # noqa: BLE001 - the last resort. A crash must still print a redacted line
         message = (
             str(failure)
@@ -76,7 +73,6 @@ def _is_expected(failure: Exception) -> bool:
 def _run(
     environ: Mapping[str, str],
     urls: ServiceUrls,
-    token_source: TokenSource | None,
     run: Callable[[Context], RunReport],
     out: TextIO,
     known: list[str],
@@ -91,21 +87,13 @@ def _run(
         return 0
     jira = JiraSettings.from_settings(settings)
     credentials = read_credentials(environ, settings)
+    token = read_github_token(environ)
     known += [
         credentials.jira_token.get_secret_value(),
         credentials.openai_key.get_secret_value(),
+        token.get_secret_value(),
     ]
-    if token_source is None:
-        app = read_app_credentials(environ)
-        known.append(app.private_key.get_secret_value())
-        token_source = GitHubAppTokenSource(
-            app.app_id, app.private_key, base_url=urls.github_api_url
-        )
     mask_values(tuple(known), out)
-    source = token_source
-    token = source.mint(env.repo)
-    known.append(token.get_secret_value())
-    mask_values((token.get_secret_value(),), out)
 
     context, provider = build_context(
         settings, jira, credentials, token, urls, env.repo

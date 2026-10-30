@@ -12,5 +12,3 @@ MIN_TOOL_RESULT_MAX_BYTES = 256
 MAX_ATTEMPTS = 2
 # The attempt number from which the strong model runs.
 STRONG_MODEL_ATTEMPT = 2
-# A low rate. The shared counter in Redis enforces it, not the Engine.
-MODEL_CALLS_PER_MINUTE = 20

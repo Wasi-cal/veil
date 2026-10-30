@@ -6,12 +6,13 @@ from pathlib import Path
 from pydantic import SecretStr
 
 from veil.adapters.github.constants.git import (
+    AUTHOR_EMAIL,
+    AUTHOR_NAME,
     GITHUB_URL,
     LOGIN_REFUSED_MARKERS,
     NETWORK_VARIABLES,
     TOKEN_USER,
 )
-from veil.adapters.github.models.commit_author import CommitAuthor
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.errors.token_expired import TokenExpired
 from veil.engine.secrets.redact import redact
@@ -36,15 +37,12 @@ def secret_values(token: SecretStr) -> tuple[str, ...]:
     return (token.get_secret_value(), _basic_credential(token))
 
 
-def git_environment(
-    token: SecretStr, home: Path, author: CommitAuthor | None = None
-) -> dict[str, str]:
+def git_environment(token: SecretStr, home: Path) -> dict[str, str]:
     """The only variables that a git child process gets. The token goes in a per-command header.
 
     Git does not write this header to `.git/config`. The header is for github.com only.
     The proxy and certificate variables pass through, because git needs them to reach GitHub.
     """
-    author = author or CommitAuthor()
     credential = _basic_credential(token)
     passed = {
         name: os.environ[name] for name in NETWORK_VARIABLES if name in os.environ
@@ -57,10 +55,10 @@ def git_environment(
         "GIT_TERMINAL_PROMPT": "0",
         "GIT_CONFIG_NOSYSTEM": "1",
         "GIT_CONFIG_GLOBAL": os.devnull,
-        "GIT_AUTHOR_NAME": author.name,
-        "GIT_AUTHOR_EMAIL": author.email,
-        "GIT_COMMITTER_NAME": author.name,
-        "GIT_COMMITTER_EMAIL": author.email,
+        "GIT_AUTHOR_NAME": AUTHOR_NAME,
+        "GIT_AUTHOR_EMAIL": AUTHOR_EMAIL,
+        "GIT_COMMITTER_NAME": AUTHOR_NAME,
+        "GIT_COMMITTER_EMAIL": AUTHOR_EMAIL,
         "GIT_CONFIG_COUNT": "1",
         "GIT_CONFIG_KEY_0": f"http.{GITHUB_URL}.extraheader",
         "GIT_CONFIG_VALUE_0": f"AUTHORIZATION: basic {credential}",

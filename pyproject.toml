@@ -5,7 +5,6 @@ description = "Agent that fixes Gozu Tickets and opens draft Fix PRs for human r
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.14.1",
-    "pyjwt[crypto]>=2.15.1",
     "pyyaml>=6",
 ]
 
@@ -55,8 +54,8 @@ name = "github adapter folders import only from the folders below them"
 type = "layers"
 layers = [
   "veil.adapters.github.provider",
-  "veil.adapters.github.http_api | veil.adapters.github.workspace | veil.adapters.github.app_token",
-  "veil.adapters.github.git_command | veil.adapters.github.api | veil.adapters.github.token_source",
+  "veil.adapters.github.http_api | veil.adapters.github.workspace",
+  "veil.adapters.github.git_command | veil.adapters.github.api",
   "veil.adapters.github.models",
   "veil.adapters.github.constants",
 ]

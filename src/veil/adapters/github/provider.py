@@ -16,7 +16,6 @@ from veil.adapters.github.git_command import (
     run_git,
     secret_values,
 )
-from veil.adapters.github.models.commit_author import CommitAuthor
 from veil.adapters.github.workspace import GitWorkspace
 from veil.engine.constants.fix_kinds import FIX_BRANCH, OPEN_PR, FixKind
 from veil.engine.errors.repo_provider_error import RepoProviderError
@@ -42,14 +41,12 @@ class GitHubRepoProvider:
         remote_url: Callable[[str], str],
         branch_prefix: str,
         temp_root: Path | None = None,
-        author: CommitAuthor | None = None,
     ):
         self._token = token
         self._api = api
         self._remote_url = remote_url
         self._branch_prefix = branch_prefix
         self._temp_root = temp_root
-        self._author = author or CommitAuthor()
         if temp_root is not None:
             temp_root.mkdir(mode=DIR_MODE, parents=True, exist_ok=True)
         self._directories: list[Path] = []
@@ -111,7 +108,7 @@ class GitHubRepoProvider:
     def open_workspace(self, repo: str, branch: str) -> GitWorkspace:
         refuse_option_like(branch)
         directory = Path(tempfile.mkdtemp(prefix="veil-", dir=self._temp_root))
-        env = git_environment(self._token, directory, self._author)
+        env = git_environment(self._token, directory)
         secrets = secret_values(self._token)
         checkout = directory / "checkout"
         try:

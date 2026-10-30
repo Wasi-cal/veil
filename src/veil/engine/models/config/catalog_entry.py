@@ -17,4 +17,3 @@ class CatalogEntry(BaseModel):
     maximum: int | None
     repo_rule: TightenRule
     read_by: Reader
-    cache_lifetime: str
