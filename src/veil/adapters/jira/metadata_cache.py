@@ -1,6 +1,7 @@
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 
+@runtime_checkable
 class MetadataCache(Protocol):
     """A cache for the Jira metadata that every run reads again: the custom field ids and the transitions.
 

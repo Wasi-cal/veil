@@ -13,8 +13,18 @@ dependencies = [
     "sqlalchemy>=2.0",
 ]
 
+[project.optional-dependencies]
+service = [
+    "temporalio>=1.32,<2",
+]
+
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.6", "import-linter>=2.0"]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "import-linter>=2.0",
+    "temporalio>=1.32,<2",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -148,13 +158,30 @@ type = "layers"
 layers = [
   "veil.shells.github_action.main",
   "veil.shells.github_action.run_action",
-  "veil.shells.github_action.context_builder | veil.shells.github_action.credentials | veil.shells.github_action.environment | veil.shells.github_action.masking | veil.shells.github_action.summary | veil.shells.github_action.triggers",
-  "veil.shells.github_action.own_repo_tracker | veil.shells.github_action.models",
+  "veil.shells.github_action.credentials | veil.shells.github_action.environment | veil.shells.github_action.masking | veil.shells.github_action.summary | veil.shells.github_action.triggers",
+  "veil.shells.github_action.models",
   "veil.shells.github_action.errors",
   "veil.shells.github_action.constants",
 ]
 
 [[tool.importlinter.contracts]]
+name = "service shell folders import only from the folders below them"
+type = "layers"
+layers = [
+  "veil.shells.service.client | veil.shells.service.worker",
+  "veil.shells.service.workflow | veil.shells.service.activities",
+  "veil.shells.service.error_mapping | veil.shells.service.checkout_sweep | veil.shells.service.workflow_id",
+  "veil.shells.service.models",
+  "veil.shells.service.constants",
+]
+
+[[tool.importlinter.contracts]]
+name = "shared shell code imports no shell"
+type = "forbidden"
+source_modules = ["veil.shells.shared"]
+forbidden_modules = ["veil.shells.github_action", "veil.shells.service"]
+
+[[tool.importlinter.contracts]]
 name = "no shell uses another shell"
 type = "independence"
-modules = ["veil.shells.github_action"]
+modules = ["veil.shells.github_action", "veil.shells.service"]

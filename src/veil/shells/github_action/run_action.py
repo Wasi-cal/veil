@@ -20,7 +20,6 @@ from veil.engine.secrets.redact import redact
 from veil.shells.github_action.constants.messages import (
     UNEXPECTED_ERROR,
 )
-from veil.shells.github_action.context_builder import build_context
 from veil.shells.github_action.credentials import (
     read_app_credentials,
     read_credentials,
@@ -28,9 +27,10 @@ from veil.shells.github_action.credentials import (
 from veil.shells.github_action.environment import read_run_environment
 from veil.shells.github_action.errors.action_failure import ActionFailure
 from veil.shells.github_action.masking import mask_values
-from veil.shells.github_action.models.service_urls import ServiceUrls
 from veil.shells.github_action.summary import write_summary
 from veil.shells.github_action.triggers import skip_reason
+from veil.shells.shared.context_builder import build_context
+from veil.shells.shared.models.service_urls import ServiceUrls
 
 
 def run_action(

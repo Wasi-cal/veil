@@ -45,6 +45,7 @@ def make_context(
     source_files=None,
     open_source_pr=True,
     credentials=(),
+    progress=None,
     **ticket_fields,
 ):
     fields = {
@@ -72,6 +73,7 @@ def make_context(
     context = Context(
         settings=settings,
         credentials=credentials,
+        progress=progress,
         tracker=tracker,
         repo_provider=repos,
         model_client=model,

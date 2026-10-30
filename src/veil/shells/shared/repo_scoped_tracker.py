@@ -2,10 +2,10 @@ from veil.engine.interfaces.tracker import Tracker
 from veil.engine.models.ticket.ticket import Ticket
 
 
-class OwnRepoTracker:
-    """A tracker that shows the Engine only the tickets of one repo. The Action works on its own repo only.
+class RepoScopedTracker:
+    """A tracker that shows the Engine only the tickets of one repo. Each run works on one repo only.
 
-    The token of the Action covers one repo. A ticket of another repo must never reach the Engine.
+    The GitHub token of a run covers one repo. A ticket of another repo must never reach the Engine.
     """
 
     def __init__(self, inner: Tracker, repo: str) -> None:

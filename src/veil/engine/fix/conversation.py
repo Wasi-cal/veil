@@ -1,4 +1,5 @@
 import json
+from collections.abc import Callable
 
 from veil.engine.constants.tools import FINISH
 from veil.engine.errors.attempt_failed import AttemptFailed
@@ -20,6 +21,7 @@ def converse(
     messages: list[dict],
     settings: Settings,
     report: RunReport,
+    progress: Callable[[int], None] | None = None,
 ) -> FinishArgs:
     """Run the tool calls of the model until it calls finish with valid arguments. Return them.
 
@@ -33,6 +35,8 @@ def converse(
         ensure_budget(report, settings)
         reply = model_client.next(messages, model, tools)
         report.tokens_used += reply.tokens
+        if progress is not None:
+            progress(report.tokens_used)
         if reply.tool_calls:
             messages.append(_assistant_message(reply))
         steps += 0 if reply.tool_calls else 1  # An empty reply also counts as a step.

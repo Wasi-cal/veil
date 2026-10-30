@@ -1,4 +1,6 @@
 import json
+import time
+from collections.abc import Callable
 
 from veil.adapters.openai.api import OpenAIApi
 from veil.adapters.openai.constants.items import (
@@ -8,6 +10,12 @@ from veil.adapters.openai.constants.items import (
     ROLE_ASSISTANT,
     ROLE_TOOL,
 )
+from veil.adapters.openai.constants.retry import (
+    MODEL_CALL_RETRIES,
+    RETRY_BASE_DELAY_SECONDS,
+    RETRY_MAX_DELAY_SECONDS,
+)
+from veil.adapters.openai.models.api_response import ApiResponse
 from veil.engine.errors.model_client_error import ModelClientError
 from veil.engine.models.llm.model_reply import ModelReply
 from veil.engine.models.llm.tool_call import ToolCall
@@ -19,17 +27,20 @@ class OpenAIModelClient:
 
     It turns the chat messages of the Engine into items of the Responses API, and the reply into a ModelReply.
     It keeps no state. The Engine sends the whole conversation on each call.
+    A failed call with `retryable` set is tried again at most twice, with a growing pause.
+    A rejected call costs no tokens, so a new try keeps the token ceiling intact.
     """
 
-    def __init__(self, api: OpenAIApi):
+    def __init__(
+        self, api: OpenAIApi, sleep: Callable[[float], None] = time.sleep
+    ) -> None:
         self._api = api
+        self._sleep = sleep
 
     def next(
         self, messages: list[dict], model: str, tools: list[ToolDefinition]
     ) -> ModelReply:
-        response = self._api.create_response(
-            model, _items(messages), [_tool(tool) for tool in tools]
-        )
+        response = self._create(model, _items(messages), [_tool(t) for t in tools])
         return ModelReply(
             tool_calls=[
                 ToolCall(
@@ -41,6 +52,18 @@ class OpenAIModelClient:
             ],
             tokens=response.total_tokens,
         )
+
+    def _create(self, model: str, items: list[dict], tools: list[dict]) -> ApiResponse:
+        for attempt in range(MODEL_CALL_RETRIES):
+            try:
+                return self._api.create_response(model, items, tools)
+            except ModelClientError as failure:
+                if not failure.retryable:
+                    raise
+                self._sleep(
+                    min(RETRY_MAX_DELAY_SECONDS, RETRY_BASE_DELAY_SECONDS * 2**attempt)
+                )
+        return self._api.create_response(model, items, tools)
 
 
 def _tool(tool: ToolDefinition) -> dict:

@@ -146,7 +146,7 @@ def test_a_tool_message_that_answers_no_call_is_a_clear_error_and_nothing_is_sen
 
 
 def test_an_error_of_the_api_reaches_the_caller_unchanged():
-    error = ModelClientError("The API is down.", retryable=True)
+    error = ModelClientError("The API refused the key.", retryable=False)
     client, _ = client_with(error)
 
     with pytest.raises(ModelClientError) as raised:

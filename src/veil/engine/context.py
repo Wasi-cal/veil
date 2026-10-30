@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from pydantic import BaseModel, ConfigDict, SecretStr, field_validator
 
 from veil.engine.constants.limits import MIN_SECRET_LENGTH
@@ -19,6 +21,8 @@ class Context(BaseModel):
     repo_provider: RepoProvider
     model_client: ModelClient
     credentials: tuple[SecretStr, ...] = ()
+    # The Engine calls it with the tokens used so far. A Shell uses it to show that the run still lives.
+    progress: Callable[[int], None] | None = None
 
     @field_validator("credentials")
     @classmethod
@@ -35,6 +39,11 @@ class Context(BaseModel):
         if any(not value.strip() for value in values):
             raise ValueError("A credential value must not be only white space.")
         return credentials
+
+    def report_progress(self, tokens_used: int) -> None:
+        """Tell the Shell how many tokens the run used so far. An error of the callback stops the run."""
+        if self.progress is not None:
+            self.progress(tokens_used)
 
     def redact(self, text: str) -> str:
         """Replace the credential values of this run, and the known secret patterns, in a text.

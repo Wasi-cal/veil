@@ -17,13 +17,11 @@ from veil.shells.github_action.constants.messages import (
     SHARED_NAME,
 )
 from veil.shells.github_action.errors.action_failure import ActionFailure
-from veil.shells.github_action.models.action_credentials import ActionCredentials
 from veil.shells.github_action.models.app_credentials import AppCredentials
+from veil.shells.shared.models.run_credentials import RunCredentials
 
 
-def read_credentials(
-    environ: Mapping[str, str], settings: Settings
-) -> ActionCredentials:
+def read_credentials(environ: Mapping[str, str], settings: Settings) -> RunCredentials:
     """Read the Jira and OpenAI credentials from the variables that the settings name.
 
     A setting may not name a variable that the Action or the runner owns. Two credentials may not share a variable.
@@ -39,7 +37,7 @@ def read_credentials(
             raise ActionFailure(RESERVED_NAME.format(key=key, name=name))
     if len(set(names.values())) != len(names):
         raise ActionFailure(SHARED_NAME)
-    return ActionCredentials(
+    return RunCredentials(
         jira_email=(environ.get(settings.jira_email_env) or "").strip() or None,
         jira_token=_secret(environ, settings.jira_token_env),
         openai_key=_secret(environ, settings.openai_key_env),

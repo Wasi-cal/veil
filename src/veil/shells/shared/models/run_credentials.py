@@ -1,8 +1,8 @@
 from pydantic import BaseModel, ConfigDict, SecretStr
 
 
-class ActionCredentials(BaseModel):
-    """The credentials that the Action reads from the environment. The GitHub token is not here. The Action mints it."""
+class RunCredentials(BaseModel):
+    """The Jira and OpenAI credentials of a run. The GitHub token is not here. A Shell mints it."""
 
     model_config = ConfigDict(frozen=True, hide_input_in_errors=True)
 

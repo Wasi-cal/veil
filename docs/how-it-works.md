@@ -130,6 +130,18 @@ The Action is the first Shell (ADR 0013). It runs the Engine once for the repo o
 
 Any failure before step 5 stops the run with one error line and exit code 1. No ticket changes. A Failed Fix is not a failure.
 
+## The service Shell
+
+The service is the second Shell (ADR 0014). It runs the Engine for one repo inside a Temporal workflow.
+
+1. The workflow ID comes from the repo name. A second start for the same repo joins the active run.
+2. The activity `read_settings` reads the settings snapshot. The workflow keeps it.
+3. The activity `run_engine` mints the GitHub token, runs the Engine once and returns the run report.
+4. The Engine reports its tokens after each model call and each ticket. The activity sends each report as a heartbeat.
+5. Temporal retries only an infrastructure failure, at most twice. A retry uses the same snapshot. It lowers the token ceiling by the tokens of the last heartbeat.
+
+No credential goes into a workflow input, a result or a failure message. A worker deletes old checkouts when it starts.
+
 ## Settings
 
 Every number and every name that the Engine uses is a setting. Each setting has a default in code, a type, a minimum and a maximum. `docs/settings-catalog.md` lists them all. The declaration of the settings makes it. A test fails if the file is old.

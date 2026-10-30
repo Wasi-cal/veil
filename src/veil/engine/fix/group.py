@@ -27,6 +27,7 @@ def fix_group(context: Context, group: FixGroup, report: RunReport) -> None:
                 fix = fix_ticket(context, ticket, report, workspace)
             except FailedFix as failed:
                 record_failed_fix(context, ticket, failed, report)
+                context.report_progress(report.tokens_used)
                 continue
             if branch is None:
                 branch = group.branch_name(
@@ -34,6 +35,7 @@ def fix_group(context: Context, group: FixGroup, report: RunReport) -> None:
                 )
             workspace.commit(branch, context.redact(fix.commit_message))
             fixes.append(fix)
+            context.report_progress(report.tokens_used)
     except BudgetExhausted as exhausted:
         workspace.discard_changes()
         budget_error = exhausted

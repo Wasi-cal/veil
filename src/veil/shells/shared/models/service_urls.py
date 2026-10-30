@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict
 
 from veil.adapters.github.constants.http import API_URL as GITHUB_API_URL
 from veil.adapters.openai.constants.http import API_URL as OPENAI_API_URL
-from veil.shells.github_action.constants.urls import GIT_URL
+from veil.shells.shared.constants.urls import GIT_URL
 
 
 class ServiceUrls(BaseModel):

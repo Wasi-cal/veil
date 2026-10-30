@@ -54,6 +54,7 @@ def attempt(
         messages,
         settings,
         report,
+        context.progress,
     )
     ensure_no_secret(context, working_copy, finish)
     working_copy.verify()

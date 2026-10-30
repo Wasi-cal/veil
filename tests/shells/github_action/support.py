@@ -9,7 +9,7 @@ from tests.adapters.jira.support import API_TOKEN as JIRA_TOKEN
 from tests.fakes.http_server import StubHttpServer
 from tests.support.secret_samples import KEY_LIKE
 from veil.engine import Context, RunReport
-from veil.shells.github_action.models.service_urls import ServiceUrls
+from veil.shells.shared.models.service_urls import ServiceUrls
 
 OPENAI_KEY = KEY_LIKE["sk-key"]
 JIRA_EMAIL = "bot@example.invalid"

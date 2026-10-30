@@ -1,9 +1,10 @@
 from collections.abc import Sequence
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from veil.adapters.postgres.models.settings_snapshot import SettingsSnapshot
 
 
+@runtime_checkable
 class SnapshotSource(Protocol):
     """Where the settings snapshot comes from. The store in PostgreSQL is the source of truth."""
 
