@@ -130,21 +130,9 @@ The Action is the first Shell (ADR 0013). It runs the Engine once for the repo o
 
 Any failure before step 5 stops the run with one error line and exit code 1. No ticket changes. A Failed Fix is not a failure.
 
-## The service Shell
+## The service Shell (deferred)
 
-The service is the second Shell (ADR 0014). It runs the Engine for one repo inside a Temporal workflow.
-
-1. The workflow ID comes from the repo name. A second start for the same repo joins the active run.
-2. The activity `read_settings` reads the settings snapshot. The workflow keeps it.
-3. The activity `run_engine` mints the GitHub token, runs the Engine once and returns the run report.
-4. The Engine reports its tokens after each model call and each ticket. The activity sends each report as a heartbeat.
-5. Temporal retries only an infrastructure failure, at most twice. A retry uses the same snapshot. It lowers the token ceiling by the tokens of the last heartbeat.
-
-No credential goes into a workflow input, a result or a failure message. A worker deletes old checkouts when it starts.
-
-The service acts as a GitHub App (ADR 0015). A worker reads the App at start and refuses it if it holds other permissions than the three or listens to events. The repos that the service may run are the repos of the installation, narrowed by `repos_allow` and `repos_deny`. Commits carry the bot of the App as the author. If GitHub refuses the token in the middle of a repo, the Engine stops the run. It leaves the tickets without an outcome for the next run. The report says `token_expired`.
-
-The work of a run is the function `run_repo`. It has no Temporal in it. Only the folder `veil/shells/service/temporal/` imports `temporalio`, so Temporal is easy to delete (ADR 0014).
+The org-wide service is the second Shell (ADR 0014). It is not in the code now. veil runs on one repo through the GitHub Action. The decisions of the service stay in ADRs 0011, 0012, 0014 and 0015. The code was removed on purpose, and git history keeps it (commit `0bcf11c`).
 
 ## Settings
 
@@ -161,7 +149,7 @@ A repo can only tighten a value that the org set. The catalog gives a rule for e
 
 `resolve_settings(org, repo, overrides)` checks every layer. These fail: a key that is not a setting, a value of the wrong type and a value outside the bounds. A repo value that loosens the org value fails too. It also refuses a value that looks like a secret. The failure comes before the Engine touches any ticket. The message lists every problem and never repeats a value. The Engine reads no file. A Shell reads the YAML with `load_settings_file` and passes plain mappings.
 
-The org service keeps its settings in PostgreSQL (ADR 0011). Redis caches the slow reads, and a Redis outage never stops a run (ADR 0012). It reads one settings snapshot at the start of a run, and the whole run uses it. A change in the database applies to the next run.
+The Action reads its settings from repo YAML. A settings store in PostgreSQL with a Redis cache is deferred (ADRs 0011 and 0012).
 
 The safety rules are code. They are not settings. A setting with the name of a safety rule is an unknown key.
 

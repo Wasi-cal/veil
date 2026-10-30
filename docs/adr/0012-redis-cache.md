@@ -1,5 +1,7 @@
 # The Redis cache
 
+**Status: deferred.** veil runs on one repo through the GitHub Action now. GR-23. The code was removed with the service. The commit before the removal has it.
+
 Redis caches the slow reads of the org-wide service (ticket GR-23, decision GR-11). The code is in `veil/adapters/redis/`. A Redis outage never stops a run. The Engine does not change.
 
 ## What we decided

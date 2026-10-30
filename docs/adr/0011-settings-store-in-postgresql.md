@@ -1,5 +1,7 @@
 # The settings store in PostgreSQL
 
+**Status: deferred.** veil runs on one repo through the GitHub Action now. GR-22. The code was removed with the service. The commit before the removal has it.
+
 The org-wide service reads its settings from PostgreSQL (ticket GR-22, decision GR-11). The code is in `veil/adapters/postgres/`. The Engine does not change. It still gets a `Settings` object.
 
 ## What we decided

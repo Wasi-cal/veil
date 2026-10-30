@@ -1,5 +1,7 @@
 # The GitHub App in the service
 
+**Status: deferred.** veil runs on one repo through the GitHub Action now. GR-26. The service code was removed. The GitHub App code in `veil/adapters/github/` stays, because the Action uses it.
+
 The org-wide service acts on repos as a GitHub App (ticket GR-26, decision GR-5). The code is in `veil/adapters/github/` and `veil/shells/service/`. The Engine does not know the App.
 
 ## What we decided

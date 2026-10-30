@@ -1,5 +1,7 @@
 # The service Shell on Temporal
 
+**Status: deferred.** veil runs on one repo through the GitHub Action now. GR-25. The code was removed with the service. The commit before the removal has it.
+
 The org-wide service runs the Engine for one repo inside a Temporal workflow and activity (ticket GR-25, decision GR-9). The code is in `veil/shells/service/`. The code that both Shells use is in `veil/shells/shared/`. The Engine does not know Temporal.
 
 ## What we decided
