@@ -47,18 +47,18 @@ def run_action(
     It masks each credential in the log before it uses the value. A failure prints one error line and returns 1.
     A failure never touches a ticket. The message hides the credential values of the run.
     """
-    out = out or sys.stdout
+    stream: TextIO = out or sys.stdout
     urls = urls or ServiceUrls()
     known: list[str] = []
     try:
-        return _run(environ, urls, token_source, run, out, known)
+        return _run(environ, urls, token_source, run, stream, known)
     except Exception as failure:  # noqa: BLE001 - the last resort. A crash must still print a redacted line
         message = (
             str(failure)
             if _is_expected(failure)
             else f"{UNEXPECTED_ERROR} {type(failure).__name__}: {failure}"
         )
-        print(f"::error::{redact(message, tuple(known))}", file=out, flush=True)
+        print(f"::error::{redact(message, tuple(known))}", file=stream, flush=True)
         return 1
 
 
