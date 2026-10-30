@@ -3,6 +3,7 @@ import pytest
 from veil.engine.errors.model_client_error import ModelClientError
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.errors.settings_error import SettingsError
+from veil.engine.errors.token_expired import TokenExpired
 from veil.engine.errors.tracker_error import TrackerError
 from veil.shells.service.classify_failure import classify_failure
 from veil.shells.service.errors.run_failed import RunFailed
@@ -36,6 +37,7 @@ def test_an_infrastructure_failure_may_be_retried(error):
         TrackerError("bad login", status=401),
         TrackerError("not found", status=404),
         SettingsError(["bad value"]),
+        TokenExpired("the token expired"),
         ValueError("a bug"),
     ],
 )

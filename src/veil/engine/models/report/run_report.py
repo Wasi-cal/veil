@@ -8,6 +8,7 @@ class RunReport(BaseModel):
     outcomes: dict[str, str] = Field(default_factory=dict)
     skipped: dict[str, list[str]] = Field(default_factory=dict)
     tokens_used: int = 0
+    stopped: str | None = None
 
     def redacted(self, redact: Callable[[str], str]) -> "RunReport":
         """Return a copy of the report with `redact` applied to each text."""
@@ -19,4 +20,5 @@ class RunReport(BaseModel):
                 for reason, keys in self.skipped.items()
             },
             tokens_used=self.tokens_used,
+            stopped=self.stopped,
         )

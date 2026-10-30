@@ -171,7 +171,7 @@ type = "layers"
 layers = [
   "veil.shells.service.temporal",
   "veil.shells.service.run_repo",
-  "veil.shells.service.classify_failure | veil.shells.service.checkout_sweep",
+  "veil.shells.service.classify_failure | veil.shells.service.checkout_sweep | veil.shells.service.eligible_repos",
   "veil.shells.service.errors | veil.shells.service.models",
   "veil.shells.service.constants",
 ]

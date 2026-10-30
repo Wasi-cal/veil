@@ -2,6 +2,7 @@ from collections.abc import Callable
 
 from veil.engine.errors.model_client_error import ModelClientError
 from veil.engine.errors.repo_provider_error import RepoProviderError
+from veil.engine.errors.token_expired import TokenExpired
 from veil.engine.errors.tracker_error import TrackerError
 from veil.shells.service.constants.retry import (
     SERVER_ERROR_STATUS,
@@ -15,6 +16,7 @@ def classify_failure(error: Exception, redact: Callable[[str], str]) -> RunFaile
 
     Only an infrastructure failure may retry. A Failed Fix is a normal result and never reaches this function.
     A git or GitHub failure may retry too. The adapter cannot tell a lost network from a refused call.
+    A refused token is the one exception. The Engine stops the repo, and the next run mints a new token.
     The message goes through `redact`, because a runner may store it.
     """
     return RunFailed(
@@ -25,6 +27,8 @@ def classify_failure(error: Exception, redact: Callable[[str], str]) -> RunFaile
 
 
 def _may_retry(error: Exception) -> bool:
+    if isinstance(error, TokenExpired):
+        return False
     if isinstance(error, ModelClientError):
         return error.retryable
     if isinstance(error, TrackerError):

@@ -6,6 +6,7 @@ from tests.fakes.github_fixtures import pull_json
 from tests.fakes.http_server import StubHttpServer
 from veil.adapters.github.http_api import HttpGitHubApi
 from veil.engine.errors.repo_provider_error import RepoProviderError
+from veil.engine.errors.token_expired import TokenExpired
 
 
 def api_for(server: StubHttpServer) -> HttpGitHubApi:
@@ -128,3 +129,27 @@ def test_a_redirect_never_carries_the_token_to_another_host():
 def test_the_adapter_refuses_a_url_that_is_not_https(url):
     with pytest.raises(RepoProviderError):
         HttpGitHubApi(SecretStr(TOKEN), base_url=url)
+
+
+def test_a_401_from_github_is_an_expired_token_error():
+    with StubHttpServer() as server:
+        server.routes[("GET", "/repos/acme/app/pulls")] = (
+            401,
+            {"message": "Bad credentials"},
+        )
+
+        with pytest.raises(TokenExpired) as failure:
+            api_for(server).find_pull_requests("acme/app", head="feature-x")
+
+    assert TOKEN not in str(failure.value)
+
+
+@pytest.mark.parametrize("status", [403, 404, 422, 500])
+def test_any_other_failure_of_github_is_not_an_expired_token(status):
+    with StubHttpServer() as server:
+        server.routes[("GET", "/repos/acme/app/pulls")] = (status, {"message": "no"})
+
+        with pytest.raises(RepoProviderError) as failure:
+            api_for(server).find_pull_requests("acme/app", head="feature-x")
+
+    assert not isinstance(failure.value, TokenExpired)

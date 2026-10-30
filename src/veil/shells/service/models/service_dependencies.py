@@ -2,6 +2,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from veil.adapters.github.models.commit_author import CommitAuthor
 from veil.adapters.github.token_source import TokenSource
 from veil.adapters.jira.metadata_cache import MetadataCache
 from veil.adapters.redis.snapshot_source import SnapshotSource
@@ -25,3 +26,4 @@ class ServiceDependencies(BaseModel):
     checkout_root: Path
     urls: ServiceUrls = ServiceUrls()
     metadata_cache: MetadataCache | None = None
+    author: CommitAuthor

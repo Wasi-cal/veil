@@ -48,6 +48,7 @@ def run_repo(
             metadata_cache=dependencies.metadata_cache,
             temp_root=dependencies.checkout_root,
             progress=(lambda used: progress(prior_tokens + used)) if progress else None,
+            author=dependencies.author,
         )
         report = run(context)
     except Exception as failure:  # noqa: BLE001 - one error type with a redacted message leaves this function

@@ -210,3 +210,54 @@ def test_a_minted_token_that_looks_like_nothing_known_is_still_hidden_in_an_erro
         )
 
     assert opaque not in str(failure.value)
+
+
+def test_the_commits_of_the_run_carry_the_author_of_the_dependencies(tmp_path, stubs):
+    from tests.adapters.github.support import git
+    from veil.adapters.github.models.commit_author import CommitAuthor
+
+    remote_root = tmp_path / "remote"
+    remote_root.mkdir()
+    make_remote(remote_root)
+    bot = CommitAuthor(
+        name="gozu-veil[bot]", email="9001+gozu-veil[bot]@users.noreply.github.com"
+    )
+    seen = []
+
+    def step(context):
+        workspace = context.repo_provider.open_workspace("acme/app", "main")
+        workspace.write_file("app.py", "value = 'fixed'\n")
+        workspace.commit("gozu/fix-1", "Fix it")
+        seen.append(git(workspace.path, "log", "-1", "--format=%an|%ae").strip())
+        return RunReport()
+
+    deps = make_deps(tmp_path, stubs, author=bot)
+    deps = deps.model_copy(
+        update={
+            "urls": deps.urls.model_copy(
+                update={"git_url": (remote_root / "remotes").as_uri()}
+            )
+        }
+    )
+
+    run_repo(deps, "acme/app", make_snapshot(), run=FakeEngine(step))
+
+    assert seen == ["gozu-veil[bot]|9001+gozu-veil[bot]@users.noreply.github.com"]
+
+
+def test_the_dependencies_need_an_author_so_that_a_run_never_commits_with_a_default(
+    tmp_path, stubs
+):
+    from pydantic import ValidationError
+
+    from veil.shells.service.models.service_dependencies import ServiceDependencies
+
+    deps = make_deps(tmp_path, stubs)
+    fields = {
+        name: getattr(deps, name)
+        for name in ServiceDependencies.model_fields
+        if name != "author"
+    }
+
+    with pytest.raises(ValidationError):
+        ServiceDependencies(**fields)

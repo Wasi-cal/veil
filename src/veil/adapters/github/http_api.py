@@ -6,12 +6,21 @@ from veil.adapters.github.constants.http import (
     API_URL,
     API_VERSION,
     PAGE_SIZE,
+    UNAUTHORIZED,
 )
 from veil.adapters.github.constants.pr_states import MERGED, PrState
 from veil.adapters.github.constants.repo_name import REPO_NAME
 from veil.adapters.github.models.pull_request import PullRequest
-from veil.adapters.json_http import call_json, plain_error, require_https
+from veil.adapters.json_http import call_json, require_https
 from veil.engine.errors.repo_provider_error import RepoProviderError
+from veil.engine.errors.token_expired import TokenExpired
+
+
+def _error(message: str, status: int | None) -> Exception:
+    """GitHub answers 401 to a token that expired or that somebody revoked."""
+    return (
+        TokenExpired(message) if status == UNAUTHORIZED else RepoProviderError(message)
+    )
 
 
 class HttpGitHubApi:
@@ -107,7 +116,7 @@ class HttpGitHubApi:
     ) -> Any:
         reply = call_json(
             service="GitHub",
-            error=plain_error(RepoProviderError),
+            error=_error,
             secrets=(self._token.get_secret_value(),),
             base_url=self._base_url,
             method=method,

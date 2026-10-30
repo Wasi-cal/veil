@@ -142,6 +142,8 @@ The service is the second Shell (ADR 0014). It runs the Engine for one repo insi
 
 No credential goes into a workflow input, a result or a failure message. A worker deletes old checkouts when it starts.
 
+The service acts as a GitHub App (ADR 0015). A worker reads the App at start and refuses it if it holds other permissions than the three or listens to events. The repos that the service may run are the repos of the installation, narrowed by `repos_allow` and `repos_deny`. Commits carry the bot of the App as the author. If GitHub refuses the token in the middle of a repo, the Engine stops the run. It leaves the tickets without an outcome for the next run. The report says `token_expired`.
+
 The work of a run is the function `run_repo`. It has no Temporal in it. Only the folder `veil/shells/service/temporal/` imports `temporalio`, so Temporal is easy to delete (ADR 0014).
 
 ## Settings

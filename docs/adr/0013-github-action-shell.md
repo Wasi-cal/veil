@@ -29,7 +29,7 @@ The Action runs the Engine on one repo from a GitHub workflow (ticket GR-24, dec
 - A container Action needs Docker on the runner. A self-hosted runner must be Linux and must run Docker. The example workflow uses `ubuntu-latest`. A self-hosted runner needs another `runs-on` value.
 - The App key is a repo secret and stays in the environment of the Action process. The model loop has no shell and the git child gets no such variable. But the process itself holds the key.
 - A repo file can name any variable that the step sets and that is not reserved. A repo writer can choose which secret goes to Jira or to OpenAI. A repo writer can also choose the Jira site (ADR 0010).
-- The token lives for one hour. If it expires during a run, the Engine stops on the first error and the next run starts again. There is no re-mint.
+- The token lives for one hour. If it expires during a run, the Engine stops the run, leaves the tickets without an outcome for the next run and reports `token_expired` (ADR 0015). There is no re-mint.
 - The Action ignores `schedule_cron`. The cron lives in the workflow file.
 - `workflow_dispatch` from a branch other than the default branch reads the settings of that branch. Protect the branches that can run the workflow.
 - The check of the token trusts the reply of GitHub. It cannot see a permission that GitHub hides.

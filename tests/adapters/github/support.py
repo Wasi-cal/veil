@@ -3,6 +3,8 @@ from pathlib import Path
 
 from pydantic import SecretStr
 
+from tests.fakes.http_server import StubHttpServer  # noqa: F401
+from veil.adapters.github.app_token import GitHubAppTokenSource
 from veil.adapters.github.provider import GitHubRepoProvider
 
 TOKEN = "".join(["ghp_", "a1B2c3D4e5F6g7H8i9J0", "k1L2m3N4o5P6q7R8s9T0"])  # noqa: FLY002
@@ -60,3 +62,26 @@ def make_provider(root: Path, api=None, branch_prefix: str = "gozu/fix-"):
         branch_prefix=branch_prefix,
         temp_root=root / "tmp",
     )
+
+
+APP_ID = "424242"
+GOOD_PERMISSIONS = {"contents": "write", "pull_requests": "write", "metadata": "read"}
+
+
+def minted(permissions=None, repositories=("acme/app",), selection="selected"):
+    return (
+        201,
+        {
+            "token": TOKEN,
+            "expires_at": "2099-01-01T00:00:00Z",
+            "permissions": permissions or GOOD_PERMISSIONS,
+            "repository_selection": selection,
+            "repositories": [
+                {"name": name.split("/")[1], "full_name": name} for name in repositories
+            ],
+        },
+    )
+
+
+def source_for(server, key):
+    return GitHubAppTokenSource(APP_ID, key, base_url=server.url)

@@ -1,49 +1,20 @@
 import jwt
 import pytest
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
 from pydantic import SecretStr
 
-from tests.adapters.github.support import TOKEN
+from tests.adapters.github.support import (
+    APP_ID,
+    GOOD_PERMISSIONS,
+    TOKEN,
+    minted,
+    source_for,
+)
 from tests.fakes.http_server import StubHttpServer
 from veil.adapters.github.app_token import GitHubAppTokenSource
 from veil.engine.errors.repo_provider_error import RepoProviderError
 
-APP_ID = "424242"
 INSTALLATION_PATH = "/repos/acme/app/installation"
 TOKEN_PATH = "/app/installations/77/access_tokens"
-GOOD_PERMISSIONS = {"contents": "write", "pull_requests": "write", "metadata": "read"}
-
-
-@pytest.fixture(scope="module")
-def key_pair():
-    private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    pem = private.private_bytes(
-        serialization.Encoding.PEM,
-        serialization.PrivateFormat.PKCS8,
-        serialization.NoEncryption(),
-    ).decode()
-    public = private.public_key()
-    return SecretStr(pem), public
-
-
-def minted(permissions=None, repositories=("acme/app",), selection="selected"):
-    return (
-        201,
-        {
-            "token": TOKEN,
-            "expires_at": "2099-01-01T00:00:00Z",
-            "permissions": permissions or GOOD_PERMISSIONS,
-            "repository_selection": selection,
-            "repositories": [
-                {"name": name.split("/")[1], "full_name": name} for name in repositories
-            ],
-        },
-    )
-
-
-def source_for(server, key):
-    return GitHubAppTokenSource(APP_ID, key, base_url=server.url)
 
 
 def serve(server, answer=None):

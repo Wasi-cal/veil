@@ -23,7 +23,7 @@ The org-wide service runs the Engine for one repo inside a Temporal workflow and
 
 - No worker ran against a real Temporal cluster, real PostgreSQL on AWS or a real GitHub App. The tests use a dev server and stubs.
 - The tests use the real clock of the dev server. A retry waits 1 second. No test proves the heartbeat time-out, because that needs time skipping.
-- `GitHubAppTokenSource` mints the token with a key from a secret. The key service of the cloud and the real worker program with its settings come in GR-26 and GR-29. This ticket has no `main` for the worker.
+- `GitHubAppTokenSource` mints the token with a key from a secret. The key service of the cloud is a later ticket (ADR 0015). The real worker program with its settings comes in GR-29. This ticket has no `main` for the worker.
 - The workflow does not catch a bad snapshot. The store refuses bad rows, so a bad snapshot cannot come from it.
 - A thread sends the heartbeat. A cancel of the workflow reaches the Engine only at the next heartbeat call. It does not stop a model call that is running.
 - A retry after a crash repeats the model calls that ran before the last heartbeat. The budget holds only up to that heartbeat.

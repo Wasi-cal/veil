@@ -7,6 +7,7 @@ from tests.shells.github_action.support import (
     SITE,
     FakeTokenSource,
 )
+from veil.adapters.github.models.commit_author import CommitAuthor
 from veil.adapters.postgres.models.settings_snapshot import SettingsSnapshot
 from veil.engine import Context, RunReport
 from veil.shells.service.models.service_dependencies import ServiceDependencies
@@ -56,6 +57,7 @@ class UnusedSource:
 
 
 def make_deps(tmp_path, stubs, token_source=None, settings_source=None, **changes):
+    changes.setdefault("author", CommitAuthor())
     jira, github = stubs
     return ServiceDependencies(
         token_source=token_source or FakeTokenSource(),

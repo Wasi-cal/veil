@@ -18,3 +18,9 @@ NETWORK_VARIABLES = (
     "SSL_CERT_DIR",
     "GIT_SSL_CAINFO",
 )
+# Git prints one of these when GitHub refuses the token. The token expired or somebody revoked it.
+LOGIN_REFUSED_MARKERS = (
+    "Invalid username or token",
+    "Authentication failed",
+    "returned error: 401",
+)

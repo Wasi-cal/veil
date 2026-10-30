@@ -59,3 +59,16 @@ _Avoid_: Mode, wrapper
 **Settings snapshot**:
 The settings rows of the org and of the repos of one run, read from the database at one point in time. The service reads it once at the start of a run, and the whole run uses it. A change in the database applies to the next run.
 _Avoid_: Config cache, settings copy
+
+**GitHub App**:
+The identity that the agent uses on GitHub. It has three permissions: Contents write, Pull requests write and Metadata read. It mints one installation token for each repo. Its commits show the bot of the App as the author.
+_Avoid_: Bot account, service account
+
+**Installation**:
+The install of the GitHub App on an organization or a user, on selected repos. The repos of the installation are the most repos that the service may run.
+_Avoid_: Integration
+
+**Stopped run**:
+A run that ended before it handled every ticket, because GitHub refused the token. The report says `token_expired`. Each ticket without an outcome stays open for the next run.
+_Avoid_: Failed run (a Failed Fix is another thing)
+

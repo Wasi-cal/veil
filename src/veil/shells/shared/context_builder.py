@@ -4,6 +4,7 @@ from pathlib import Path
 from pydantic import SecretStr
 
 from veil.adapters.github.http_api import HttpGitHubApi
+from veil.adapters.github.models.commit_author import CommitAuthor
 from veil.adapters.github.provider import GitHubRepoProvider
 from veil.adapters.jira.gateway import resolve_api_base
 from veil.adapters.jira.metadata_cache import MetadataCache
@@ -29,11 +30,16 @@ def build_context(
     metadata_cache: MetadataCache | None = None,
     temp_root: Path | None = None,
     progress: Callable[[int], None] | None = None,
+    author: CommitAuthor | None = None,
 ) -> tuple[Context, GitHubRepoProvider]:
     """Build the Engine context from the real adapters. Return the repo provider too, so the caller can close it.
 
     The GitHub token goes to the repo provider and its API only. The Jira token goes to the tracker only.
-    The OpenAI key goes to the model client only. A Shell may give a Jira metadata cache, a root for the checkouts and a progress callback. The tracker shows the Engine the tickets of this repo only.
+    The OpenAI key goes to the model client only. A Shell may also give:
+    - a Jira metadata cache,
+    - a root for the checkouts,
+    - a progress callback,
+    - the author of the commits. The tracker shows the Engine the tickets of this repo only.
     """
     provider = GitHubRepoProvider(
         token=github_token,
@@ -41,6 +47,7 @@ def build_context(
         remote_url=lambda repo: f"{urls.git_url}/{repo}.git",
         branch_prefix=settings.branch_prefix,
         temp_root=temp_root,
+        author=author,
     )
     try:
         jira_tracker = JiraTracker(
