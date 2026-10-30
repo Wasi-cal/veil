@@ -9,7 +9,7 @@ from temporalio.contrib.pydantic import pydantic_data_converter
 from tests.shells.github_action.support import SITE
 from tests.shells.service.support import FakeEngine, make_deps, reports
 from veil.adapters.postgres.store import PostgresSettingsStore
-from veil.shells.service.worker import create_worker
+from veil.shells.service.temporal.worker import create_worker
 
 
 @pytest.fixture

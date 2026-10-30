@@ -1,13 +1,17 @@
 import asyncio
 import base64
+import dataclasses
 import json
 import uuid
 from collections.abc import Awaitable, Callable
 
 from temporalio.client import Client
 from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.testing import ActivityEnvironment
 
-from veil.shells.service.worker import create_worker
+from tests.shells.service.support import make_snapshot
+from veil.shells.service.temporal.models.run_engine_input import RunEngineInput
+from veil.shells.service.temporal.worker import create_worker
 
 
 def with_worker(host, deps, engine, scenario: Callable[..., Awaitable]):
@@ -54,3 +58,17 @@ def activity_scheduled(history, name: str):
         ):
             return attributes
     raise AssertionError(f"No activity {name} was scheduled.")
+
+
+def make_input(repo: str = "acme/app", **org) -> RunEngineInput:
+    return RunEngineInput(repo=repo, snapshot=make_snapshot(repo, **org))
+
+
+def activity_env(prior_tokens: int | None = None):
+    """An activity environment and the list of heartbeats. A prior heartbeat is what an earlier attempt sent."""
+    env = ActivityEnvironment()
+    beats: list[int] = []
+    env.on_heartbeat = lambda *details: beats.append(details[0])
+    if prior_tokens is not None:
+        env.info = dataclasses.replace(env.info, heartbeat_details=[prior_tokens])
+    return env, beats

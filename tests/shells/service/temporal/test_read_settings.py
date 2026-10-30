@@ -1,6 +1,7 @@
-from tests.shells.service.support import activity_env, make_deps
+from tests.shells.service.support import make_deps
+from tests.shells.service.temporal.support import activity_env
 from veil.adapters.postgres.store import PostgresSettingsStore
-from veil.shells.service.activities import EngineActivities
+from veil.shells.service.temporal.activities import EngineActivities
 
 
 def test_it_reads_the_snapshot_of_the_repo_from_the_real_database(

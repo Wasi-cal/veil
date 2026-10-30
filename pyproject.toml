@@ -39,6 +39,7 @@ pythonpath = ["src", "."]
 
 [tool.importlinter]
 root_package = "veil"
+include_external_packages = true
 
 [[tool.importlinter.contracts]]
 name = "engine imports nothing from adapters or shells"
@@ -168,11 +169,21 @@ layers = [
 name = "service shell folders import only from the folders below them"
 type = "layers"
 layers = [
-  "veil.shells.service.client | veil.shells.service.worker",
-  "veil.shells.service.workflow | veil.shells.service.activities",
-  "veil.shells.service.error_mapping | veil.shells.service.checkout_sweep | veil.shells.service.workflow_id",
-  "veil.shells.service.models",
+  "veil.shells.service.temporal",
+  "veil.shells.service.run_repo",
+  "veil.shells.service.classify_failure | veil.shells.service.checkout_sweep",
+  "veil.shells.service.errors | veil.shells.service.models",
   "veil.shells.service.constants",
+]
+
+[[tool.importlinter.contracts]]
+name = "temporal folders of the service import only from the folders below them"
+type = "layers"
+layers = [
+  "veil.shells.service.temporal.client | veil.shells.service.temporal.worker",
+  "veil.shells.service.temporal.workflow | veil.shells.service.temporal.activities",
+  "veil.shells.service.temporal.workflow_id | veil.shells.service.temporal.models",
+  "veil.shells.service.temporal.constants",
 ]
 
 [[tool.importlinter.contracts]]
@@ -185,3 +196,20 @@ forbidden_modules = ["veil.shells.github_action", "veil.shells.service"]
 name = "no shell uses another shell"
 type = "independence"
 modules = ["veil.shells.github_action", "veil.shells.service"]
+
+[[tool.importlinter.contracts]]
+name = "only the temporal folder of the service imports temporalio"
+type = "forbidden"
+source_modules = [
+  "veil.engine",
+  "veil.adapters",
+  "veil.shells.shared",
+  "veil.shells.github_action",
+  "veil.shells.service",
+]
+forbidden_modules = ["temporalio"]
+ignore_imports = [
+  "veil.shells.service.temporal.** -> temporalio",
+  "veil.shells.service.temporal.** -> temporalio.**",
+]
+unmatched_ignore_imports_alerting = "none"

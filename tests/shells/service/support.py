@@ -1,7 +1,4 @@
-import dataclasses
-
 from pydantic import SecretStr
-from temporalio.testing import ActivityEnvironment
 
 from tests.shells.github_action.support import (
     JIRA_EMAIL,
@@ -12,12 +9,17 @@ from tests.shells.github_action.support import (
 )
 from veil.adapters.postgres.models.settings_snapshot import SettingsSnapshot
 from veil.engine import Context, RunReport
-from veil.shells.service.models.run_engine_input import RunEngineInput
 from veil.shells.service.models.service_dependencies import ServiceDependencies
 from veil.shells.shared.models.run_credentials import RunCredentials
 from veil.shells.shared.models.service_urls import ServiceUrls
 
-__all__ = ["FakeEngine", "FakeTokenSource", "activity_env", "make_deps", "make_input"]
+__all__ = [
+    "FakeEngine",
+    "FakeTokenSource",
+    "make_deps",
+    "make_snapshot",
+    "reports",
+]
 
 
 class FakeEngine:
@@ -73,22 +75,9 @@ def make_deps(tmp_path, stubs, token_source=None, settings_source=None, **change
     )
 
 
-def make_input(repo: str = "acme/app", **org) -> RunEngineInput:
-    return RunEngineInput(
-        repo=repo,
-        snapshot=SettingsSnapshot(
-            version=1,
-            org={"jira_site_url": SITE, "jira_project_keys": ["SEC"], **org},
-            repos={repo: {}},
-        ),
+def make_snapshot(repo: str = "acme/app", **org) -> SettingsSnapshot:
+    return SettingsSnapshot(
+        version=1,
+        org={"jira_site_url": SITE, "jira_project_keys": ["SEC"], **org},
+        repos={repo: {}},
     )
-
-
-def activity_env(prior_tokens: int | None = None):
-    """An activity environment and the list of heartbeats. A prior heartbeat is what an earlier attempt sent."""
-    env = ActivityEnvironment()
-    beats: list[int] = []
-    env.on_heartbeat = lambda *details: beats.append(details[0])
-    if prior_tokens is not None:
-        env.info = dataclasses.replace(env.info, heartbeat_details=[prior_tokens])
-    return env, beats

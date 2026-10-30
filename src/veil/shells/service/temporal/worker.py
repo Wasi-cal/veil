@@ -8,11 +8,11 @@ from temporalio.worker import Worker
 from veil.engine.context import Context
 from veil.engine.models.report.run_report import RunReport
 from veil.engine.run import run as run_engine
-from veil.shells.service.activities import EngineActivities
 from veil.shells.service.checkout_sweep import sweep_old_checkouts
-from veil.shells.service.constants.names import ACTIVITY_THREADS, TASK_QUEUE
 from veil.shells.service.models.service_dependencies import ServiceDependencies
-from veil.shells.service.workflow import RepoRunWorkflow
+from veil.shells.service.temporal.activities import EngineActivities
+from veil.shells.service.temporal.constants.names import ACTIVITY_THREADS, TASK_QUEUE
+from veil.shells.service.temporal.workflow import RepoRunWorkflow
 
 
 def create_worker(

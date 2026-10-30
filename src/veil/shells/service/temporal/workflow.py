@@ -6,16 +6,16 @@ from temporalio.common import RetryPolicy
 with workflow.unsafe.imports_passed_through():
     from veil.adapters.postgres.models.settings_snapshot import SettingsSnapshot
     from veil.engine.models.report.run_report import RunReport
-    from veil.shells.service.constants.names import (
+    from veil.shells.service.temporal.constants.names import (
         READ_SETTINGS_ACTIVITY,
         RUN_ENGINE_ACTIVITY,
     )
-    from veil.shells.service.constants.retry import (
+    from veil.shells.service.temporal.constants.retry import (
         MAX_ATTEMPTS,
         READ_SETTINGS_ATTEMPTS,
         READ_SETTINGS_TIMEOUT_SECONDS,
     )
-    from veil.shells.service.models.run_engine_input import RunEngineInput
+    from veil.shells.service.temporal.models.run_engine_input import RunEngineInput
 
 
 @workflow.defn(name="RepoRunWorkflow")

@@ -8,7 +8,7 @@ from temporalio.exceptions import ActivityError, ApplicationError
 from tests.adapters.github.support import TOKEN
 from tests.shells.github_action.support import JIRA_TOKEN, OPENAI_KEY, SITE
 from tests.shells.service.support import FakeEngine, make_deps, reports
-from tests.shells.service.temporal_support import (
+from tests.shells.service.temporal.support import (
     activity_scheduled,
     history_text,
     with_worker,
@@ -16,8 +16,8 @@ from tests.shells.service.temporal_support import (
 from veil.adapters.postgres.store import PostgresSettingsStore
 from veil.engine import RunReport
 from veil.engine.errors.tracker_error import TrackerError
-from veil.shells.service.client import start_repo_run
-from veil.shells.service.workflow_id import workflow_id
+from veil.shells.service.temporal.client import start_repo_run
+from veil.shells.service.temporal.workflow_id import workflow_id
 
 
 @pytest.fixture

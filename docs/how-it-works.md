@@ -142,6 +142,8 @@ The service is the second Shell (ADR 0014). It runs the Engine for one repo insi
 
 No credential goes into a workflow input, a result or a failure message. A worker deletes old checkouts when it starts.
 
+The work of a run is the function `run_repo`. It has no Temporal in it. Only the folder `veil/shells/service/temporal/` imports `temporalio`, so Temporal is easy to delete (ADR 0014).
+
 ## Settings
 
 Every number and every name that the Engine uses is a setting. Each setting has a default in code, a type, a minimum and a maximum. `docs/settings-catalog.md` lists them all. The declaration of the settings makes it. A test fails if the file is old.

@@ -1,6 +1,6 @@
 from veil.adapters.github.constants.repo_name import REPO_NAME
 from veil.engine.errors.repo_provider_error import RepoProviderError
-from veil.shells.service.constants.names import WORKFLOW_ID_PREFIX
+from veil.shells.service.temporal.constants.names import WORKFLOW_ID_PREFIX
 
 
 def workflow_id(repo: str) -> str:
