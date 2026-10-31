@@ -20,11 +20,20 @@ def list_dir(path: str = ".") -> ToolCall:
 
 
 def finish(
-    explanation: str = "Fixed.", commit_message: str = "Fix the finding."
+    explanation: str = "Fixed.",
+    commit_message: str = "Fix the finding.",
+    problem: str = "The input reaches eval, so it can run any code.",
+    solves: str = "The input is now only a number.",
 ) -> ToolCall:
+    """A finish call. `explanation` is the text of the part `change`."""
     return ToolCall(
         name="finish",
-        arguments={"commit_message": commit_message, "explanation": explanation},
+        arguments={
+            "commit_message": commit_message,
+            "problem": problem,
+            "change": explanation,
+            "solves": solves,
+        },
     )
 
 

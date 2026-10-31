@@ -13,7 +13,7 @@ The Engine puts Gozu Tickets into groups. Each group gets one draft Fix PR. A Sh
 - **The token ceiling.** If the ceiling stops a run in the middle of a group, the Engine still publishes the Fixes that passed. The current ticket and the later tickets wait for the next run.
 - **The cap of the Shared PR.** A Shared PR holds at most 10 tickets (a setting). The Engine applies the cap before the attempts. A ticket that fails does not free a place. The other tickets wait for the next run.
 - **Unknown severity is High.** A severity word that is not in the severity map gets its own PR, so a person looks at it. A severity map that a caller gives changes only its own words. The other words keep the default.
-- **`finish` has a format.** The model gives a one-line commit message and an explanation of at most 3 sentences. The commit message becomes the commit. The explanation goes in the PR body and in the comment on the ticket.
+- **`finish` has a format.** The model gives a one-line commit message and three parts: `problem`, `change` and `solves`. Each part has at most 3 sentences. The commit message becomes the commit. The three parts go in the PR body and in the comment on the ticket. A part that copies the text of the ticket is refused (ADR 0016).
 - **Settings.** The severity map, the branch prefix, the cap of the Shared PR and the number of sentences are settings. The safety rules are not. The branch prefix feeds the no-loop rule, so it must have at least 3 characters and end with `/` or `-`.
 - **The branch name.** A Shared PR branch names the first Fix that passed, not the first ticket. A ticket that failed gives no name.
 
@@ -21,4 +21,4 @@ The Engine puts Gozu Tickets into groups. Each group gets one draft Fix PR. A Sh
 
 - A later run makes a new Shared PR with a new branch for tickets that came later. The Engine does not add commits to an open Shared PR.
 - If the repo provider fails while it commits or opens the PR, the run stops. The tickets of that group get no outcome and no tracker change. The next run tries them again.
-- The explanation and the commit message are text from the model. The secret scan of ticket GR-17 must scan them.
+- The three parts and the commit message are text from the model. The secret scan of ticket GR-17 must scan them.

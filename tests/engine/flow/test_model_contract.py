@@ -14,7 +14,9 @@ def test_the_model_gets_the_five_tools_with_a_description_and_a_schema(tmp_path)
     assert set(tools["edit_file"].parameters["properties"]) == {"path", "old", "new"}
     assert set(tools["finish"].parameters["properties"]) == {
         "commit_message",
-        "explanation",
+        "problem",
+        "change",
+        "solves",
     }
 
 

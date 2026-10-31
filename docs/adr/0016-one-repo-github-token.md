@@ -12,7 +12,7 @@ veil runs on one repo through the GitHub Action. This ADR changes the GitHub cre
 
 - **The eligible label is optional.** An empty `eligible_label` turns the label check off. The default stays `veil-eligible`.
 - **A ticket always has a branch.** No word stands for a missing branch. The tools that write tickets (Gozurion and the Gozu CLI) stop before they write one. They find the branch from the runner or from git, also on a detached HEAD. If they find none, they stop and write nothing. veil skips a ticket that has no branch.
-- **The text that veil writes follows ASD-STE100.** The prompt tells the model to write the commit message and the explanation in Simplified Technical English. The Engine sends a sentence of more than 25 words back to the model. The PR title says "ticket" for one ticket.
+- **The text that veil writes follows ASD-STE100.** The prompt tells the model to write the commit message and the three parts in Simplified Technical English. The three parts are the problem, the change and what it solves. The PR and the ticket comment show them under three labels. The Engine refuses a part that copies the text of the ticket. The Engine sends a sentence of more than 25 words back to the model. The PR title says "ticket" for one ticket.
 
 ## What we accept for now
 

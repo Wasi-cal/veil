@@ -1,10 +1,13 @@
 import re
+from difflib import SequenceMatcher
 
 from pydantic import ValidationError
 
 from veil.engine.constants.explanation import (
     ABBREVIATIONS,
+    COPY_SHARE,
     MAX_SENTENCE_WORDS,
+    MIN_COPY_WORDS,
     SENTENCE_END,
 )
 from veil.engine.models.config.settings import Settings
@@ -37,16 +40,43 @@ def _abbreviation(text: str, mark: re.Match[str]) -> bool:
     )
 
 
-def read_finish(call: ToolCall, settings: Settings) -> FinishArgs | str:
-    """Return the arguments of a finish call. If they break the format, return an error text for the model."""
+def read_finish(
+    call: ToolCall, settings: Settings, finding_text: str = ""
+) -> FinishArgs | str:
+    """Return the arguments of a finish call. If they break the format, return an error text for the model.
+
+    Each of the three parts must be short, with short sentences. No part may copy the text of the ticket.
+    """
     try:
         args = FinishArgs.model_validate(call.arguments)
     except ValidationError as error:
         problem = error.errors()[0]["msg"].removeprefix("Value error, ")
         return f"Error: The arguments of finish are not valid. {problem}"
     limit = settings.explanation_max_sentences
-    if count_sentences(args.explanation) > limit:
-        return f"Error: The explanation has more than {limit} sentences. Use at most {limit} sentences."
-    if longest_sentence_words(args.explanation) > MAX_SENTENCE_WORDS:
-        return f"Error: A sentence of the explanation has more than {MAX_SENTENCE_WORDS} words. Use short sentences."
+    for name in ("problem", "change", "solves"):
+        text = getattr(args, name)
+        if count_sentences(text) > limit:
+            return f"Error: The part {name} has more than {limit} sentences. Use at most {limit} sentences."
+        if longest_sentence_words(text) > MAX_SENTENCE_WORDS:
+            return f"Error: A sentence of the part {name} has more than {MAX_SENTENCE_WORDS} words. Use short sentences."
+        if copies_text(text, finding_text):
+            return f"Error: The part {name} copies the text of the ticket. Describe this code in your own words."
     return args
+
+
+def copies_text(text: str, source: str) -> bool:
+    """Check if `text` copies `source`. It copies if it is inside the source word for word.
+
+    A long text also copies if a big share of its words is one run of the words of the source.
+    """
+    words = re.findall(r"[a-z0-9_]+", text.lower())
+    source_words = re.findall(r"[a-z0-9_]+", source.lower())
+    if len(words) < MIN_COPY_WORDS or not source_words:
+        return False
+    joined, source_joined = " ".join(words), " ".join(source_words)
+    if joined in source_joined:
+        return True
+    match = SequenceMatcher(
+        None, words, source_words, autojunk=False
+    ).find_longest_match(0, len(words), 0, len(source_words))
+    return match.size / len(words) >= COPY_SHARE

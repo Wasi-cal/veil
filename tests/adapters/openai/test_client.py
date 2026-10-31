@@ -160,7 +160,12 @@ def test_the_engine_fixes_a_ticket_with_the_real_client_and_counts_the_api_token
 ):
     edit = json.dumps({"path": "app.py", "old": "eval(input())", "new": "int(input())"})
     finish = json.dumps(
-        {"commit_message": "Replace eval.", "explanation": "Used int instead of eval."}
+        {
+            "commit_message": "Replace eval.",
+            "problem": "The input reaches eval, so it can run any code.",
+            "change": "Used int instead of eval.",
+            "solves": "The input is now only a number.",
+        }
     )
     api = StubOpenAIApi(
         [

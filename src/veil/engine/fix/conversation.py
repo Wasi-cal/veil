@@ -22,10 +22,12 @@ def converse(
     settings: Settings,
     report: RunReport,
     progress: Callable[[int], None] | None = None,
+    finding_text: str = "",
 ) -> FinishArgs:
     """Run the tool calls of the model until it calls finish with valid arguments. Return them.
 
     A finish call that breaks the format gets an error text, and the model can try again.
+    `finding_text` is the text of the ticket. A part that copies it breaks the format.
     Raise AttemptFailed at the step cap. Raise BudgetExhausted before a model call if the run used its token ceiling.
     """
     tools = tool_definitions()
@@ -43,7 +45,7 @@ def converse(
         for call in reply.tool_calls:
             steps += 1
             if call.name == FINISH:
-                result = read_finish(call, settings)
+                result = read_finish(call, settings, finding_text)
                 if isinstance(result, FinishArgs):
                     finish = result
                     break

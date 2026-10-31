@@ -55,11 +55,14 @@ def attempt(
         settings,
         report,
         context.progress,
+        ticket.finding,
     )
     ensure_no_secret(context, working_copy, finish)
     working_copy.verify()
     return Fix(
         ticket=ticket,
         commit_message=finish.commit_message,
-        explanation=finish.explanation,
+        problem=finish.problem,
+        change=finish.change,
+        solves=finish.solves,
     )

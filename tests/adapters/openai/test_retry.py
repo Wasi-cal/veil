@@ -4,7 +4,11 @@ from tests.fakes.openai_api import StubOpenAIApi, api_reply
 from veil.adapters.openai.client import OpenAIModelClient
 from veil.engine.errors.model_client_error import ModelClientError
 
-FINISH = ("c1", "finish", '{"commit_message": "x", "explanation": "y"}')
+FINISH = (
+    "c1",
+    "finish",
+    '{"commit_message": "x", "problem": "p", "change": "c", "solves": "s"}',
+)
 
 
 def client_for(*replies):
