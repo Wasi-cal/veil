@@ -44,4 +44,8 @@ jobs:
             -e GITHUB_WORKSPACE=/github/workspace \
             -e GITHUB_REPOSITORY -e GITHUB_EVENT_NAME -e GITHUB_STEP_SUMMARY \
             -e GITHUB_TOKEN -e JIRA_EMAIL -e JIRA_API_TOKEN -e OPENAI_API_KEY \
-            veil:trial
+            veil:trial || status=$?
+          # Print the report in the log, so a person can read it without the Summary page.
+          echo "----- veil report -----"
+          cat "$GITHUB_STEP_SUMMARY" || true
+          exit "${status:-0}"
