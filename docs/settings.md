@@ -4,7 +4,7 @@ veil reads its settings from one file in the repo: `.gozu/jira-to-pr.yml`. The f
 
 Each key in the file is one setting. A key that is not in this list fails the run. A value of the wrong type or outside its range fails the run. A value that looks like a secret fails the run. The message names the setting and never repeats the value.
 
-The safety rules are code and are not settings. You cannot turn them off. They are: never merge, never touch the default branch, never edit `.github/workflows/`, drafts only, no shell and no network for the model.
+The safety rules are code and are not settings. You cannot turn them off. They are: never merge, never touch the default branch, never edit `.github/workflows/`, no shell and no network for the model.
 
 ## The fix loop
 

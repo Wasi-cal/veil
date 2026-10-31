@@ -1,7 +1,7 @@
 [project]
 name = "veil"
 version = "0.1.0"
-description = "Agent that fixes Gozu Tickets and opens draft Fix PRs for human review."
+description = "Agent that fixes Gozu Tickets and opens Fix PRs, ready for review."
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.14.1",

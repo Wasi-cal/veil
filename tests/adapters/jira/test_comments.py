@@ -4,7 +4,7 @@ from tests.fakes.http_server import StubHttpServer
 COMMENTS = "/rest/api/3/issue/SEC-7/comment"
 LIST = ("GET", COMMENTS)
 POST = ("POST", COMMENTS)
-TEXT = "Veil opened a draft PR.\nhttps://github.example.invalid/acme/app/pull/9"
+TEXT = "Veil opened a PR.\nhttps://github.example.invalid/acme/app/pull/9"
 
 
 def no_comments() -> tuple:

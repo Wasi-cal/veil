@@ -29,7 +29,7 @@ def test_low_and_medium_fixes_of_one_source_pr_go_into_one_shared_pr(tmp_path):
     assert report.outcomes == {"GR-100": "fixed", "GR-101": "fixed"}
     [pr] = repos.pull_requests
     assert report.pull_requests == [pr.url]
-    assert pr.draft is True
+    assert pr.draft is False
     assert pr.base == "feature"
     assert repos.commit_subjects_on(pr) == [
         "fix(security): Fix a",

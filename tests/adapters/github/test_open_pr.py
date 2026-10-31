@@ -2,7 +2,7 @@ import pytest
 
 from tests.adapters.github.support import TOKEN, git, make_provider, make_remote
 from tests.fakes.github_api import StubGitHubApi
-from veil.engine import DraftPr
+from veil.engine import NewPr
 from veil.engine.errors.repo_provider_error import RepoProviderError
 
 FIX_BRANCH = "gozu/fix-GR-1"
@@ -14,7 +14,7 @@ def remote_branch_heads(tmp_path) -> dict[str, str]:
     return dict(line.split() for line in out.splitlines())
 
 
-def draft(**fields) -> DraftPr:
+def new_pr(**fields) -> NewPr:
     base = {
         "repo": "acme/app",
         "head": FIX_BRANCH,
@@ -23,7 +23,7 @@ def draft(**fields) -> DraftPr:
         "body": "Replaced eval with int.",
         "labels": ("issue-abc123",),
     }
-    return DraftPr(**{**base, **fields})
+    return NewPr(**{**base, **fields})
 
 
 def committed_fix(tmp_path):
@@ -37,14 +37,18 @@ def committed_fix(tmp_path):
     return provider, api
 
 
-def test_the_draft_pr_has_the_fix_branch_and_targets_the_source_branch(tmp_path):
+def test_the_pr_has_the_fix_branch_and_targets_the_source_branch(tmp_path):
     provider, api = committed_fix(tmp_path)
 
-    url = provider.open_draft_pr(draft())
+    url = provider.open_pr(new_pr())
 
     [pr] = api.created
     assert url == pr.url
-    assert (pr.head_branch, pr.base_branch, pr.draft) == (FIX_BRANCH, "feature-x", True)
+    assert (pr.head_branch, pr.base_branch, pr.draft) == (
+        FIX_BRANCH,
+        "feature-x",
+        False,
+    )
     assert (pr.title, pr.body, pr.labels) == (
         "Fix GR-1",
         "Replaced eval with int.",
@@ -58,7 +62,7 @@ def test_only_the_fix_branch_changes_in_the_remote(tmp_path):
     provider, _ = committed_fix(tmp_path)
     before = remote_branch_heads(tmp_path)
 
-    provider.open_draft_pr(draft())
+    provider.open_pr(new_pr())
 
     after = remote_branch_heads(tmp_path)
     assert {k: v for k, v in after.items() if k != FIX_BRANCH} == before
@@ -68,8 +72,8 @@ def test_only_the_fix_branch_changes_in_the_remote(tmp_path):
 def test_a_second_call_for_the_same_branch_returns_the_first_url(tmp_path):
     provider, api = committed_fix(tmp_path)
 
-    first = provider.open_draft_pr(draft())
-    second = provider.open_draft_pr(draft())
+    first = provider.open_pr(new_pr())
+    second = provider.open_pr(new_pr())
 
     assert second == first
     assert len(api.created) == 1
@@ -90,7 +94,7 @@ def test_the_provider_refuses_to_push_any_other_branch(tmp_path, fields):
     before = remote_branch_heads(tmp_path)
 
     with pytest.raises(RepoProviderError):
-        provider.open_draft_pr(draft(**fields))
+        provider.open_pr(new_pr(**fields))
 
     assert remote_branch_heads(tmp_path) == before
     assert api.created == []
@@ -100,7 +104,7 @@ def test_a_branch_that_no_checkout_holds_cannot_be_pushed(tmp_path):
     provider, api = committed_fix(tmp_path)
 
     with pytest.raises(RepoProviderError) as error:
-        provider.open_draft_pr(draft(head="gozu/fix-GR-99"))
+        provider.open_pr(new_pr(head="gozu/fix-GR-99"))
 
     assert TOKEN not in str(error.value)
     assert api.created == []

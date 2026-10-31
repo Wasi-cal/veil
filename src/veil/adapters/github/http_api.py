@@ -55,7 +55,7 @@ class HttpGitHubApi:
         found_prs = [self._pull_request(item) for item in raw]
         return [pr for pr in found_prs if head is None or pr.head_branch == head]
 
-    def create_draft_pr(
+    def create_pr(
         self,
         repo: str,
         head: str,
@@ -73,7 +73,7 @@ class HttpGitHubApi:
                 "head": head,
                 "base": base,
                 "body": body,
-                "draft": True,
+                "draft": False,
             },
         )
         if labels:

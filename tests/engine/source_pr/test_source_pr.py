@@ -42,7 +42,7 @@ def test_the_fix_pr_targets_the_branch_of_the_source_pr(tmp_path):
 
     [pr] = repos.pull_requests
     assert pr.base == "feature-x"
-    assert pr.draft is True
+    assert pr.draft is False
     assert repos.commit_count_on(pr) == 1
 
 

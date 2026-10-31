@@ -46,7 +46,7 @@
 <body>
 <main>
   <h1>How veil works</h1>
-  <p class="lead">veil reads open Gozu Tickets and fixes the flagged code. It opens a draft Fix PR for a person to review. It never merges.</p>
+  <p class="lead">veil reads open Gozu Tickets and fixes the flagged code. It opens a Fix PR, ready for review, for a person to review. It never merges.</p>
 
   <div class="cols">
     <section class="col" aria-label="Inputs">
@@ -65,13 +65,13 @@
       <div class="box eng"><b><span class="num">3</span>Group the tickets</b><span>One High PR for each High ticket. One Shared PR for Low and Medium tickets, at most 10 fixes.</span></div>
       <div class="box eng"><b><span class="num">4</span>Fix each ticket</b><span>Check out the Source PR branch. The model reads and edits files with five tools. It tries the cheap model, then the strong model.</span></div>
       <div class="box warn"><b><span class="num">5</span>Check the result</b><span>No secret in the change. The diff is small. No change in <code>.github/workflows/</code>. The token ceiling holds.</span></div>
-      <div class="box eng"><b><span class="num">6</span>Publish</b><span>Commit, push the branch <code>gozu/fix-…</code>, and open a draft PR into the Source PR branch.</span></div>
+      <div class="box eng"><b><span class="num">6</span>Publish</b><span>Commit, push the branch <code>gozu/fix-…</code>, and open a PR into the Source PR branch.</span></div>
       <div class="box eng"><b><span class="num">7</span>Update the ticket</b><span>Add a comment with the PR link. Move the ticket to review.</span></div>
     </section>
 
     <section class="col" aria-label="Outputs">
       <h2>What veil writes</h2>
-      <div class="box ok"><b>Draft Fix PR</b><span>One commit for each fix. The PR has the <code>issue-</code> label.</span></div>
+      <div class="box ok"><b>Fix PR</b><span>One commit for each fix. The PR has the <code>issue-</code> label.</span></div>
       <div class="box ok"><b>Jira comment and status</b><span>The comment holds the PR link and a short reason.</span></div>
       <div class="box bad"><b>Failed Fix</b><span>No safe fix. The ticket stays open with a comment and the label <code>veil-failed-fix</code>. No PR.</span></div>
       <div class="box warn"><b>Left for the next run</b><span>The token ceiling or an expired token stopped the run. The ticket stays unchanged.</span></div>
@@ -80,7 +80,7 @@
   </div>
 
   <div class="rules" aria-label="Safety rules">
-    <div class="box bad"><b>Never merges</b><span>A person merges. Every PR is a draft.</span></div>
+    <div class="box bad"><b>Never merges</b><span>A person merges. Every PR waits for review.</span></div>
     <div class="box bad"><b>Never touches the default branch</b><span>It works on the Source PR branch and its own fix branch.</span></div>
     <div class="box bad"><b>No shell, no network for the model</b><span>The model has five tools. All of them stay inside the checkout.</span></div>
     <div class="box bad"><b>Ticket text is data</b><span>The model never follows instructions in a ticket or a file.</span></div>

@@ -1,6 +1,6 @@
 # Grouping Fixes into PRs
 
-The Engine puts Gozu Tickets into groups. Each group gets one draft Fix PR. A Shared PR carries Low and Medium Fixes. A High PR carries one High Fix, or the High Fixes that change the same file.
+The Engine puts Gozu Tickets into groups. Each group gets one Fix PR. A Shared PR carries Low and Medium Fixes. A High PR carries one High Fix, or the High Fixes that change the same file.
 
 ## What we decided
 

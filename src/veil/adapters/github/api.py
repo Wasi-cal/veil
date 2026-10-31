@@ -15,7 +15,7 @@ class GitHubApi(Protocol):
         """
         ...
 
-    def create_draft_pr(
+    def create_pr(
         self,
         repo: str,
         head: str,
@@ -24,5 +24,5 @@ class GitHubApi(Protocol):
         body: str,
         labels: tuple[str, ...],
     ) -> PullRequest:
-        """Open a draft PR from a branch of the repository. Put the labels on it."""
+        """Open a PR, ready for review, from a branch of the repository. Put the labels on it."""
         ...

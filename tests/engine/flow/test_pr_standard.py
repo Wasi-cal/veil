@@ -78,7 +78,7 @@ def test_the_title_of_a_shared_pr_counts_the_findings_and_names_the_tickets(tmp_
     assert pr.title == "fix(security): resolve 2 findings (GR-100, GR-101)"
 
 
-def test_the_body_has_a_summary_and_one_section_for_each_ticket(tmp_path):
+def test_the_body_has_one_section_for_each_ticket_and_no_empty_summary(tmp_path):
     _, _, repos = run_with(
         tmp_path,
         [
@@ -95,9 +95,9 @@ def test_the_body_has_a_summary_and_one_section_for_each_ticket(tmp_path):
     )
 
     [pr] = repos.pull_requests
-    assert pr.body.startswith("## Summary\n")
-    assert "acme/app" in pr.body.split("## GR-100")[0]
-    assert "draft" in pr.body.split("## GR-100")[0].lower()
+    assert pr.body.startswith("## GR-100 · `app.py:3`")
+    assert "## Summary" not in pr.body
+    assert "draft" not in pr.body.lower()
     assert "## GR-100 · `app.py:3`" in pr.body
     section = pr.body.split("## GR-100 · `app.py:3`")[1]
     assert section.index("**Why this is a problem**") < section.index(

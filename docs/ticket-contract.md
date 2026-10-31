@@ -59,6 +59,6 @@ The issue type is Bug. The priority comes from the severity: CRITICAL is Highest
 - **Commit subject:** a Conventional Commit, `fix(security): replace eval with ast.literal_eval`. It has at most 72 characters and no full stop at the end. The footer is `Refs: VT-10`.
 - **PR title, one ticket:** the commit subject and the ticket, `fix(security): replace eval with ast.literal_eval (VT-10)`.
 - **PR title, many tickets:** `fix(security): resolve 3 findings (VT-10, VT-11, VT-12)`. More than three tickets end with `and N more`.
-- **PR body:** `## Summary` (the repo, the branch it targets, and the words "draft"), then one section for each ticket, `## VT-10 · path/to/file.py:42`. Each section has three parts: **Why this is a problem**, **What changed** and **What this solves**. The model writes them in its own words, and they never copy the ticket.
-- **PR state:** always a draft. A person reviews it and merges it.
+- **PR body:** one section for each ticket, `## VT-10 · path/to/file.py:42`. Each section has three parts: **Why this is a problem**, **What changed** and **What this solves**. A PR of several tickets starts with `## Summary` and the reason for the group.
+- **PR state:** open and ready for review. veil never merges. A person reviews it and merges it.
 - **Language:** ASD-STE100. A sentence has at most 25 words.

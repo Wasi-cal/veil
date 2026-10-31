@@ -11,13 +11,13 @@ from tests.support.scenario import (
 from veil.engine import run
 
 
-def test_scripted_edit_makes_one_commit_and_one_draft_pr(tmp_path):
+def test_scripted_edit_makes_one_commit_and_one_ready_pr(tmp_path):
     context, _, repos, _ = make_context(tmp_path, EDIT_THEN_FINISH)
 
     run(context)
 
     [pr] = repos.pull_requests
-    assert pr.draft is True
+    assert pr.draft is False
     assert pr.head.startswith("gozu/fix-")
     assert repos.commit_count_on(pr) == 1
     assert repos.file_on(pr, "app.py") == FIXED

@@ -12,7 +12,7 @@ The real repo provider is `GitHubRepoProvider` in `veil/adapters/github/`. Git d
 - **Existing Fix.** An open PR that carries the issue label, comes from this repository and has the Source PR branch as base is `open_pr`. A closed PR that is not merged counts as `fix_branch`. It must carry the label, start with the branch prefix and have a branch that still exists. A merged PR does not count. A GitHub branch cannot carry a label, so the label of the closed PR stands for the branch.
 - **Https only.** The GitHub API adapter refuses a URL that is not https. Only a local host may use http, so that tests can run against a local server.
 - **Paths and redirects.** A workspace refuses a path that leaves the checkout. This covers `..`, an absolute path and a symlink that points outside. The API adapter never follows a redirect, so the token cannot reach another host. Git gets the proxy and certificate variables that it needs.
-- **Draft PR.** The provider pushes one ref, `refs/heads/<fix branch>`, never with force. It refuses a head that does not start with the branch prefix and a head that equals the base. It returns the URL of an open PR for the head and makes no second PR. It never merges.
+- **Fix PR.** The provider pushes one ref, `refs/heads/<fix branch>`, never with force. It refuses a head that does not start with the branch prefix and a head that equals the base. It returns the URL of an open PR for the head and makes no second PR. It never merges.
 
 ## What we accept for now
 

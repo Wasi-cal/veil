@@ -2,8 +2,8 @@ from typing import Protocol, runtime_checkable
 
 from veil.engine.constants.names import FixKind
 from veil.engine.interfaces.workspace import Workspace
-from veil.engine.models.provider.draft_pr import DraftPr
 from veil.engine.models.provider.fix_query import FixQuery
+from veil.engine.models.provider.new_pr import NewPr
 
 
 @runtime_checkable
@@ -31,8 +31,8 @@ class RepoProvider(Protocol):
         """
         ...
 
-    def open_draft_pr(self, draft: DraftPr) -> str:
-        """Push the branch of the draft and open a draft PR against its base. Return the URL.
+    def open_pr(self, new_pr: NewPr) -> str:
+        """Push the branch of the new PR and open a PR against its base. Return the URL.
 
         Push only the Fix branch. It starts with the branch prefix. Never push to the base branch or to the default branch.
         Never make a second PR for a branch. If a PR for the branch exists, return its URL.

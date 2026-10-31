@@ -12,7 +12,7 @@ from veil.engine.models.report.run_report import RunReport
 
 
 def fix_group(context: Context, group: FixGroup, report: RunReport) -> None:
-    """Fix the tickets of a group in one checkout. Commit each Fix. Then open one draft Fix PR.
+    """Fix the tickets of a group in one checkout. Commit each Fix. Then open one Fix PR.
 
     A ticket that ends as a Failed Fix stays out of the PR.
     At the token ceiling the Engine still publishes the Fixes that passed. Then it raises BudgetExhausted.

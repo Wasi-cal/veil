@@ -13,7 +13,7 @@ The code change that addresses one Gozu Ticket. It has its own commit.
 _Avoid_: Patch, remediation
 
 **Fix PR**:
-A draft pull request that the agent opens. It contains one or more Fixes. It targets the branch of the Source PR.
+A pull request that the agent opens, ready for review. It contains one or more Fixes. It targets the branch of the Source PR.
 _Avoid_: Bot PR, auto-PR
 
 **Source PR**:

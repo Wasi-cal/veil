@@ -4,7 +4,7 @@ This page explains what the code does, step by step. Read `GLOSSARY.md` for the 
 
 ## The short version
 
-Veil takes open Gozu Tickets. Gozu makes a ticket when a developer raises a pull request and a scan finds a problem. We call that pull request the Source PR. Each ticket names one file and one line with a security finding. For each ticket, Veil asks an AI model to change the code. Then Veil opens a draft pull request. A human reviews the pull request.
+Veil takes open Gozu Tickets. Gozu makes a ticket when a developer raises a pull request and a scan finds a problem. We call that pull request the Source PR. Each ticket names one file and one line with a security finding. For each ticket, Veil asks an AI model to change the code. Then Veil opens a pull request. A human reviews the pull request.
 
 The part that does this work is the Engine. You start it with one function call: `run(context)`.
 
@@ -27,9 +27,9 @@ The Engine knows only the shape of these parts. It does not know Jira, GitHub or
 The function `run` works in four stages:
 
 1. It skips the tickets that must not get a Fix (see the section "Which tickets the Engine skips").
-2. It puts the other tickets into groups. Each group gets one draft pull request (see the section "How the Engine groups tickets"). High groups come first.
+2. It puts the other tickets into groups. Each group gets one pull request (see the section "How the Engine groups tickets"). High groups come first.
 3. It fixes the tickets of each group, one after the other, in one checkout.
-4. It opens one draft pull request for each group.
+4. It opens one pull request for each group.
 
 For one group, the steps are:
 
@@ -39,7 +39,7 @@ For one group, the steps are:
 4. Talk to the model. The model answers with tool calls. The Engine runs each call and sends the result back. This repeats until the model calls `finish`. Before each model call, the Engine checks the token ceiling.
 5. The model gives four things with `finish`: a commit message and three parts. The commit message is a Conventional Commit of at most 72 characters, for example `fix(security): replace eval with a safe parser`. The Engine adds the footer `Refs: <ticket>`. The part `problem` says why this code is a problem. The part `change` says what the model changed. The part `solves` says what the change solves. Each part has at most 3 sentences, and a sentence has at most 25 words. A part that copies the text of the ticket is refused. If the format is wrong, the Engine gives an error and the model can try again.
 6. Check the change. It must not be empty. It must have 200 changed lines or fewer. Each edited file must still parse. The added lines, the commit message and the explanation must hold no secret (see the section "Secrets"). Then the Engine makes one commit for this Fix. The next ticket starts from that commit, so it sees the earlier Fixes.
-7. After the last ticket, publish. The Engine opens one draft pull request that targets the branch of the Source PR. The title is the commit subject and the ticket, or `fix(security): resolve N findings (…)` for many tickets. The body has a summary, then one section for each ticket. A section has the three parts of the Fix under the labels "Why this is a problem", "What changed" and "What this solves". The Engine also adds a comment with the link and the same three parts on each ticket. It moves each ticket to In Review.
+7. After the last ticket, publish. The Engine opens one pull request that targets the branch of the Source PR. The title is the commit subject and the ticket, or `fix(security): resolve N findings (…)` for many tickets. The body has a summary, then one section for each ticket. A section has the three parts of the Fix under the labels "Why this is a problem", "What changed" and "What this solves". The Engine also adds a comment with the link and the same three parts on each ticket. It moves each ticket to In Review.
 
 If the first attempt fails, the Engine starts one more attempt with the strong model (see the section "When an attempt fails").
 
@@ -66,7 +66,7 @@ Other rules:
 - A Failed Fix stays out of the PR. The PR holds only the Fixes that passed. A ticket that ends as a Failed Fix leaves no edit in the PR.
 - If the token ceiling stops the run in the middle of a group, the Engine still publishes the Fixes that passed. The current ticket and the later tickets wait for the next run.
 - The branch of a Shared PR starts with the branch prefix (setting `branch_prefix`, default `gozu/fix-`), the word `shared` and the key of the first Fix that passed. The branch of a High PR starts with the prefix and that key. A ticket that failed gives no name. So a later run can make a new PR for that ticket without a branch clash.
-- All PRs are drafts. The Engine merges nothing.
+- Every PR opens ready for review. The Engine merges nothing.
 
 ## Which tickets the Engine skips
 
@@ -84,7 +84,7 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 
 A skipped ticket opens no checkout, uses no tokens and gets no comment. The run report lists each skipped ticket under its reason.
 
-This makes a second run safe. The Engine puts the issue label on each draft PR that it opens. The next run finds the PR and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
+This makes a second run safe. The Engine puts the issue label on each PR that it opens. The next run finds the PR and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
 
 If the tracker lists a ticket twice, the Engine uses it once. If two tickets have the same issue label on the same Source PR branch, the Engine fixes the first one. It skips the second because the first PR already exists.
 
@@ -215,7 +215,7 @@ A folder imports only from the folders below it. The file `run.py` is at the top
 
 Almost every test calls `run(context)` with three fakes. The model fake plays a script of tool calls. The repo fake uses real local git repositories. The test then checks the result: pull requests, commits, ticket comments, labels and the report. The tests do not call the internal functions.
 
-Example: the script says "edit one line, then finish". The test checks that one draft pull request exists and that the ticket is In Review.
+Example: the script says "edit one line, then finish". The test checks that one pull request exists and that the ticket is In Review.
 
 ## One example from start to end
 
@@ -227,6 +227,6 @@ Ticket GR-100 says: "Line 3 of `app.py` uses `eval(input())`."
 4. The `WorkingCopy` checks the edit and writes it. The result is "Edit applied."
 5. The model calls `finish`.
 6. The Engine checks the change. One line changed. The file still parses.
-7. The Engine commits, opens a draft pull request and comments on GR-100. GR-100 moves to In Review.
+7. The Engine commits, opens a pull request and comments on GR-100. GR-100 moves to In Review.
 
 If the model calls `edit_file` on `.env`, the result is `Refused:` and nothing changes. The model can try another edit.

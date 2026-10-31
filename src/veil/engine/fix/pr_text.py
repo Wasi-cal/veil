@@ -32,22 +32,13 @@ def pr_title(fixes: list[Fix]) -> str:
 
 
 def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
-    """The body of the PR: a summary, then one section for each Fix.
+    """The body of the PR: one section for each Fix. A PR of several Fixes starts with the reason for the group.
 
     A section has the ticket and the place of the finding, then the three parts of the explanation.
     """
-    count = len(fixes)
-    noun = "finding" if count == 1 else "findings"
-    summary = [
-        (
-            f"Fixes {count} security {noun} in `{group.repo}`. "
-            f"The PR targets the branch `{group.branch}` of the Source PR. "
-            "It is a draft. A person must review it and merge it."
-        )
-    ]
-    if group.reason and count > 1:
-        summary.append(group.reason)
-    sections = [f"{SUMMARY_HEADING}\n\n" + "\n\n".join(summary)]
+    sections = []
+    if group.reason and len(fixes) > 1:
+        sections.append(f"{SUMMARY_HEADING}\n\n{group.reason}")
     for fix in fixes:
         ticket = fix.ticket
         sections.append(
@@ -62,7 +53,7 @@ def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
 def ticket_comment(pr_url: str, fix: Fix) -> str:
     """The comment on the ticket: the link to the PR, then the three parts."""
     return (
-        f"The Engine opened a draft Fix PR: {pr_url}\n"
+        f"The Engine opened a Fix PR: {pr_url}\n"
         f"{PROBLEM_LABEL}: {fix.problem}\n"
         f"{CHANGE_LABEL}: {fix.change}\n"
         f"{SOLVES_LABEL}: {fix.solves}"

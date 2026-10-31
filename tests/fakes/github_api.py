@@ -19,7 +19,7 @@ class StubGitHubApi:
             and (label is None or label in pr.labels)
         ]
 
-    def create_draft_pr(
+    def create_pr(
         self,
         repo: str,
         head: str,
@@ -38,7 +38,7 @@ class StubGitHubApi:
             labels=labels,
             title=title,
             body=body,
-            draft=True,
+            draft=False,
         )
         self.pull_requests.append(pr)
         self.created.append(pr)

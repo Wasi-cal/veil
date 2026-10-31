@@ -58,18 +58,18 @@ def test_it_finds_the_pull_requests_that_carry_a_label():
     assert search.query["q"] == ['repo:acme/app is:pr label:"issue-abc"']
 
 
-def test_it_opens_a_draft_pr_and_puts_the_labels_on_it():
+def test_it_opens_a_ready_pr_and_puts_the_labels_on_it():
     with StubHttpServer() as server:
         server.routes[("POST", "/repos/acme/app/pulls")] = (
             201,
-            pull_json(9, head="gozu/fix-GR-1", base="feature-x", draft=True),
+            pull_json(9, head="gozu/fix-GR-1", base="feature-x", draft=False),
         )
         server.routes[("POST", "/repos/acme/app/issues/9/labels")] = (
             200,
             [{"name": "issue-abc"}],
         )
 
-        pr = api_for(server).create_draft_pr(
+        pr = api_for(server).create_pr(
             "acme/app", "gozu/fix-GR-1", "feature-x", "Fix", "Body", ("issue-abc",)
         )
 
@@ -79,12 +79,12 @@ def test_it_opens_a_draft_pr_and_puts_the_labels_on_it():
         "head": "gozu/fix-GR-1",
         "base": "feature-x",
         "body": "Body",
-        "draft": True,
+        "draft": False,
     }
     assert label.body == {"labels": ["issue-abc"]}
     assert (pr.url, pr.draft, pr.labels) == (
         "https://github.example.invalid/acme/app/pull/9",
-        True,
+        False,
         ("issue-abc",),
     )
 

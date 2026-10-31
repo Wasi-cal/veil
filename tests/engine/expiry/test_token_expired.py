@@ -38,7 +38,7 @@ def test_a_token_that_expires_at_the_pr_leaves_the_fixed_ticket_for_the_next_run
     tmp_path,
 ):
     context, tracker, repos, _ = make_context(tmp_path, EDIT_THEN_FINISH)
-    repos.open_draft_pr = expire
+    repos.open_pr = expire
 
     report = run(context)
 
