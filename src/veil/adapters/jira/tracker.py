@@ -252,8 +252,9 @@ class JiraTracker:
 
     def _jql(self) -> str:
         projects = ", ".join(f'"{key}"' for key in self._settings.project_keys)
+        label = self._settings.eligible_label
+        label_clause = f'AND labels = "{label}" ' if label else ""
         return (
-            f"project in ({projects}) "
-            f'AND labels = "{self._settings.eligible_label}" '
+            f"project in ({projects}) {label_clause}"
             "AND statusCategory != Done AND assignee is EMPTY ORDER BY key ASC"
         )

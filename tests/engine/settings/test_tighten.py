@@ -85,7 +85,7 @@ def test_a_repo_may_not_change_a_value_that_the_org_locks():
     fails(
         repo={"branch_prefix": "repo/fix-"},
         org={"branch_prefix": "org/fix-"},
-        words="branch_prefix is set by the org. A repo cannot change it.",
+        words="branch_prefix has a value from the org. A repo cannot change it.",
     )
     same = resolve_settings(
         org={"branch_prefix": "org/fix-"}, repo={"branch_prefix": "org/fix-"}

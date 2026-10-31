@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The veil GitHub Action</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --panel: #ffffff; --ink: #1c2330; --muted: #5b6577; --line: #c9d0dc;
+    --blue: #2563eb; --blue-bg: #e8f0fe; --green: #15803d; --green-bg: #e6f4ea;
+    --amber: #b45309; --amber-bg: #fdf2e0; --red: #b91c1c; --red-bg: #fde8e8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11151c; --panel: #1a2029; --ink: #e6eaf1; --muted: #9aa6b8; --line: #364051;
+      --blue: #7aa7ff; --blue-bg: #1b2a49; --green: #6fd08c; --green-bg: #17301f;
+      --amber: #f0b45a; --amber-bg: #3a2b12; --red: #ff8a8a; --red-bg: #3b1a1a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 20px; }
+  .lane { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  .lane h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+  .step { flex: 1 1 150px; border: 1px solid var(--line); border-top-width: 4px; border-radius: 8px; padding: 8px 10px; background: var(--panel); position: relative; }
+  .step b { display: block; }
+  .step span { color: var(--muted); font-size: 13px; }
+  .step + .step::before { content: "→"; position: absolute; left: -14px; top: 8px; color: var(--muted); }
+  .t { border-top-color: var(--blue); background: var(--blue-bg); }
+  .s { border-top-color: var(--ink); }
+  .m { border-top-color: var(--amber); background: var(--amber-bg); }
+  .g { border-top-color: var(--green); background: var(--green-bg); }
+  .r { border-top-color: var(--red); background: var(--red-bg); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .down { text-align: center; color: var(--muted); font-size: 20px; line-height: 1; margin: -6px 0 8px; }
+  ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+  code { font-size: 13px; }
+  @media (max-width: 820px) { .two { grid-template-columns: 1fr; } .step + .step::before { content: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>The veil GitHub Action</h1>
+  <p class="lead">One workflow run handles one repo. It runs the Engine once and writes a report. A failure before the Engine starts changes no ticket.</p>
+
+  <section class="lane" aria-label="Trigger">
+    <h2>1. What starts a run</h2>
+    <div class="flow">
+      <div class="step t"><b>schedule</b><span>Off by default. Turn on <code>schedule_enabled</code>.</span></div>
+      <div class="step t"><b>workflow_dispatch</b><span>A person starts it by hand. On by default.</span></div>
+      <div class="step t"><b>repository_dispatch</b><span>An outside system starts it, for example a Jira Automation rule.</span></div>
+      <div class="step r"><b>Any other event</b><span>For example <code>pull_request</code>. The run fails. A fork must never get secrets.</span></div>
+    </div>
+  </section>
+  <div class="down" aria-hidden="true">↓</div>
+
+  <section class="lane" aria-label="Workflow job">
+    <h2>2. The workflow job on the GitHub runner</h2>
+    <div class="flow">
+      <div class="step s"><b>Concurrency group</b><span>One run for each repo. A new event waits. It does not cancel the run.</span></div>
+      <div class="step s"><b>Check out the repo</b><span><code>persist-credentials: false</code>. The Action reads <code>.gozu/jira-to-pr.yml</code> from this checkout.</span></div>
+      <div class="step s"><b>Run the veil image</b><span>The image is built before. Nothing installs at run time.</span></div>
+    </div>
+    <ul>
+      <li>Permissions: <code>contents: write</code> and <code>pull-requests: write</code>. No other permission.</li>
+      <li>Secrets go in through <code>env</code>: <code>GITHUB_TOKEN</code>, <code>JIRA_EMAIL</code>, <code>JIRA_API_TOKEN</code>, <code>OPENAI_API_KEY</code>.</li>
+    </ul>
+  </section>
+  <div class="down" aria-hidden="true">↓</div>
+
+  <section class="lane" aria-label="Inside the Action">
+    <h2>3. Inside the container: <code>run_action</code></h2>
+    <div class="flow">
+      <div class="step s"><b>Read the runner</b><span>Repo, workspace, event, summary file.</span></div>
+      <div class="step s"><b>Load settings</b><span>The repo file is the only layer. A wrong value stops the run.</span></div>
+      <div class="step s"><b>Check the event</b><span>A trigger that is off ends the run with a notice and exit 0.</span></div>
+      <div class="step s"><b>Read credentials</b><span>A missing or short value stops the run. The message names the variable.</span></div>
+      <div class="step m"><b>Mask the secrets</b><span><code>::add-mask::</code> for each credential, line by line.</span></div>
+      <div class="step s"><b>Build the context</b><span>Jira tracker for this repo only. GitHub repo provider. OpenAI model client.</span></div>
+    </div>
+    <div class="down" aria-hidden="true">↓</div>
+    <div class="flow">
+      <div class="step g"><b>Run the Engine once</b><span>See the other diagram. The Engine fixes the eligible tickets and opens draft PRs.</span></div>
+      <div class="step s"><b>Close the checkouts</b><span>Always, also after an error.</span></div>
+      <div class="step g"><b>Write the report</b><span>Fix PRs, the outcome of each ticket, skipped tickets and tokens used go to the step summary.</span></div>
+    </div>
+  </section>
+  <div class="down" aria-hidden="true">↓</div>
+
+  <div class="two">
+    <section class="lane" aria-label="Success">
+      <h2>Result: exit 0</h2>
+      <div class="flow">
+        <div class="step g"><b>On GitHub</b><span>Draft Fix PR into the Source PR branch.</span></div>
+        <div class="step g"><b>In Jira</b><span>Comment with the PR link. Ticket moved to review.</span></div>
+      </div>
+      <ul><li>A Failed Fix is a normal result, not an error. The ticket gets a comment and a marker label.</li></ul>
+    </section>
+    <section class="lane" aria-label="Failure">
+      <h2>Result: exit 1</h2>
+      <div class="flow">
+        <div class="step r"><b>One error line</b><span><code>::error::</code> with the credential values hidden.</span></div>
+        <div class="step r"><b>No ticket changed</b><span>Before the Engine starts, nothing is touched.</span></div>
+      </div>
+      <ul><li>An expired token stops the repo in the middle of a run. The tickets stay for the next run. The report says <code>token_expired</code>.</li></ul>
+    </section>
+  </div>
+</main>
+</body>
+</html>

@@ -9,6 +9,8 @@ from veil.engine.models.config.settings import Settings
 class JiraSettings(BaseModel):
     """Where the tickets are and which of them the Engine may fix. These values are not secret.
 
+    An empty `eligible_label` means that a ticket needs no label.
+
     The credentials never come from settings. The Shell passes them in.
     """
 
@@ -47,6 +49,6 @@ class JiraSettings(BaseModel):
     @field_validator("eligible_label")
     @classmethod
     def _safe_label(cls, label: str) -> str:
-        if not SAFE_LABEL.fullmatch(label):
+        if label and not SAFE_LABEL.fullmatch(label):
             raise ValueError("The eligible label has no space, quote or backslash.")
         return label

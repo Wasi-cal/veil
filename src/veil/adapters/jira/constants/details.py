@@ -4,8 +4,6 @@ DETAIL_COMPONENT = "Component"
 DETAIL_LINE = "Line"
 DETAIL_SEVERITY = "Severity"
 DETAIL_BRANCH = "Branch"
-# Gozurion writes this word when the scan knew no branch.
-UNKNOWN_BRANCH = "unknown"
 # A Sonar component is `project:path`. A plain path has no separator.
 COMPONENT_SEPARATOR = ":"
 

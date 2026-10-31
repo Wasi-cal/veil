@@ -120,7 +120,7 @@ def _loosens(key: str, org_raw: Any, repo_raw: Any) -> str | None:
     if rule == TIGHTEN_DISABLE_ONLY and repo and not org:
         return "is off in the org. A repo can only turn it off."
     if rule == TIGHTEN_LOCKED and repo != org:
-        return "is set by the org. A repo cannot change it."
+        return "has a value from the org. A repo cannot change it."
     return None
 
 

@@ -61,6 +61,19 @@ def test_the_eligible_label_comes_from_the_settings():
     assert 'labels = "fix-me"' in search.body["jql"]
 
 
+def test_an_empty_eligible_label_asks_for_every_open_ticket_without_an_assignee():
+    with StubHttpServer() as server:
+        serve(server, search_page([]))
+
+        make_tracker(server, eligible_label="").open_tickets()
+
+    [search] = [r for r in server.seen if (r.method, r.path) == SEARCH]
+    assert search.body["jql"] == (
+        'project in ("SEC", "OPS") '
+        "AND statusCategory != Done AND assignee is EMPTY ORDER BY key ASC"
+    )
+
+
 def test_every_page_of_the_search_is_read():
     with StubHttpServer() as server:
         serve(
@@ -76,12 +89,15 @@ def test_every_page_of_the_search_is_read():
     assert searches[1].body["nextPageToken"] == "page-2"
 
 
-def test_a_ticket_that_is_not_a_finding_of_one_line_is_skipped():
+def test_a_ticket_that_is_not_a_finding_of_one_line_or_has_no_branch_is_skipped():
     rollup = issue_json("SEC-8", details=["Repository: acme/app", "Source: sonarqube"])
     no_line = issue_json("SEC-9", details=gozurion_details(line=None))
-    unknown_branch = issue_json("SEC-10", details=gozurion_details(branch="unknown"))
+    no_branch = issue_json(
+        "SEC-10",
+        details=[d for d in gozurion_details() if not d.startswith("Branch:")],
+    )
     with StubHttpServer() as server:
-        serve(server, search_page([rollup, no_line, unknown_branch, issue_json()]))
+        serve(server, search_page([rollup, no_line, no_branch, issue_json()]))
 
         tickets = make_tracker(server).open_tickets()
 

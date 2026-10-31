@@ -36,6 +36,7 @@ from veil.engine.constants.settings_patterns import (
     BRANCH_PREFIX,
     ENV_NAME,
     LABEL,
+    OPTIONAL_LABEL,
     PROJECT_KEY,
     SITE_URL,
 )
@@ -142,7 +143,7 @@ class Settings(BaseModel):
         DEFAULT_ELIGIBLE_LABEL,
         TIGHTEN_FREE,
         READER_SHELL,
-        pattern=LABEL,
+        pattern=OPTIONAL_LABEL,
         max_length=MAX_NAME_CHARS,
     )
     failed_fix_label: str = _setting(

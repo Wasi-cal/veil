@@ -2,7 +2,11 @@ import re
 
 from pydantic import ValidationError
 
-from veil.engine.constants.explanation import ABBREVIATIONS, SENTENCE_END
+from veil.engine.constants.explanation import (
+    ABBREVIATIONS,
+    MAX_SENTENCE_WORDS,
+    SENTENCE_END,
+)
 from veil.engine.models.config.settings import Settings
 from veil.engine.models.llm.tool_call import ToolCall
 from veil.engine.models.tool_args.finish_args import FinishArgs
@@ -15,6 +19,12 @@ def count_sentences(text: str) -> int:
         1 for mark in SENTENCE_END.finditer(text) if not _abbreviation(text, mark)
     )
     return max(count, 1)
+
+
+def longest_sentence_words(text: str) -> int:
+    """The number of words in the longest sentence of a text."""
+    sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+    return max(len(sentence.split()) for sentence in sentences)
 
 
 def _abbreviation(text: str, mark: re.Match[str]) -> bool:
@@ -37,4 +47,6 @@ def read_finish(call: ToolCall, settings: Settings) -> FinishArgs | str:
     limit = settings.explanation_max_sentences
     if count_sentences(args.explanation) > limit:
         return f"Error: The explanation has more than {limit} sentences. Use at most {limit} sentences."
+    if longest_sentence_words(args.explanation) > MAX_SENTENCE_WORDS:
+        return f"Error: A sentence of the explanation has more than {MAX_SENTENCE_WORDS} words. Use short sentences."
     return args

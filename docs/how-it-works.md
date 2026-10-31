@@ -130,6 +130,16 @@ The Action is the first Shell (ADR 0013). It runs the Engine once for the repo o
 
 Any failure before step 5 stops the run with one error line and exit code 1. No ticket changes. A Failed Fix is not a failure.
 
+A ticket needs all of these before the Action fixes it:
+
+- The label `veil-eligible`, or the label that the setting `eligible_label` names. If you set `eligible_label` to an empty text, a ticket needs no such label. Then veil takes every open ticket without an assignee in the project keys.
+- A label that starts with `issue-`. It names the finding. The Engine copies it to the Fix PR.
+- A Details list with the repository, the file (`Component`), the line, the severity and the exact branch. A branch is required. There is no unknown branch.
+- An open PR from that branch in that repository.
+- A status that is not done, and no assignee.
+
+Two repo settings must fit the site. The Jira workflow must have the status that `in_review_status` names, or you must set the setting to a status that exists. The repo must allow GitHub Actions to create pull requests (Settings, Actions, General).
+
 ## The service Shell (deferred)
 
 The org-wide service is the second Shell (ADR 0014). It is not in the code now. veil runs on one repo through the GitHub Action. The decisions of the service stay in ADRs 0011, 0012, 0014 and 0015. The code is deleted on purpose, and git history keeps it (commit `0bcf11c`).

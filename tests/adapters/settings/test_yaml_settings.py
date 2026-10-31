@@ -120,7 +120,7 @@ def test_an_alias_is_refused_because_it_can_grow_a_small_file_into_a_huge_value(
 def test_a_file_with_very_deep_nesting_is_an_error_and_not_a_crash(tmp_path):
     path = write(tmp_path, "x: " + "[" * 1500 + "]" * 1500 + "\n")
 
-    with pytest.raises(SettingsError, match="too deep"):
+    with pytest.raises(SettingsError, match="too many levels"):
         load_settings_file(path)
 
 

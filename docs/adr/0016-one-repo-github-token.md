@@ -10,10 +10,19 @@ veil runs on one repo through the GitHub Action. This ADR changes the GitHub cre
 - **The settings of the service are gone.** The Action did not read them. They are: the model-call rate, the allow and deny lists of repos, the cron, the quiet window and the run time-out. The rest are the heartbeat, the number of concurrent runs, the checkout sweep and the cache lifetimes. The catalog has no cache column now.
 - **What stays.** `TokenExpired` stays. The job token expires after one hour. If GitHub refuses it in the middle of a run, the Engine stops the run, leaves the tickets for the next run and reports `token_expired`.
 
+- **The eligible label is optional.** An empty `eligible_label` turns the label check off. The default stays `veil-eligible`.
+- **A ticket always has a branch.** No word stands for a missing branch. The tools that write tickets (Gozurion and the Gozu CLI) stop before they write one. They find the branch from the runner or from git, also on a detached HEAD. If they find none, they stop and write nothing. veil skips a ticket that has no branch.
+- **The text that veil writes follows ASD-STE100.** The prompt tells the model to write the commit message and the explanation in Simplified Technical English. The Engine sends a sentence of more than 25 words back to the model. The PR title says "ticket" for one ticket.
+
 ## What we accept for now
 
 - A PR that the `GITHUB_TOKEN` opens does not start other workflows. CI does not run on a Fix PR until a person pushes to it.
 - Commits show the fixed author `Gozu Veil`. They do not show a bot of an App.
 - A repo that needs to run CI on Fix PRs needs another token. That is a new decision.
 - The settings layers (org, repo, overrides) and the tighten rules stay in the Engine. The Action uses the repo layer only. Removing the layers is a later cut.
-- No run used a real GitHub token, Jira site or OpenAI key.
+- A failed PR call leaves the pushed Fix branch on GitHub. A plain rerun is then rejected, because the push is never forced. A person must remove the branch first. The next change must let a rerun reuse or reset the Fix branch of veil.
+- The PR title is "Fix 1 tickets". The text is not grammatical for one ticket.
+
+## The first trial
+
+On 2026-10-31 the Action ran by hand on one public repo against one seeded ticket. The workflow built the image on the runner. The run opened a draft Fix PR with a working fix. The ticket moved to In Progress and got a comment. The record is in the ticket GR-30. The trial needed four changes outside the code. They were the `issue-` label, the exact branch name, an `in_review_status` that exists in the workflow, and the repo setting for PRs.

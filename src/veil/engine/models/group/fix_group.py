@@ -30,4 +30,4 @@ class FixGroup(BaseModel):
         """The title of the Fix PR. A high group names its tickets. A shared group gives the count."""
         if self.kind == HIGH_GROUP:
             return f"Fix {', '.join(keys)}"
-        return f"Fix {len(keys)} tickets"
+        return f"Fix {len(keys)} ticket{'' if len(keys) == 1 else 's'}"

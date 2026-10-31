@@ -213,6 +213,7 @@ DESCRIPTIONS = {
     "tests/engine/flow/test_fix_flow.py": "The normal path: one commit, one draft PR, a ticket comment, In Review and the report.",
     "tests/engine/escalation/test_escalation.py": "A failed cheap attempt leads to one strong attempt. A failed strong attempt is a Failed Fix.",
     "tests/engine/budget/test_token_ceiling.py": "The token ceiling counts all attempts and leaves the rest of the tickets for the next run.",
+    "tests/engine/flow/test_plain_text.py": "Tests the plain text rules: the PR title for one ticket and the length of a sentence in the explanation of the model.",
     "tests/engine/limits/test_step_cap.py": "The step cap of 25 tool calls ends the attempt as a Failed Fix.",
     "tests/engine/limits/test_diff_limit.py": "The diff limit of 200 changed lines. Line endings and spaces count.",
     "tests/engine/limits/test_result_caps.py": "The caps on tool results: 300 lines, 50 matches and 8 KB.",

@@ -57,7 +57,7 @@ def load_settings_file(path: Path) -> dict[str, Any]:
         loaded = yaml.load(text, Loader=_StrictLoader)
     except RecursionError:
         raise SettingsError(
-            [f"The settings file {path.name} is nested too deep."]
+            [f"The settings file {path.name} has too many levels."]
         ) from None
     except yaml.YAMLError as failure:
         mark = getattr(failure, "problem_mark", None)
