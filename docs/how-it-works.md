@@ -135,7 +135,7 @@ Any failure before step 5 stops the run with one error line and exit code 1. No 
 A ticket needs all of these before the Action fixes it:
 
 - The label `veil-eligible`, or the label that the setting `eligible_label` names. If you set `eligible_label` to an empty text, a ticket needs no such label. Then veil takes every open ticket without an assignee in the project keys.
-- A label that starts with `issue-`. It names the finding. The Engine copies it to the Fix PR. A title of the form `[owner/repo] path:line - title` and the other labels are in `docs/ticket-contract.md`.
+- A label that starts with `issue-`. It names the finding. The Engine copies it to the Fix PR. A title of the form `repo | file | line | title` and the other labels are in `docs/ticket-contract.md`.
 - A Details list with the repository, the file (`Component`), the line, the severity and the exact branch. A branch is required. There is no unknown branch.
 - An open PR from that branch in that repository.
 - A status that is not done, and no assignee.
