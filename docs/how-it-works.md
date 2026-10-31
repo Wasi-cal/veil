@@ -8,6 +8,8 @@ Veil takes open Gozu Tickets. Gozu makes a ticket when a developer raises a pull
 
 The part that does this work is the Engine. You start it with one function call: `run(context)`.
 
+Two diagrams show the flow: `docs/diagrams/how-veil-works.html` and `docs/diagrams/github-action-workflow.html`. Open them in a browser.
+
 ## What you give to the Engine
 
 The `context` holds five parts:
@@ -142,7 +144,7 @@ Two repo settings must fit the site. The Jira workflow must have the status that
 
 ## The service Shell (deferred)
 
-The org-wide service is the second Shell (ADR 0014). It is not in the code now. veil runs on one repo through the GitHub Action. The decisions of the service stay in ADRs 0011, 0012, 0014 and 0015. The code is deleted on purpose, and git history keeps it (commit `0bcf11c`).
+The org-wide service was to be the second Shell. It is not in the code now. veil runs on one repo through the GitHub Action. ADR 0017 keeps the decisions of the service. The code is deleted on purpose, and git history keeps it (commit `0bcf11c`).
 
 ## Settings
 
@@ -159,7 +161,7 @@ A repo can only tighten a value that the org set. The catalog gives a rule for e
 
 `resolve_settings(org, repo, overrides)` checks every layer. These fail: a key that is not a setting, a value of the wrong type and a value outside the bounds. A repo value that loosens the org value fails too. It also refuses a value that looks like a secret. The failure comes before the Engine touches any ticket. The message lists every problem and never repeats a value. The Engine reads no file. A Shell reads the YAML with `load_settings_file` and passes plain mappings.
 
-The Action reads its settings from repo YAML. A settings store in PostgreSQL with a Redis cache is deferred (ADRs 0011 and 0012).
+The Action reads its settings from repo YAML. A settings store in PostgreSQL with a Redis cache is deferred (ADR 0017).
 
 The safety rules are code. They are not settings. A setting with the name of a safety rule is an unknown key.
 
