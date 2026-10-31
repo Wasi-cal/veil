@@ -17,3 +17,4 @@ def record_failed_fix(
         ticket.key, context.redact(f"Failed Fix. {failed.reason}")
     )
     report.outcomes[ticket.key] = FAILED
+    report.reasons[ticket.key] = failed.reason

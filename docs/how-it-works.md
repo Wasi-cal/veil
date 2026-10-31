@@ -84,6 +84,8 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 
 A skipped ticket opens no checkout, uses no tokens and gets no comment. The run report lists each skipped ticket under its reason.
 
+The run report has a table with one row for each ticket: the ticket, the outcome and the reason. A Failed Fix has the same reason in the report as in its Jira comment. The Engine hides credentials in the reason.
+
 This makes a second run safe. The Engine puts the issue label on each PR that it opens. The next run finds the PR and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
 
 If the tracker lists a ticket twice, the Engine uses it once. If two tickets have the same issue label on the same Source PR branch, the Engine fixes the first one. It skips the second because the first PR already exists.

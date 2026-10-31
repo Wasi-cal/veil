@@ -85,7 +85,8 @@ def test_the_checkouts_are_deleted_even_when_the_engine_fails(world, monkeypatch
 def test_the_report_goes_to_the_step_summary_and_a_failed_fix_is_not_a_failure(world):
     report = RunReport(
         pull_requests=["https://github.example.invalid/acme/app/pull/9"],
-        outcomes={"SEC-1": "fixed", "SEC-2": "failed_fix"},
+        outcomes={"SEC-1": "fixed", "SEC-2": "failed"},
+        reasons={"SEC-2": "The file a|b.js is not a text file.\nSecond line."},
         tokens_used=1234,
     )
 
@@ -96,6 +97,11 @@ def test_the_report_goes_to_the_step_summary_and_a_failed_fix_is_not_a_failure(w
     assert "https://github.example.invalid/acme/app/pull/9" in text
     assert "SEC-2" in text
     assert "1234" in text
+    assert (
+        "| SEC-2 | failed | The file a\\|b.js is not a text file. Second line. |"
+        in text
+    )
+    assert "| SEC-1 | fixed |  |" in text
 
 
 def test_no_summary_file_is_needed(world):
