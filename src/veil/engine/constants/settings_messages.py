@@ -7,10 +7,8 @@ VALUE_NOT_ALLOWED = "has a value that is not allowed"
 VALUE_NOT_VALID = "has a value that is not valid"
 # The last words of the problem line for a value that looks like a secret.
 NO_SECRETS = "Settings hold no secrets."
-# The names of the layers in a problem line.
-LAYER_ORG = "org settings"
-LAYER_REPO = "repo settings"
-LAYER_OVERRIDES = "overrides"
+# The problem line for settings that are not a mapping of names to values.
+SETTINGS_NOT_A_MAPPING = "The settings must be a mapping of setting names to values."
 
 
 # How a message names a key that it must not repeat.

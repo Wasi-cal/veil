@@ -1,14 +1,13 @@
 import pytest
 
-from veil.engine import SettingsError, resolve_settings
+from veil.engine import SettingsError, parse_settings
 
 GITHUB_TOKEN = "".join(["gh", "p_", "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6q7R8s9T0"])  # noqa: FLY002
 
 
-@pytest.mark.parametrize("layer", ["org", "repo", "overrides"])
-def test_a_value_that_looks_like_a_secret_is_refused_in_every_layer(layer):
+def test_a_value_that_looks_like_a_secret_is_refused():
     with pytest.raises(SettingsError) as error:
-        resolve_settings(**{layer: {"cheap_model": GITHUB_TOKEN}})
+        parse_settings({"cheap_model": GITHUB_TOKEN})
 
     message = str(error.value)
     assert (
@@ -20,8 +19,8 @@ def test_a_value_that_looks_like_a_secret_is_refused_in_every_layer(layer):
 
 def test_a_secret_inside_a_list_or_an_address_is_refused_too():
     with pytest.raises(SettingsError) as error:
-        resolve_settings(
-            org={
+        parse_settings(
+            {
                 "extra_refused_read_patterns": ["*.pem", GITHUB_TOKEN],
                 "jira_site_url": f"https://bot:{GITHUB_TOKEN}@example.atlassian.net",
             }
@@ -33,8 +32,6 @@ def test_a_secret_inside_a_list_or_an_address_is_refused_too():
 
 
 def test_text_that_only_looks_a_little_like_a_key_is_allowed():
-    settings = resolve_settings(
-        org={"cheap_model": "gpt-6-luna", "branch_prefix": "gh/p-"}
-    )
+    settings = parse_settings({"cheap_model": "gpt-6-luna", "branch_prefix": "gh/p-"})
 
     assert settings.cheap_model == "gpt-6-luna"

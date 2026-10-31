@@ -4,7 +4,7 @@ from tests.support.scenario import (
     make_context,
     toggle_edits,
 )
-from veil.engine import Settings, resolve_settings, run
+from veil.engine import Settings, parse_settings, run
 
 CHEAP = Settings().cheap_model
 STRONG = Settings().strong_model
@@ -68,8 +68,8 @@ def test_with_two_attempts_the_strong_model_gets_one_try(tmp_path):
     assert len(repos.pull_requests) == 1
 
 
-def test_a_tighter_repo_limit_reaches_the_run(tmp_path):
-    settings = resolve_settings(org={"step_cap": 10}, repo={"step_cap": 2})
+def test_a_limit_from_the_settings_reaches_the_run(tmp_path):
+    settings = parse_settings({"step_cap": 2})
     context, _, _, _ = make_context(
         tmp_path, {CHEAP: toggle_edits(5), STRONG: toggle_edits(5)}, settings=settings
     )

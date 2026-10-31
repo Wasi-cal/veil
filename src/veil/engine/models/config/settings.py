@@ -40,16 +40,6 @@ from veil.engine.constants.settings_patterns import (
     PROJECT_KEY,
     SITE_URL,
 )
-from veil.engine.constants.settings_rules import (
-    READER_ENGINE,
-    READER_SHELL,
-    TIGHTEN_ADD_ONLY,
-    TIGHTEN_DISABLE_ONLY,
-    TIGHTEN_FREE,
-    TIGHTEN_LOCKED,
-    TIGHTEN_LOWER,
-    TIGHTEN_RAISE_ONLY,
-)
 from veil.engine.constants.severity import DEFAULT_SEVERITY_MAP, Bucket
 from veil.engine.constants.statuses import IN_REVIEW
 from veil.engine.constants.triggers import (
@@ -59,19 +49,8 @@ from veil.engine.constants.triggers import (
 )
 
 
-def _setting(default: Any, tighten: str, reader: str, **constraints: Any) -> Any:
-    """One setting. The default, the bounds and the rule for a repo are in one place.
-
-    The settings catalog reads them from here.
-    """
-    extra: dict[str, Any] = {"tighten": tighten, "reader": reader}
-    if "default_factory" in constraints:
-        return Field(json_schema_extra=extra, **constraints)
-    return Field(default=default, json_schema_extra=extra, **constraints)
-
-
 class Settings(BaseModel):
-    """Every setting of a run. The defaults are in code. A layer can give other values.
+    """Every setting of a run. The defaults are in code. The repo file can give other values.
 
     Settings hold no secret. The safety rules are code and are not here.
     """
@@ -79,122 +58,83 @@ class Settings(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     # The fix loop
-    cheap_model: str = _setting(
-        CHEAP_MODEL,
-        TIGHTEN_FREE,
-        READER_ENGINE,
+    cheap_model: str = Field(
+        default=CHEAP_MODEL,
         min_length=1,
         max_length=MAX_NAME_CHARS,
     )
-    strong_model: str = _setting(
-        STRONG_MODEL,
-        TIGHTEN_FREE,
-        READER_ENGINE,
+    strong_model: str = Field(
+        default=STRONG_MODEL,
         min_length=1,
         max_length=MAX_NAME_CHARS,
     )
-    max_attempts: int = _setting(MAX_ATTEMPTS, TIGHTEN_LOWER, READER_ENGINE, ge=1, le=2)
-    step_cap: int = _setting(STEP_CAP, TIGHTEN_LOWER, READER_ENGINE, ge=1, le=100)
-    diff_limit: int = _setting(DIFF_LIMIT, TIGHTEN_LOWER, READER_ENGINE, ge=0, le=2000)
-    tool_result_max_bytes: int = _setting(
-        TOOL_RESULT_MAX_BYTES,
-        TIGHTEN_LOWER,
-        READER_ENGINE,
+    max_attempts: int = Field(default=MAX_ATTEMPTS, ge=1, le=2)
+    step_cap: int = Field(default=STEP_CAP, ge=1, le=100)
+    diff_limit: int = Field(default=DIFF_LIMIT, ge=0, le=2000)
+    tool_result_max_bytes: int = Field(
+        default=TOOL_RESULT_MAX_BYTES,
         ge=MIN_TOOL_RESULT_MAX_BYTES,
         le=65_536,
     )
-    read_file_max_lines: int = _setting(
-        READ_FILE_MAX_LINES, TIGHTEN_LOWER, READER_ENGINE, ge=1, le=2000
+    read_file_max_lines: int = Field(default=READ_FILE_MAX_LINES, ge=1, le=2000)
+    search_max_matches: int = Field(default=SEARCH_MAX_MATCHES, ge=1, le=500)
+    explanation_max_sentences: int = Field(
+        default=EXPLANATION_MAX_SENTENCES, ge=1, le=10
     )
-    search_max_matches: int = _setting(
-        SEARCH_MAX_MATCHES, TIGHTEN_LOWER, READER_ENGINE, ge=1, le=500
-    )
-    explanation_max_sentences: int = _setting(
-        EXPLANATION_MAX_SENTENCES, TIGHTEN_LOWER, READER_ENGINE, ge=1, le=10
-    )
-    extra_refused_read_patterns: tuple[str, ...] = _setting(
-        (), TIGHTEN_ADD_ONLY, READER_ENGINE, max_length=MAX_LIST_ENTRIES
+    extra_refused_read_patterns: tuple[str, ...] = Field(
+        default=(), max_length=MAX_LIST_ENTRIES
     )
 
     # The budget
-    token_ceiling: int = _setting(
-        TOKEN_CEILING, TIGHTEN_LOWER, READER_ENGINE, ge=1, le=5_000_000
-    )
+    token_ceiling: int = Field(default=TOKEN_CEILING, ge=1, le=5_000_000)
 
     # Grouping and the names that the Engine writes
-    shared_pr_max: int = _setting(
-        SHARED_PR_MAX, TIGHTEN_LOWER, READER_ENGINE, ge=1, le=50
-    )
-    branch_prefix: str = _setting(
-        FIX_BRANCH_PREFIX,
-        TIGHTEN_LOCKED,
-        READER_ENGINE,
+    shared_pr_max: int = Field(default=SHARED_PR_MAX, ge=1, le=50)
+    branch_prefix: str = Field(
+        default=FIX_BRANCH_PREFIX,
         min_length=3,
         max_length=MAX_NAME_CHARS,
         pattern=BRANCH_PREFIX,
     )
-    severity_map: dict[str, Bucket] = _setting(
-        None,
-        TIGHTEN_RAISE_ONLY,
-        READER_ENGINE,
+    severity_map: dict[str, Bucket] = Field(
         default_factory=lambda: dict(DEFAULT_SEVERITY_MAP),
     )
-    eligible_label: str = _setting(
-        DEFAULT_ELIGIBLE_LABEL,
-        TIGHTEN_FREE,
-        READER_SHELL,
+    eligible_label: str = Field(
+        default=DEFAULT_ELIGIBLE_LABEL,
         pattern=OPTIONAL_LABEL,
         max_length=MAX_NAME_CHARS,
     )
-    failed_fix_label: str = _setting(
-        FAILED_FIX_LABEL,
-        TIGHTEN_FREE,
-        READER_ENGINE,
+    failed_fix_label: str = Field(
+        default=FAILED_FIX_LABEL,
         pattern=LABEL,
         max_length=MAX_NAME_CHARS,
     )
-    in_review_status: str = _setting(
-        IN_REVIEW, TIGHTEN_LOCKED, READER_ENGINE, min_length=1, max_length=60
-    )
+    in_review_status: str = Field(default=IN_REVIEW, min_length=1, max_length=60)
 
     # The tracker and the repos that the Shells use
-    jira_site_url: str = _setting(
-        "", TIGHTEN_LOCKED, READER_SHELL, pattern=SITE_URL, max_length=MAX_URL_CHARS
-    )
-    jira_project_keys: tuple[str, ...] = _setting(
-        (), TIGHTEN_LOCKED, READER_SHELL, max_length=MAX_LIST_ENTRIES
-    )
+    jira_site_url: str = Field(default="", pattern=SITE_URL, max_length=MAX_URL_CHARS)
+    jira_project_keys: tuple[str, ...] = Field(default=(), max_length=MAX_LIST_ENTRIES)
     # The names of the environment variables that hold the credentials. A value is never a setting.
-    jira_email_env: str = _setting(
-        DEFAULT_JIRA_EMAIL_ENV,
-        TIGHTEN_FREE,
-        READER_SHELL,
+    jira_email_env: str = Field(
+        default=DEFAULT_JIRA_EMAIL_ENV,
         pattern=ENV_NAME,
         max_length=MAX_NAME_CHARS,
     )
-    jira_token_env: str = _setting(
-        DEFAULT_JIRA_TOKEN_ENV,
-        TIGHTEN_FREE,
-        READER_SHELL,
+    jira_token_env: str = Field(
+        default=DEFAULT_JIRA_TOKEN_ENV,
         pattern=ENV_NAME,
         max_length=MAX_NAME_CHARS,
     )
-    openai_key_env: str = _setting(
-        DEFAULT_OPENAI_KEY_ENV,
-        TIGHTEN_FREE,
-        READER_SHELL,
+    openai_key_env: str = Field(
+        default=DEFAULT_OPENAI_KEY_ENV,
         pattern=ENV_NAME,
         max_length=MAX_NAME_CHARS,
     )
 
     # The triggers
-    schedule_enabled: bool = _setting(
-        SCHEDULE_ENABLED, TIGHTEN_DISABLE_ONLY, READER_SHELL
-    )
-    on_demand_enabled: bool = _setting(
-        ON_DEMAND_ENABLED, TIGHTEN_DISABLE_ONLY, READER_SHELL
-    )
-    event_enabled: bool = _setting(EVENT_ENABLED, TIGHTEN_DISABLE_ONLY, READER_SHELL)
+    schedule_enabled: bool = Field(default=SCHEDULE_ENABLED)
+    on_demand_enabled: bool = Field(default=ON_DEMAND_ENABLED)
+    event_enabled: bool = Field(default=EVENT_ENABLED)
 
     @field_validator("branch_prefix")
     @classmethod

@@ -6,7 +6,7 @@ from typing import TextIO
 from veil.adapters.constants.settings_file import REPO_SETTINGS_PATH
 from veil.adapters.jira.models.jira_settings import JiraSettings
 from veil.adapters.yaml_settings import load_settings_file
-from veil.engine.config.resolve import resolve_settings
+from veil.engine.config.parse import parse_settings
 from veil.engine.context import Context
 from veil.engine.errors.model_client_error import ModelClientError
 from veil.engine.errors.repo_provider_error import RepoProviderError
@@ -78,9 +78,7 @@ def _run(
     known: list[str],
 ) -> int:
     env = read_run_environment(environ)
-    settings = resolve_settings(
-        repo=load_settings_file(env.workspace / REPO_SETTINGS_PATH)
-    )
+    settings = parse_settings(load_settings_file(env.workspace / REPO_SETTINGS_PATH))
     reason = skip_reason(env.event, settings)
     if reason:
         print(f"::notice::{reason}", file=out, flush=True)

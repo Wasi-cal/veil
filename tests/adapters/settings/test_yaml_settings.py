@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from veil.adapters.yaml_settings import load_settings_file
-from veil.engine import SettingsError, resolve_settings
+from veil.engine import SettingsError, parse_settings
 
 
 def write(tmp_path: Path, text: str) -> Path:
@@ -34,20 +34,18 @@ def test_a_missing_file_gives_no_settings(tmp_path):
     assert load_settings_file(tmp_path / "none.yml") == {}
 
 
-def test_the_loaded_settings_are_checked_by_the_same_schema_as_any_other_layer(
+def test_the_loaded_settings_are_checked_by_the_schema(
     tmp_path,
 ):
     path = write(tmp_path, "step_cap: 12\nstep_capp: 5\ndiff_limit: 99999\n")
 
     with pytest.raises(SettingsError) as error:
-        resolve_settings(repo=load_settings_file(path))
+        parse_settings(load_settings_file(path))
 
     lines = str(error.value).splitlines()
     assert len(lines) == 2
-    assert "repo settings: unknown setting step_capp." in lines
-    assert any(
-        line.startswith("repo settings: diff_limit must be at most") for line in lines
-    )
+    assert "unknown setting step_capp." in lines
+    assert any(line.startswith("diff_limit must be at most") for line in lines)
 
 
 def test_text_that_is_not_yaml_gives_a_clear_error_with_a_line_and_no_content(tmp_path):

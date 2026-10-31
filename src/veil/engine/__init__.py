@@ -1,5 +1,4 @@
-from veil.engine.config.catalog import render_settings_catalog, settings_catalog
-from veil.engine.config.resolve import resolve_settings
+from veil.engine.config.parse import parse_settings
 from veil.engine.context import Context
 from veil.engine.errors.settings_error import SettingsError
 from veil.engine.interfaces.model_client import ModelClient
@@ -34,9 +33,7 @@ __all__ = [
     "ToolDefinition",
     "Tracker",
     "Workspace",
+    "parse_settings",
     "redact",
-    "render_settings_catalog",
-    "resolve_settings",
     "run",
-    "settings_catalog",
 ]

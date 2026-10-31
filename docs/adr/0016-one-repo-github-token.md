@@ -19,7 +19,6 @@ veil runs on one repo through the GitHub Action. This ADR changes the GitHub cre
 - A PR that the `GITHUB_TOKEN` opens does not start other workflows. CI does not run on a Fix PR until a person pushes to it.
 - Commits show the fixed author `Gozu Veil`. They do not show a bot of an App.
 - A repo that needs to run CI on Fix PRs needs another token. That is a new decision.
-- The settings layers (org, repo, overrides) and the tighten rules stay in the Engine. The Action uses the repo layer only. Removing the layers is a later cut.
 - A failed PR call leaves the pushed Fix branch on GitHub. A plain rerun is then rejected, because the push is never forced. A person must remove the branch first. The next change must let a rerun reuse or reset the Fix branch of veil.
 - The PR title is "Fix 1 tickets". The text is not grammatical for one ticket.
 
