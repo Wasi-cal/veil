@@ -37,9 +37,9 @@ For one group, the steps are:
 2. For each ticket of the group, read the file that the ticket names. Refuse if the file may hold secrets.
 3. Build the first message to the model. It holds the repository, file, line, severity and finding. It also holds about 40 lines of code around the flagged line. The Engine marks the text from the ticket as untrusted data.
 4. Talk to the model. The model answers with tool calls. The Engine runs each call and sends the result back. This repeats until the model calls `finish`. Before each model call, the Engine checks the token ceiling.
-5. The model gives four things with `finish`: a commit message of one line, and three parts. The part `problem` says why this code is a problem. The part `change` says what the model changed. The part `solves` says what the change solves. Each part has at most 3 sentences, and a sentence has at most 25 words. A part that copies the text of the ticket is refused. If the format is wrong, the Engine gives an error and the model can try again.
+5. The model gives four things with `finish`: a commit message and three parts. The commit message is a Conventional Commit of at most 72 characters, for example `fix(security): replace eval with a safe parser`. The Engine adds the footer `Refs: <ticket>`. The part `problem` says why this code is a problem. The part `change` says what the model changed. The part `solves` says what the change solves. Each part has at most 3 sentences, and a sentence has at most 25 words. A part that copies the text of the ticket is refused. If the format is wrong, the Engine gives an error and the model can try again.
 6. Check the change. It must not be empty. It must have 200 changed lines or fewer. Each edited file must still parse. The added lines, the commit message and the explanation must hold no secret (see the section "Secrets"). Then the Engine makes one commit for this Fix. The next ticket starts from that commit, so it sees the earlier Fixes.
-7. After the last ticket, publish. The Engine opens one draft pull request that targets the branch of the Source PR. The body holds the three parts of each Fix, under the labels "Why this is a problem", "What changed" and "What this solves". It adds a comment with the link and the same three parts on each ticket and moves each ticket to In Review.
+7. After the last ticket, publish. The Engine opens one draft pull request that targets the branch of the Source PR. The title is the commit subject and the ticket, or `fix(security): resolve N findings (…)` for many tickets. The body has a summary, then one section for each ticket. A section has the three parts of the Fix under the labels "Why this is a problem", "What changed" and "What this solves". The Engine also adds a comment with the link and the same three parts on each ticket. It moves each ticket to In Review.
 
 If the first attempt fails, the Engine starts one more attempt with the strong model (see the section "When an attempt fails").
 
@@ -135,7 +135,7 @@ Any failure before step 5 stops the run with one error line and exit code 1. No 
 A ticket needs all of these before the Action fixes it:
 
 - The label `veil-eligible`, or the label that the setting `eligible_label` names. If you set `eligible_label` to an empty text, a ticket needs no such label. Then veil takes every open ticket without an assignee in the project keys.
-- A label that starts with `issue-`. It names the finding. The Engine copies it to the Fix PR.
+- A label that starts with `issue-`. It names the finding. The Engine copies it to the Fix PR. A title of the form `[owner/repo] path:line - title` and the other labels are in `docs/ticket-contract.md`.
 - A Details list with the repository, the file (`Component`), the line, the severity and the exact branch. A branch is required. There is no unknown branch.
 - An open PR from that branch in that repository.
 - A status that is not done, and no assignee.

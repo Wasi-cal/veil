@@ -1,6 +1,6 @@
 from veil.engine.constants.names import FIXED
 from veil.engine.context import Context
-from veil.engine.fix.pr_text import pr_body, ticket_comment
+from veil.engine.fix.pr_text import pr_body, pr_title, ticket_comment
 from veil.engine.models.fix.fix import Fix
 from veil.engine.models.group.fix_group import FixGroup
 from veil.engine.models.provider.draft_pr import DraftPr
@@ -21,12 +21,11 @@ def publish(
     """
     if not fixes:
         return
-    keys = [fix.ticket.key for fix in fixes]
     draft = DraftPr(
         repo=group.repo,
         head=branch,
         base=group.branch,
-        title=context.redact(group.title(keys)),
+        title=context.redact(pr_title(fixes)),
         body=context.redact(pr_body(group, fixes)),
         labels=tuple(label for fix in fixes if (label := fix.ticket.issue_label)),
     )

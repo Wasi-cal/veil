@@ -27,8 +27,8 @@ def test_each_high_ticket_gets_its_own_high_pr(tmp_path):
     assert report.outcomes == {"GR-100": "fixed", "GR-101": "fixed"}
     first, second = repos.pull_requests
     assert first.head != second.head
-    assert repos.commit_subjects_on(first) == ["Fix a"]
-    assert repos.commit_subjects_on(second) == ["Fix b"]
+    assert repos.commit_subjects_on(first) == ["fix(security): Fix a"]
+    assert repos.commit_subjects_on(second) == ["fix(security): Fix b"]
     assert first.url in tracker.comments_on("GR-100")[0]
     assert second.url in tracker.comments_on("GR-101")[0]
 
@@ -60,7 +60,10 @@ def test_high_fixes_of_the_same_file_go_into_one_pr_and_the_body_gives_the_reaso
 
     assert report.outcomes == {"GR-100": "fixed", "GR-101": "fixed"}
     [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == ["Fix first", "Fix second"]
+    assert repos.commit_subjects_on(pr) == [
+        "fix(security): Fix first",
+        "fix(security): Fix second",
+    ]
     assert repos.file_on(pr, "a.py") == "first = int(input())\nsecond = int(input())\n"
     assert "same file" in pr.body
     assert "a.py" in pr.body
@@ -93,7 +96,10 @@ def test_high_tickets_of_the_same_file_group_even_if_the_path_is_written_differe
     run(context)
 
     [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == ["Fix first", "Fix second"]
+    assert repos.commit_subjects_on(pr) == [
+        "fix(security): Fix first",
+        "fix(security): Fix second",
+    ]
 
 
 def test_the_body_gives_no_same_file_reason_if_only_one_high_fix_passed(tmp_path):

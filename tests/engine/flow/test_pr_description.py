@@ -26,9 +26,9 @@ def test_the_pr_says_why_it_is_a_problem_what_changed_and_what_it_solves(tmp_pat
 
     [pr] = repos.pull_requests
     assert "GR-100" in pr.body
-    assert f"Why this is a problem: {PROBLEM}" in pr.body
-    assert f"What changed: {CHANGE}" in pr.body
-    assert f"What this solves: {SOLVES}" in pr.body
+    assert f"**Why this is a problem**\n{PROBLEM}" in pr.body
+    assert f"**What changed**\n{CHANGE}" in pr.body
+    assert f"**What this solves**\n{SOLVES}" in pr.body
     assert pr.body.index("Why this is a problem") < pr.body.index("What changed")
     assert pr.body.index("What changed") < pr.body.index("What this solves")
 
@@ -107,6 +107,6 @@ def test_a_shared_pr_with_two_fixes_gives_each_ticket_its_own_three_parts(tmp_pa
     run(context)
 
     [pr] = repos.pull_requests
-    assert pr.body.count("Why this is a problem:") == 2
+    assert pr.body.count("**Why this is a problem**") == 2
     assert pr.body.index("GR-100") < pr.body.index(PROBLEM) < pr.body.index("GR-101")
     assert other[0] in pr.body

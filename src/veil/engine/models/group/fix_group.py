@@ -25,9 +25,3 @@ class FixGroup(BaseModel):
         """
         key = first_fixed_key.lower()
         return f"{prefix}{key}" if self.kind == HIGH_GROUP else f"{prefix}shared-{key}"
-
-    def title(self, keys: list[str]) -> str:
-        """The title of the Fix PR. A high group names its tickets. A shared group gives the count."""
-        if self.kind == HIGH_GROUP:
-            return f"Fix {', '.join(keys)}"
-        return f"Fix {len(keys)} ticket{'' if len(keys) == 1 else 's'}"

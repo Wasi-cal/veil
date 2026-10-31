@@ -1,31 +1,69 @@
-from veil.engine.constants.names import CHANGE_LABEL, PROBLEM_LABEL, SOLVES_LABEL
+from veil.engine.constants.names import (
+    CHANGE_LABEL,
+    COMMIT_FOOTER_KEY,
+    COMMIT_PREFIX,
+    PR_TITLE_KEYS_SHOWN,
+    PROBLEM_LABEL,
+    SOLVES_LABEL,
+    SUMMARY_HEADING,
+)
 from veil.engine.models.fix.fix import Fix
 from veil.engine.models.group.fix_group import FixGroup
 
 
-def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
-    """The body of the PR: the reason for the group, then the three parts of each Fix.
+def commit_text(fix: Fix) -> str:
+    """The commit message: the subject of the model, then a footer that names the ticket."""
+    return f"{fix.commit_message}\n\n{COMMIT_FOOTER_KEY}: {fix.ticket.key}"
 
-    The reason names the Fixes that share the PR. It has no use if only one Fix passed.
+
+def pr_title(fixes: list[Fix]) -> str:
+    """The title of the PR, in the form of a Conventional Commit.
+
+    One fix: its commit subject and its ticket, for example "fix(security): replace eval (VT-10)".
+    More fixes: the count and the tickets, for example "fix(security): resolve 3 findings (VT-1, VT-2, VT-3)".
     """
-    parts = [
-        f"{fix.ticket.key}\n\n{_three_parts(fix, chr(10) + chr(10))}" for fix in fixes
+    keys = [fix.ticket.key for fix in fixes]
+    if len(keys) == 1:
+        return f"{fixes[0].commit_message} ({keys[0]})"
+    shown = ", ".join(keys[:PR_TITLE_KEYS_SHOWN])
+    rest = len(keys) - PR_TITLE_KEYS_SHOWN
+    names = shown if rest <= 0 else f"{shown} and {rest} more"
+    return f"{COMMIT_PREFIX}resolve {len(keys)} findings ({names})"
+
+
+def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
+    """The body of the PR: a summary, then one section for each Fix.
+
+    A section has the ticket and the place of the finding, then the three parts of the explanation.
+    """
+    count = len(fixes)
+    noun = "finding" if count == 1 else "findings"
+    summary = [
+        (
+            f"Fixes {count} security {noun} in `{group.repo}`. "
+            f"The PR targets the branch `{group.branch}` of the Source PR. "
+            "It is a draft. A person must review it and merge it."
+        )
     ]
-    if group.reason and len(fixes) > 1:
-        parts.insert(0, group.reason)
-    return "\n\n".join(parts)
+    if group.reason and count > 1:
+        summary.append(group.reason)
+    sections = [f"{SUMMARY_HEADING}\n\n" + "\n\n".join(summary)]
+    for fix in fixes:
+        ticket = fix.ticket
+        sections.append(
+            f"## {ticket.key} · `{ticket.file}:{ticket.line}`\n\n"
+            f"**{PROBLEM_LABEL}**\n{fix.problem}\n\n"
+            f"**{CHANGE_LABEL}**\n{fix.change}\n\n"
+            f"**{SOLVES_LABEL}**\n{fix.solves}"
+        )
+    return "\n\n".join(sections)
 
 
 def ticket_comment(pr_url: str, fix: Fix) -> str:
     """The comment on the ticket: the link to the PR, then the three parts."""
-    return f"The Engine opened a draft Fix PR: {pr_url}\n{_three_parts(fix, chr(10))}"
-
-
-def _three_parts(fix: Fix, separator: str) -> str:
-    return separator.join(
-        [
-            f"{PROBLEM_LABEL}: {fix.problem}",
-            f"{CHANGE_LABEL}: {fix.change}",
-            f"{SOLVES_LABEL}: {fix.solves}",
-        ]
+    return (
+        f"The Engine opened a draft Fix PR: {pr_url}\n"
+        f"{PROBLEM_LABEL}: {fix.problem}\n"
+        f"{CHANGE_LABEL}: {fix.change}\n"
+        f"{SOLVES_LABEL}: {fix.solves}"
     )

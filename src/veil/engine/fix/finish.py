@@ -10,6 +10,7 @@ from veil.engine.constants.limits import (
     MIN_COPY_WORDS,
     SENTENCE_END,
 )
+from veil.engine.constants.names import COMMIT_PREFIX, COMMIT_SUBJECT_MAX_LENGTH
 from veil.engine.models.config.settings import Settings
 from veil.engine.models.llm.tool_call import ToolCall
 from veil.engine.models.tool_args.finish_args import FinishArgs
@@ -52,6 +53,11 @@ def read_finish(
     except ValidationError as error:
         problem = error.errors()[0]["msg"].removeprefix("Value error, ")
         return f"Error: The arguments of finish are not valid. {problem}"
+    if not _is_conventional(args.commit_message):
+        return (
+            f"Error: The commit message must look like '{COMMIT_PREFIX}replace eval with a safe parser'. "
+            f"It has at most {COMMIT_SUBJECT_MAX_LENGTH} characters and no full stop at the end."
+        )
     limit = settings.explanation_max_sentences
     for name in ("problem", "change", "solves"):
         text = getattr(args, name)
@@ -62,6 +68,18 @@ def read_finish(
         if copies_text(text, finding_text):
             return f"Error: The part {name} copies the text of the ticket. Describe this code in your own words."
     return args
+
+
+def _is_conventional(message: str) -> bool:
+    """A subject that starts with the prefix, has a summary, fits the length and has no full stop at the end."""
+    summary = message.removeprefix(COMMIT_PREFIX)
+    return (
+        message.startswith(COMMIT_PREFIX)
+        and bool(summary.strip())
+        and not summary[0].isspace()
+        and len(message) <= COMMIT_SUBJECT_MAX_LENGTH
+        and not message.endswith(".")
+    )
 
 
 def copies_text(text: str, source: str) -> bool:

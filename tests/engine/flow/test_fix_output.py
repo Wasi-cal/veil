@@ -26,7 +26,7 @@ def test_the_commit_gets_the_message_of_the_model_and_the_pr_and_ticket_get_the_
     run(context)
 
     [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == ["Replace eval with int"]
+    assert repos.commit_subjects_on(pr) == ["fix(security): Replace eval with int"]
     assert "The input is now an integer. Eval is gone." in pr.body
     [comment] = tracker.comments_on("GR-100")
     assert pr.url in comment
@@ -66,7 +66,7 @@ def test_a_finish_that_breaks_the_format_is_refused_and_the_model_can_finish_aga
 
     assert report.outcomes == {"GR-100": "fixed"}
     [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == ["Replace eval"]
+    assert repos.commit_subjects_on(pr) == ["fix(security): Replace eval"]
     assert "Short explanation." in pr.body
     assert LONG_EXPLANATION not in pr.body
     assert "Line two" not in pr.body

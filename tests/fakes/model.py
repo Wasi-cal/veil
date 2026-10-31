@@ -19,13 +19,22 @@ def list_dir(path: str = ".") -> ToolCall:
     return ToolCall(name="list_dir", arguments={"path": path})
 
 
+COMMIT_PREFIX = "fix(security): "
+
+
 def finish(
     explanation: str = "Fixed.",
-    commit_message: str = "Fix the finding.",
+    commit_message: str = "fix the finding",
     problem: str = "The input reaches eval, so it can run any code.",
     solves: str = "The input is now only a number.",
+    prefix: bool = True,
 ) -> ToolCall:
-    """A finish call. `explanation` is the text of the part `change`."""
+    """A finish call. `explanation` is the text of the part `change`.
+
+    `commit_message` is the summary. The call adds the Conventional Commit prefix, unless it is there or `prefix` is False.
+    """
+    if prefix and not commit_message.startswith(COMMIT_PREFIX):
+        commit_message = COMMIT_PREFIX + commit_message
     return ToolCall(
         name="finish",
         arguments={

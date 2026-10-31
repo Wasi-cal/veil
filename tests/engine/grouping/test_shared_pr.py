@@ -31,7 +31,10 @@ def test_low_and_medium_fixes_of_one_source_pr_go_into_one_shared_pr(tmp_path):
     assert report.pull_requests == [pr.url]
     assert pr.draft is True
     assert pr.base == "feature"
-    assert repos.commit_subjects_on(pr) == ["Fix a", "Fix b"]
+    assert repos.commit_subjects_on(pr) == [
+        "fix(security): Fix a",
+        "fix(security): Fix b",
+    ]
     assert repos.file_on(pr, "a.py") == FIXED_LINE
     assert repos.file_on(pr, "b.py") == FIXED_LINE
     assert "Changed a.py." in pr.body
@@ -83,7 +86,10 @@ def test_a_failed_fix_stays_out_of_the_shared_pr_and_leaves_no_edit_in_it(tmp_pa
         "GR-102": "fixed",
     }
     [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == ["Fix a", "Fix c"]
+    assert repos.commit_subjects_on(pr) == [
+        "fix(security): Fix a",
+        "fix(security): Fix c",
+    ]
     assert repos.changed_paths_on(pr) == {"a.py", "c.py"}
     assert repos.file_on(pr, "b.py") == BUGGY
     assert tracker.labels_on("GR-101") == ["veil-failed-fix"]
@@ -112,7 +118,10 @@ def test_a_shared_pr_holds_at_most_the_cap_and_the_next_run_takes_the_rest(tmp_p
         "GR-102": "left_for_next_run",
     }
     [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == ["Fix a", "Fix b"]
+    assert repos.commit_subjects_on(pr) == [
+        "fix(security): Fix a",
+        "fix(security): Fix b",
+    ]
     assert tracker.comments_on("GR-102") == []
     assert tracker.status_of("GR-102") == "To Do"
 
@@ -124,7 +133,7 @@ def test_a_shared_pr_holds_at_most_the_cap_and_the_next_run_takes_the_rest(tmp_p
         "GR-102": "fixed",
     }
     assert len(repos.pull_requests) == 2
-    assert repos.commit_subjects_on(repos.pull_requests[1]) == ["Fix c"]
+    assert repos.commit_subjects_on(repos.pull_requests[1]) == ["fix(security): Fix c"]
 
 
 def test_tickets_of_different_source_prs_get_separate_shared_prs(tmp_path):
@@ -143,7 +152,10 @@ def test_tickets_of_different_source_prs_get_separate_shared_prs(tmp_path):
     first, second = repos.pull_requests
     assert {first.base, second.base} == {"feature-one", "feature-two"}
     assert first.head != second.head
-    assert repos.commit_subjects_on(first) in (["Fix a"], ["Fix b"])
+    assert repos.commit_subjects_on(first) in (
+        ["fix(security): Fix a"],
+        ["fix(security): Fix b"],
+    )
 
 
 def test_at_the_token_ceiling_the_fixes_that_passed_are_published_and_the_rest_wait(
@@ -172,7 +184,7 @@ def test_at_the_token_ceiling_the_fixes_that_passed_are_published_and_the_rest_w
     }
     assert report.tokens_used == 900
     [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == ["Fix a"]
+    assert repos.commit_subjects_on(pr) == ["fix(security): Fix a"]
     assert repos.changed_paths_on(pr) == {"a.py"}
     for key in ("GR-101", "GR-102"):
         assert tracker.comments_on(key) == []
@@ -231,4 +243,4 @@ def test_the_branch_names_the_first_fix_that_passed_so_a_retry_does_not_collide(
     assert second.outcomes == {"GR-100": "fixed", "GR-101": "skipped"}
     pr_one, pr_two = repos.pull_requests
     assert pr_two.head == "gozu/fix-shared-gr-100"
-    assert repos.commit_subjects_on(pr_two) == ["Fix a"]
+    assert repos.commit_subjects_on(pr_two) == ["fix(security): Fix a"]

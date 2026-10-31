@@ -77,3 +77,12 @@ DEFAULT_SEVERITY_MAP: dict[str, Bucket] = {
 PROBLEM_LABEL = "Why this is a problem"
 CHANGE_LABEL = "What changed"
 SOLVES_LABEL = "What this solves"
+
+# --- the standard of commits and PRs ---
+# A commit subject is a Conventional Commit: "fix(security): replace eval with a safe parser".
+COMMIT_PREFIX = "fix(security): "
+COMMIT_SUBJECT_MAX_LENGTH = 72
+COMMIT_FOOTER_KEY = "Refs"
+# A PR title names this many tickets. More tickets end with "and N more".
+PR_TITLE_KEYS_SHOWN = 3
+SUMMARY_HEADING = "## Summary"
