@@ -1,4 +1,4 @@
-from veil.engine.constants.pr_text import CHANGE_LABEL, PROBLEM_LABEL, SOLVES_LABEL
+from veil.engine.constants.names import CHANGE_LABEL, PROBLEM_LABEL, SOLVES_LABEL
 from veil.engine.models.fix.fix import Fix
 from veil.engine.models.group.fix_group import FixGroup
 

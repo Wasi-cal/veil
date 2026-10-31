@@ -1,4 +1,4 @@
-from veil.engine.constants.outcomes import FAILED
+from veil.engine.constants.names import FAILED
 from veil.engine.context import Context
 from veil.engine.errors.failed_fix import FailedFix
 from veil.engine.models.report.run_report import RunReport

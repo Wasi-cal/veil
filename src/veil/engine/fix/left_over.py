@@ -1,4 +1,4 @@
-from veil.engine.constants.outcomes import LEFT_FOR_NEXT_RUN
+from veil.engine.constants.names import LEFT_FOR_NEXT_RUN
 from veil.engine.models.report.run_report import RunReport
 from veil.engine.models.ticket.ticket import Ticket
 

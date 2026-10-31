@@ -1,10 +1,10 @@
-from veil.engine.constants.branches import FIX_BRANCH_PREFIX
-from veil.engine.constants.outcomes import SKIPPED
-from veil.engine.constants.skip_reasons import (
+from veil.engine.constants.names import (
     DUPLICATE_ISSUE,
     FAILED_FIX,
+    FIX_BRANCH_PREFIX,
     NO_ISSUE_LABEL,
     RAISED_AGAINST_FIX_BRANCH,
+    SKIPPED,
     SOURCE_PR_NOT_OPEN,
 )
 from veil.engine.interfaces.repo_provider import RepoProvider

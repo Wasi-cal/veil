@@ -1,4 +1,4 @@
-from veil.engine.constants.outcomes import STOPPED_TOKEN_EXPIRED
+from veil.engine.constants.names import STOPPED_TOKEN_EXPIRED
 from veil.engine.context import Context
 from veil.engine.eligibility.select import distinct, select_eligible
 from veil.engine.errors.budget_exhausted import BudgetExhausted

@@ -1,7 +1,7 @@
 import json
 from collections.abc import Callable
 
-from veil.engine.constants.tools import FINISH
+from veil.engine.constants.prompt import FINISH
 from veil.engine.errors.attempt_failed import AttemptFailed
 from veil.engine.fix.budget import ensure_budget
 from veil.engine.fix.finish import read_finish

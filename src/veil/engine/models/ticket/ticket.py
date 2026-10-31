@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-from veil.engine.constants.labels import ISSUE_LABEL_PREFIX
+from veil.engine.constants.names import ISSUE_LABEL_PREFIX
 
 
 class Ticket(BaseModel):

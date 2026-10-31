@@ -1,4 +1,4 @@
-from veil.engine.constants.outcomes import FIXED
+from veil.engine.constants.names import FIXED
 from veil.engine.context import Context
 from veil.engine.fix.pr_text import pr_body, ticket_comment
 from veil.engine.models.fix.fix import Fix

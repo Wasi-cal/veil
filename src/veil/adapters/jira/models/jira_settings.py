@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from veil.adapters.jira.constants.patterns import PROJECT_KEY, SAFE_LABEL
-from veil.engine.constants.labels import DEFAULT_ELIGIBLE_LABEL
+from veil.engine.constants.names import DEFAULT_ELIGIBLE_LABEL
 from veil.engine.errors.settings_error import SettingsError
 from veil.engine.models.config.settings import Settings
 

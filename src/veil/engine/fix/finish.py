@@ -3,7 +3,7 @@ from difflib import SequenceMatcher
 
 from pydantic import ValidationError
 
-from veil.engine.constants.explanation import (
+from veil.engine.constants.limits import (
     ABBREVIATIONS,
     COPY_SHARE,
     MAX_SENTENCE_WORDS,

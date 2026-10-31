@@ -1,5 +1,7 @@
+# Patterns that keep secrets and refused files out of a fix.
 import re
 
+# --- secrets ---
 # The text that replaces a credential value or a text that matches a secret pattern.
 REDACTED = "[redacted]"
 # The kind of secret that the scan reports when it finds a credential value of the run.
@@ -18,3 +20,27 @@ SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("an API key that starts with sk-", re.compile(r"\bsk-[A-Za-z0-9_\-]{20,}")),
     ("an Atlassian API token", re.compile(r"\bATATT3[A-Za-z0-9_\-=]{20,}")),
 )
+
+# --- paths ---
+PROTECTED_DIRS = (".github/workflows",)
+
+LOCKFILE_NAMES = frozenset(
+    {
+        "uv.lock",
+        "poetry.lock",
+        "pipfile.lock",
+        "package-lock.json",
+        "npm-shrinkwrap.json",
+        "yarn.lock",
+        "pnpm-lock.yaml",
+        "bun.lockb",
+        "cargo.lock",
+        "gemfile.lock",
+        "composer.lock",
+        "go.sum",
+    }
+)
+
+# The model must never read these secret files. Settings can add patterns. Settings cannot remove these patterns.
+READ_REFUSED_PATTERNS = (".env*", "*.pem", "*.key", "*.p12", "id_rsa*", ".npmrc")
+READ_REFUSED_DIRS = (".git",)

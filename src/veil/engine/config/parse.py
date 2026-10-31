@@ -4,7 +4,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from veil.engine.config.keys import describe_key
-from veil.engine.constants.settings_messages import (
+from veil.engine.constants.settings_text import (
     MUST_BE_WHOLE_NUMBER,
     NO_SECRETS,
     SETTINGS_NOT_A_MAPPING,

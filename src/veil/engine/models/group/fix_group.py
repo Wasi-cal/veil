@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-from veil.engine.constants.group_kinds import HIGH_GROUP, GroupKind
+from veil.engine.constants.names import HIGH_GROUP, GroupKind
 from veil.engine.models.ticket.ticket import Ticket
 
 

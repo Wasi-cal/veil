@@ -1,4 +1,4 @@
-from veil.engine.constants.tools import FINISH, TOOL_DESCRIPTIONS
+from veil.engine.constants.prompt import FINISH, TOOL_DESCRIPTIONS
 from veil.engine.models.llm.tool_definition import ToolDefinition
 from veil.engine.models.tool_args.finish_args import FinishArgs
 from veil.engine.tools.toolbox import TOOLS

@@ -1,4 +1,4 @@
-from veil.engine.constants.secrets import REDACTED, SECRET_PATTERNS
+from veil.engine.constants.safety import REDACTED, SECRET_PATTERNS
 
 
 def redact(text: str, values: tuple[str, ...]) -> str:

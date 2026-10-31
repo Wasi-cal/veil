@@ -1,9 +1,9 @@
 import re
 
-from veil.engine.constants.settings_patterns import (
+from veil.engine.constants.settings_text import (
     LABEL,
 )
-from veil.engine.constants.settings_patterns import (
+from veil.engine.constants.settings_text import (
     PROJECT_KEY as PROJECT_KEY_PATTERN,
 )
 

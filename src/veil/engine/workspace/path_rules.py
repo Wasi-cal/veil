@@ -4,7 +4,7 @@ import posixpath
 from fnmatch import fnmatchcase
 from pathlib import PurePosixPath
 
-from veil.engine.constants.paths import (
+from veil.engine.constants.safety import (
     LOCKFILE_NAMES,
     PROTECTED_DIRS,
     READ_REFUSED_DIRS,

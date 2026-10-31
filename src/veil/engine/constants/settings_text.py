@@ -1,3 +1,5 @@
+# The words and the patterns that the check of the settings uses.
+# --- settings_messages ---
 # The words that end a problem line. Each says what is wrong and never repeats the value.
 MUST_BE_WHOLE_NUMBER = "must be a whole number"
 MUST_BE_TEXT = "must be text"
@@ -41,3 +43,15 @@ WORDS_BY_ERROR_TYPE = {
     "entry_too_long": ENTRY_TOO_LONG,
     "word_twice": WORD_TWICE,
 }
+
+# --- settings_patterns ---
+# A label has no space, quote or backslash. It goes into a search, so it must not change the search.
+LABEL = r'^[^\s"\\]+$'
+# A label, or nothing. Nothing means that no label is needed.
+OPTIONAL_LABEL = r'^([^\s"\\]+)?$'
+PROJECT_KEY = r"^[A-Z][A-Z0-9_]+$"
+BRANCH_PREFIX = r"^[A-Za-z0-9][A-Za-z0-9._/-]*[/-]$"
+# Empty, or an https address with no user name and no password in it.
+SITE_URL = r"^(https://[^\s/@]+(/[^\s@]*)?)?$"
+# The name of an environment variable. It has capital letters, digits and underscores.
+ENV_NAME = r"^[A-Z][A-Z0-9_]*$"

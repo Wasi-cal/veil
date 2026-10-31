@@ -1,7 +1,6 @@
 import posixpath
 
-from veil.engine.constants.group_kinds import HIGH_GROUP, SHARED_GROUP
-from veil.engine.constants.severity import HIGH
+from veil.engine.constants.names import HIGH, HIGH_GROUP, SHARED_GROUP
 from veil.engine.grouping.severity import bucket_of
 from veil.engine.models.config.settings import Settings
 from veil.engine.models.group.fix_group import FixGroup

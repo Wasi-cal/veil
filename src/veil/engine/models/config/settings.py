@@ -5,47 +5,46 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
-from veil.engine.constants.branches import FIX_BRANCH_PREFIX
-from veil.engine.constants.credential_names import (
-    DEFAULT_JIRA_EMAIL_ENV,
-    DEFAULT_JIRA_TOKEN_ENV,
-    DEFAULT_OPENAI_KEY_ENV,
-)
-from veil.engine.constants.labels import DEFAULT_ELIGIBLE_LABEL, FAILED_FIX_LABEL
 from veil.engine.constants.limits import (
     DIFF_LIMIT,
+    EVENT_ENABLED,
     EXPLANATION_MAX_SENTENCES,
     MAX_ATTEMPTS,
+    MAX_ENTRY_CHARS,
+    MAX_LIST_ENTRIES,
+    MAX_NAME_CHARS,
+    MAX_URL_CHARS,
     MIN_TOOL_RESULT_MAX_BYTES,
+    ON_DEMAND_ENABLED,
     READ_FILE_MAX_LINES,
+    SCHEDULE_ENABLED,
     SEARCH_MAX_MATCHES,
     SHARED_PR_MAX,
     STEP_CAP,
     TOKEN_CEILING,
     TOOL_RESULT_MAX_BYTES,
 )
-from veil.engine.constants.model_names import CHEAP_MODEL, STRONG_MODEL
-from veil.engine.constants.secrets import SECRET_PATTERNS
-from veil.engine.constants.settings_bounds import (
-    MAX_ENTRY_CHARS,
-    MAX_LIST_ENTRIES,
-    MAX_NAME_CHARS,
-    MAX_URL_CHARS,
+from veil.engine.constants.names import (
+    CHEAP_MODEL,
+    DEFAULT_ELIGIBLE_LABEL,
+    DEFAULT_JIRA_EMAIL_ENV,
+    DEFAULT_JIRA_TOKEN_ENV,
+    DEFAULT_OPENAI_KEY_ENV,
+    DEFAULT_SEVERITY_MAP,
+    FAILED_FIX_LABEL,
+    FIX_BRANCH_PREFIX,
+    IN_REVIEW,
+    STRONG_MODEL,
+    Bucket,
 )
-from veil.engine.constants.settings_patterns import (
+from veil.engine.constants.safety import SECRET_PATTERNS
+from veil.engine.constants.settings_text import (
     BRANCH_PREFIX,
     ENV_NAME,
     LABEL,
     OPTIONAL_LABEL,
     PROJECT_KEY,
     SITE_URL,
-)
-from veil.engine.constants.severity import DEFAULT_SEVERITY_MAP, Bucket
-from veil.engine.constants.statuses import IN_REVIEW
-from veil.engine.constants.triggers import (
-    EVENT_ENABLED,
-    ON_DEMAND_ENABLED,
-    SCHEDULE_ENABLED,
 )
 
 

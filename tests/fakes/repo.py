@@ -4,7 +4,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from veil.engine import DraftPr, FixQuery
-from veil.engine.constants.fix_kinds import FixKind
+from veil.engine.constants.names import FixKind
 
 
 def _git(cwd: Path, *args: str) -> str:

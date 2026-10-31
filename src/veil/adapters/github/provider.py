@@ -17,7 +17,7 @@ from veil.adapters.github.git_command import (
     secret_values,
 )
 from veil.adapters.github.workspace import GitWorkspace
-from veil.engine.constants.fix_kinds import FIX_BRANCH, OPEN_PR, FixKind
+from veil.engine.constants.names import FIX_BRANCH, OPEN_PR, FixKind
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.models.provider.draft_pr import DraftPr
 from veil.engine.models.provider.fix_query import FixQuery
