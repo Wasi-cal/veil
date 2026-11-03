@@ -181,3 +181,12 @@ def test_the_base_images_of_the_dockerfile_are_pinned_to_a_digest():
     assert len(lines) == 2
     for line in lines:
         assert re.search(r"@sha256:[0-9a-f]{64}", line), line
+
+
+def test_the_release_workflow_tests_on_the_python_of_the_image():
+    dockerfile = (ROOT / "Dockerfile").read_text()
+    image_python = re.search(r"FROM python:(\d+\.\d+)", dockerfile).group(1)
+    steps = load(RELEASE)["jobs"]["test"]["steps"]
+    setup = next(step for step in steps if "setup-uv" in step.get("uses", ""))
+
+    assert str(setup["with"]["python-version"]) == image_python

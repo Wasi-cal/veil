@@ -26,7 +26,6 @@ SECRET = "TOPSECRET-9f3a"
         ".ENV",
         "certs/KEY.PEM",
         "ID_RSA",
-        ".GIT/config",
         "keys\\id_rsa",
         ".github/workflows/ci.yml",
         ".github/CODEOWNERS",
