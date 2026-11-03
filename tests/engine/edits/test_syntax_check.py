@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from tests.fakes import edit_file, finish
@@ -67,6 +69,10 @@ def test_edited_file_of_unknown_type_is_not_parsed(tmp_path):
     assert len(repos.pull_requests) == 1
 
 
+@pytest.mark.skipif(
+    sys.version_info >= (3, 14),
+    reason="Python 3.14 parses this nesting, so the edit is valid JSON. The image uses Python 3.12.",
+)
 def test_deeply_nested_json_is_a_failed_fix_not_a_crash(tmp_path):
     depth = 100_000
     context, tracker, repos, _ = make_context(
