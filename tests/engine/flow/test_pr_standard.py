@@ -58,20 +58,22 @@ def test_the_pr_title_is_the_commit_subject_and_the_ticket_key(tmp_path):
     assert pr.title == f"{GOOD} (GR-100)"
 
 
-def test_the_title_of_a_shared_pr_counts_the_findings_and_names_the_tickets(tmp_path):
+def test_the_title_of_a_pr_of_two_fixes_counts_the_findings_and_names_the_tickets(
+    tmp_path,
+):
     scripts = [
-        [edit_file("a.py", "eval(input())", "int(input())")],
-        [finish_call("fix(security): replace eval in a")],
-        [edit_file("b.py", "eval(input())", "int(input())")],
-        [finish_call("fix(security): replace eval in b")],
+        [edit_file("a.py", "first = eval(input())", "first = int(input())")],
+        [finish_call("fix(security): replace eval in first")],
+        [edit_file("a.py", "second = eval(input())", "second = int(input())")],
+        [finish_call("fix(security): replace eval in second")],
     ]
     _, _, repos = run_with(
         tmp_path,
         scripts,
-        files={"a.py": "value = eval(input())\n", "b.py": "value = eval(input())\n"},
+        files={"a.py": "first = eval(input())\nsecond = eval(input())\n"},
         file="a.py",
-        severity="Medium",
-        extra_tickets=[{"key": "GR-101", "file": "b.py", "severity": "Low"}],
+        line=1,
+        extra_tickets=[{"key": "GR-101", "line": 2}],
     )
 
     [pr] = repos.pull_requests

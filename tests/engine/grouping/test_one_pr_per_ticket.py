@@ -14,7 +14,7 @@ def fix_of(path, commit_message):
     ]
 
 
-def test_low_and_medium_fixes_of_one_source_pr_go_into_one_shared_pr(tmp_path):
+def test_tickets_of_different_files_get_one_pr_each_whatever_the_severity(tmp_path):
     context, tracker, repos, _ = make_context(
         tmp_path,
         [*fix_of("a.py", "Fix a"), *fix_of("b.py", "Fix b")],
@@ -27,20 +27,20 @@ def test_low_and_medium_fixes_of_one_source_pr_go_into_one_shared_pr(tmp_path):
     report = run(context)
 
     assert report.outcomes == {"GR-100": "fixed", "GR-101": "fixed"}
-    [pr] = repos.pull_requests
-    assert report.pull_requests == [pr.url]
-    assert pr.draft is False
-    assert pr.base == "feature"
-    assert repos.commit_subjects_on(pr) == [
-        "fix(security): Fix a",
-        "fix(security): Fix b",
-    ]
-    assert repos.file_on(pr, "a.py") == FIXED_LINE
-    assert repos.file_on(pr, "b.py") == FIXED_LINE
-    assert "Changed a.py." in pr.body
-    assert "Changed b.py." in pr.body
-    assert repos.workspaces_opened == 1
-    for key, label in (("GR-100", "issue-gr-100"), ("GR-101", "issue-gr-101")):
+    first, second = repos.pull_requests
+    assert report.pull_requests == [first.url, second.url]
+    assert first.head != second.head
+    assert first.draft is False
+    assert first.base == second.base == "feature"
+    assert repos.commit_subjects_on(first) == ["fix(security): Fix a"]
+    assert repos.commit_subjects_on(second) == ["fix(security): Fix b"]
+    assert repos.file_on(first, "a.py") == FIXED_LINE
+    assert repos.file_on(second, "b.py") == FIXED_LINE
+    assert repos.workspaces_opened == 2
+    for key, label, pr in (
+        ("GR-100", "issue-gr-100", first),
+        ("GR-101", "issue-gr-101", second),
+    ):
         assert pr.url in tracker.comments_on(key)[0]
         assert tracker.status_of(key) == "In Review"
         query = FixQuery(
@@ -58,7 +58,7 @@ def toggles(path, count):
     return [[edit_file(path, *pairs[n % 2])] for n in range(count)]
 
 
-def test_a_failed_fix_stays_out_of_the_shared_pr_and_leaves_no_edit_in_it(tmp_path):
+def test_a_failed_fix_gets_no_pr_and_leaves_no_edit(tmp_path):
     context, tracker, repos, _ = make_context(
         tmp_path,
         {
@@ -85,58 +85,40 @@ def test_a_failed_fix_stays_out_of_the_shared_pr_and_leaves_no_edit_in_it(tmp_pa
         "GR-101": "failed",
         "GR-102": "fixed",
     }
-    [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == [
-        "fix(security): Fix a",
-        "fix(security): Fix c",
-    ]
-    assert repos.changed_paths_on(pr) == {"a.py", "c.py"}
-    assert repos.file_on(pr, "b.py") == BUGGY
+    first, second = repos.pull_requests
+    assert repos.commit_subjects_on(first) == ["fix(security): Fix a"]
+    assert repos.commit_subjects_on(second) == ["fix(security): Fix c"]
+    assert repos.changed_paths_on(first) == {"a.py"}
+    assert repos.changed_paths_on(second) == {"c.py"}
+    assert repos.file_on(first, "b.py") == BUGGY
+    assert repos.file_on(second, "b.py") == BUGGY
     assert tracker.labels_on("GR-101") == ["veil-failed-fix"]
     assert tracker.status_of("GR-101") == "To Do"
     assert tracker.labels_on("GR-100") == []
 
 
-def test_a_shared_pr_holds_at_most_the_cap_and_the_next_run_takes_the_rest(tmp_path):
-    context, tracker, repos, _ = make_context(
+def test_there_is_no_cap_on_the_number_of_prs(tmp_path):
+    count = 11
+    context, _, repos, _ = make_context(
         tmp_path,
-        [*fix_of("a.py", "Fix a"), *fix_of("b.py", "Fix b"), *fix_of("c.py", "Fix c")],
-        files={"a.py": BUGGY, "b.py": BUGGY, "c.py": BUGGY},
-        file="a.py",
-        settings=Settings(shared_pr_max=2),
+        [step for n in range(count) for step in fix_of(f"f{n}.py", f"Fix {n}")],
+        files={f"f{n}.py": BUGGY for n in range(count)},
+        file="f0.py",
         extra_tickets=[
-            {"key": "GR-101", "file": "b.py"},
-            {"key": "GR-102", "file": "c.py"},
+            {"key": f"GR-{100 + n}", "file": f"f{n}.py"} for n in range(1, count)
         ],
     )
 
-    first = run(context)
+    report = run(context)
 
-    assert first.outcomes == {
-        "GR-100": "fixed",
-        "GR-101": "fixed",
-        "GR-102": "left_for_next_run",
-    }
-    [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == [
-        "fix(security): Fix a",
-        "fix(security): Fix b",
-    ]
-    assert tracker.comments_on("GR-102") == []
-    assert tracker.status_of("GR-102") == "To Do"
-
-    second = run(context)
-
-    assert second.outcomes == {
-        "GR-100": "skipped",
-        "GR-101": "skipped",
-        "GR-102": "fixed",
-    }
-    assert len(repos.pull_requests) == 2
-    assert repos.commit_subjects_on(repos.pull_requests[1]) == ["fix(security): Fix c"]
+    assert set(report.outcomes.values()) == {"fixed"}
+    assert len(report.outcomes) == count
+    assert len(repos.pull_requests) == count
+    assert len({pr.head for pr in repos.pull_requests}) == count
+    assert all(len(repos.commit_subjects_on(pr)) == 1 for pr in repos.pull_requests)
 
 
-def test_tickets_of_different_source_prs_get_separate_shared_prs(tmp_path):
+def test_tickets_of_different_source_prs_get_separate_prs(tmp_path):
     context, _, repos, _ = make_context(
         tmp_path,
         [*fix_of("a.py", "Fix a"), *fix_of("b.py", "Fix b")],
@@ -191,7 +173,7 @@ def test_at_the_token_ceiling_the_fixes_that_passed_are_published_and_the_rest_w
         assert tracker.labels_on(key) == []
 
 
-def test_a_second_run_after_a_shared_pr_creates_nothing(tmp_path):
+def test_a_second_run_after_the_prs_creates_nothing(tmp_path):
     context, tracker, repos, model = make_context(
         tmp_path,
         [*fix_of("a.py", "Fix a"), *fix_of("b.py", "Fix b")],
@@ -205,8 +187,8 @@ def test_a_second_run_after_a_shared_pr_creates_nothing(tmp_path):
     report = run(context)
 
     assert report.skipped == {"open_pr": ["GR-100", "GR-101"]}
-    assert len(repos.pull_requests) == 1
-    assert repos.workspaces_opened == 1
+    assert len(repos.pull_requests) == 2
+    assert repos.workspaces_opened == 2
     assert len(model.models_used) == calls_after_first_run
     assert len(tracker.comments_on("GR-100")) == 1
     assert len(tracker.comments_on("GR-101")) == 1
@@ -235,12 +217,12 @@ def test_the_branch_names_the_first_fix_that_passed_so_a_retry_does_not_collide(
 
     assert first.outcomes == {"GR-100": "failed", "GR-101": "fixed"}
     [pr_one] = repos.pull_requests
-    assert pr_one.head == "gozu/fix-shared-gr-101"
+    assert pr_one.head == "gozu/fix-gr-101"
 
     tracker.remove_label("GR-100", "veil-failed-fix")
     second = run(context)
 
     assert second.outcomes == {"GR-100": "fixed", "GR-101": "skipped"}
     pr_one, pr_two = repos.pull_requests
-    assert pr_two.head == "gozu/fix-shared-gr-100"
+    assert pr_two.head == "gozu/fix-gr-100"
     assert repos.commit_subjects_on(pr_two) == ["fix(security): Fix a"]

@@ -19,7 +19,6 @@ from veil.engine.constants.limits import (
     READ_FILE_MAX_LINES,
     SCHEDULE_ENABLED,
     SEARCH_MAX_MATCHES,
-    SHARED_PR_MAX,
     STEP_CAP,
     TOKEN_CEILING,
     TOOL_RESULT_MAX_BYTES,
@@ -87,8 +86,7 @@ class Settings(BaseModel):
     # The budget
     token_ceiling: int = Field(default=TOKEN_CEILING, ge=1, le=5_000_000)
 
-    # Grouping and the names that the Engine writes
-    shared_pr_max: int = Field(default=SHARED_PR_MAX, ge=1, le=50)
+    # The order of the groups and the names that the Engine writes
     branch_prefix: str = Field(
         default=FIX_BRANCH_PREFIX,
         min_length=3,

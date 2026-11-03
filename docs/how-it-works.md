@@ -53,19 +53,20 @@ The Engine gives each ticket a Severity Bucket from the severity map. The map is
 | `MAJOR`, `MEDIUM` | Medium |
 | `MINOR`, `INFO`, `LOW` | Low |
 
-A severity word that is not in the map is High. The ticket then gets its own PR and a person looks at it.
+A severity word that is not in the map is High. The bucket sets only the order of the PRs. High goes first.
 
-| Bucket | Group |
+| Tickets | Group |
 |---|---|
-| Low and Medium | One Shared PR for each repository and each Source PR branch. It holds at most 10 tickets (setting `shared_pr_max`). The other tickets wait for the next run. |
-| High | One High PR for each ticket. |
-| High, same file | High tickets that flag the same file in the same Source PR go into one PR, because their Fixes overlap. The body of the PR gives the reason. |
+| One ticket | One PR. The severity does not matter. |
+| Same file | Tickets that flag the same file in the same Source PR go into one PR, because their Fixes overlap. The body of the PR gives the reason. |
+
+There is no cap. One hundred tickets on one hundred files give one hundred PRs. The PRs run in this order: High, then Medium, then Low. PRs of equal rank keep the order of the tickets.
 
 Other rules:
 
 - A Failed Fix stays out of the PR. The PR holds only the Fixes that passed. A ticket that ends as a Failed Fix leaves no edit in the PR.
 - If the token ceiling stops the run in the middle of a group, the Engine still publishes the Fixes that passed. The current ticket and the later tickets wait for the next run.
-- The branch of a Shared PR starts with the branch prefix (setting `branch_prefix`, default `gozu/fix-`), the word `shared` and the key of the first Fix that passed. The branch of a High PR starts with the prefix and that key. A ticket that failed gives no name. So a later run can make a new PR for that ticket without a branch clash.
+- The branch of a PR starts with the branch prefix (setting `branch_prefix`, default `gozu/fix-`) and the key of the first Fix that passed. A ticket that failed gives no name. So a later run can make a new PR for that ticket without a branch clash.
 - Every PR opens ready for review. The Engine merges nothing.
 
 ## Which tickets the Engine skips
@@ -76,6 +77,7 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 |---|---|
 | `raised_against_fix_branch` | The finding is on a Fix branch. That is a branch that starts with `gozu/fix-` or with the setting `branch_prefix`. A human decides what happens to it. |
 | `failed_fix` | The ticket has the label `veil-failed-fix`. It stays untouched until a human deletes the label. |
+| `ignored_path` | The file of the ticket is inside `.github/`, at any depth. Gozu makes no ticket for these files now. This catches an older ticket. |
 | `no_issue_label` | The ticket has no label that starts with `issue-`. The Engine cannot prove that no PR exists. |
 | `source_pr_not_open` | The branch of the ticket has no open PR. The developer merged or closed the Source PR, or the branch never had a PR. |
 | `duplicate_issue` | An earlier ticket in this run has the same issue label on the same Source PR branch. It is the same finding, so the Engine keeps the first ticket. |
@@ -189,7 +191,7 @@ A credential value must have at least 8 characters and must not be only white sp
 
 These rules are code. Settings cannot turn them off.
 
-- The Engine never edits `.github/workflows/`, lockfiles or secret files.
+- The Engine never reads, lists, searches or edits anything in `.github/`. It never edits lockfiles or secret files.
 - The Engine never creates or deletes a file.
 - The Engine never reads `.env` files, keys or `.git/`.
 - The Engine never touches a path outside the repository.

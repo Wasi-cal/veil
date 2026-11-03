@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from tests.engine.grouping.test_shared_pr import BUGGY, fix_of
+from tests.engine.grouping.test_one_pr_per_ticket import BUGGY, fix_of
 from tests.support.scenario import make_context
 from veil.engine import Settings, run
 
@@ -23,47 +23,57 @@ def three_tickets(tmp_path, severities, settings=None):
     )
 
 
-def pr_sizes(repos):
-    """The number of commits of each PR, as a sorted list."""
-    return sorted(len(repos.commit_subjects_on(pr)) for pr in repos.pull_requests)
+def opened_in_order(repos):
+    """The ticket key of each PR, in the order in which veil opened the PRs. The title ends with the key."""
+    return [pr.title.rsplit("(", 1)[1].rstrip(")") for pr in repos.pull_requests]
+
+
+def keys(*names):
+    """The key of the ticket of each file: a is GR-100, b is GR-101 and c is GR-102."""
+    return [f"GR-{100 + ord(name) - ord('a')}" for name in names]
 
 
 @pytest.mark.parametrize(
-    ("severities", "sizes"),
+    ("severities", "order"),
     [
-        (("BLOCKER", "MAJOR", "MINOR"), [1, 2]),
-        (("CRITICAL", "INFO", "Low"), [1, 2]),
-        (("High", "Medium", "Low"), [1, 2]),
-        (("MAJOR", "MINOR", "info"), [3]),
-        (("WEIRD", "MAJOR", "MINOR"), [1, 2]),
+        (("MINOR", "BLOCKER", "MAJOR"), ("b", "c", "a")),
+        (("Low", "High", "Medium"), ("b", "c", "a")),
+        (("MAJOR", "MINOR", "WEIRD"), ("c", "a", "b")),
+        (("INFO", "info", "MINOR"), ("a", "b", "c")),
     ],
-    ids=[
-        "sonar-names",
-        "other-sonar-names",
-        "plain-words",
-        "all-low-or-medium",
-        "unknown-is-high",
-    ],
+    ids=["sonar-names", "plain-words", "unknown-is-high", "ties-keep-ticket-order"],
 )
-def test_default_severity_map_sends_high_to_its_own_pr_and_unknown_words_are_high(
-    tmp_path, severities, sizes
+def test_every_ticket_gets_its_own_pr_and_high_severity_goes_first(
+    tmp_path, severities, order
 ):
     context, _, repos, _ = three_tickets(tmp_path, severities)
 
     run(context)
 
-    assert pr_sizes(repos) == sizes
+    assert len(repos.pull_requests) == 3
+    assert opened_in_order(repos) == keys(*order)
 
 
-def test_the_severity_map_is_a_setting(tmp_path):
-    settings = Settings(severity_map={"MAJOR": "high", "MINOR": "low"})
+def test_the_severity_map_is_a_setting_and_changes_the_order(tmp_path):
+    settings = Settings(severity_map={"BLOCKER": "low", "MAJOR": "high"})
     context, _, repos, _ = three_tickets(
-        tmp_path, ("MAJOR", "MINOR", "MINOR"), settings
+        tmp_path, ("MAJOR", "BLOCKER", "MINOR"), settings
     )
 
     run(context)
 
-    assert pr_sizes(repos) == [1, 2]
+    assert opened_in_order(repos) == keys("a", "b", "c")
+
+
+def test_a_partial_severity_map_changes_only_its_words_and_keeps_the_defaults(tmp_path):
+    settings = Settings(severity_map={"MAJOR": "high"})
+    context, _, repos, _ = three_tickets(
+        tmp_path, ("MINOR", "MAJOR", "BLOCKER"), settings
+    )
+
+    run(context)
+
+    assert opened_in_order(repos) == keys("b", "c", "a")
 
 
 def test_the_branch_prefix_is_a_setting_and_the_no_loop_rule_uses_it(tmp_path):
@@ -99,15 +109,6 @@ def test_a_custom_prefix_does_not_weaken_the_no_loop_rule_for_the_fixed_prefix(
 
     assert report.skipped == {"raised_against_fix_branch": ["GR-101"]}
     assert len(repos.pull_requests) == 1
-
-
-def test_a_partial_severity_map_changes_only_its_words_and_keeps_the_defaults(tmp_path):
-    settings = Settings(severity_map={"MAJOR": "high"})
-    context, _, repos, _ = three_tickets(tmp_path, ("MAJOR", "MINOR", "INFO"), settings)
-
-    run(context)
-
-    assert pr_sizes(repos) == [1, 2]
 
 
 @pytest.mark.parametrize(

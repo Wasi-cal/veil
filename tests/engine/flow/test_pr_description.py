@@ -84,7 +84,7 @@ def test_a_part_that_is_empty_is_refused_and_the_model_tries_again(tmp_path):
     assert PROBLEM in repos.pull_requests[0].body
 
 
-def test_a_shared_pr_with_two_fixes_gives_each_ticket_its_own_three_parts(tmp_path):
+def test_a_pr_with_two_fixes_gives_each_ticket_its_own_three_parts(tmp_path):
     other = (
         "The helper parse_value passes text to eval.",
         "It now parses a number.",
@@ -93,15 +93,15 @@ def test_a_shared_pr_with_two_fixes_gives_each_ticket_its_own_three_parts(tmp_pa
     context, _, repos, _ = make_context(
         tmp_path,
         [
-            [edit_file("a.py", "eval(input())", "int(input())")],
+            [edit_file("a.py", "first = eval(input())", "first = int(input())")],
             [finish(CHANGE, problem=PROBLEM, solves=SOLVES)],
-            [edit_file("b.py", "eval(input())", "int(input())")],
+            [edit_file("a.py", "second = eval(input())", "second = int(input())")],
             [finish(other[1], problem=other[0], solves=other[2])],
         ],
-        files={"a.py": "value = eval(input())\n", "b.py": "value = eval(input())\n"},
+        files={"a.py": "first = eval(input())\nsecond = eval(input())\n"},
         file="a.py",
-        severity="Medium",
-        extra_tickets=[{"key": "GR-101", "file": "b.py", "severity": "Low"}],
+        line=1,
+        extra_tickets=[{"key": "GR-101", "line": 2}],
     )
 
     run(context)

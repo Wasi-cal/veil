@@ -226,3 +226,15 @@ def test_a_fix_branch_with_another_prefix_does_not_block_the_ticket(tmp_path):
     report = run(context)
 
     assert report.outcomes == {"GR-100": "fixed"}
+
+
+def test_ticket_for_a_file_in_the_github_dir_is_skipped(tmp_path):
+    context, tracker, repos, model = make_context(
+        tmp_path, EDIT_THEN_FINISH, file=".github/workflows/ci.yml"
+    )
+
+    report = run(context)
+
+    assert report.outcomes == {"GR-100": "skipped"}
+    assert report.skipped == {"ignored_path": ["GR-100"]}
+    assert_untouched(tracker, repos, model)

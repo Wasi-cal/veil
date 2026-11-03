@@ -29,10 +29,9 @@ def run(context: Context) -> RunReport:
 
 def _fix(context: Context, tickets: list[Ticket], report: RunReport) -> None:
     eligible = select_eligible(tickets, context.repo_provider, context.settings, report)
-    plan = plan_groups(eligible, context.settings)
-    leave_for_next_run(list(plan.left_for_next_run), report)
-    planned = [ticket for group in plan.groups for ticket in group.tickets]
-    for group in plan.groups:
+    groups = plan_groups(eligible, context.settings)
+    planned = [ticket for group in groups for ticket in group.tickets]
+    for group in groups:
         try:
             fix_group(context, group, report)
         except BudgetExhausted:

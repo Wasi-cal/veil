@@ -6,10 +6,10 @@ from pathlib import PurePosixPath
 
 from veil.engine.constants.safety import (
     LOCKFILE_NAMES,
-    PROTECTED_DIRS,
     READ_REFUSED_DIRS,
     READ_REFUSED_PATTERNS,
 )
+from veil.engine.constants.names import IGNORED_DIRECTORIES
 from veil.engine.errors.rule_violation import RuleViolation
 
 
@@ -33,6 +33,8 @@ def check_readable(path: str, extra_patterns: tuple[str, ...] = ()) -> str:
     path = normalize_file(path)
     lowered = path.lower()
     parts = PurePosixPath(lowered).parts
+    if any(part in IGNORED_DIRECTORIES for part in parts):
+        raise RuleViolation("The Engine stays away from this folder.")
     patterns = [pattern.lower() for pattern in READ_REFUSED_PATTERNS + extra_patterns]
     if any(part in READ_REFUSED_DIRS for part in parts) or any(
         fnmatchcase(parts[-1], pattern) or fnmatchcase(lowered, pattern)
@@ -44,9 +46,6 @@ def check_readable(path: str, extra_patterns: tuple[str, ...] = ()) -> str:
 
 def check_editable(path: str, extra_patterns: tuple[str, ...] = ()) -> str:
     path = check_readable(path, extra_patterns)
-    lowered = path.lower()
-    if any(lowered.startswith(f"{protected}/") for protected in PROTECTED_DIRS):
-        raise RuleViolation("The Engine protects this path.")
-    if PurePosixPath(lowered).name in LOCKFILE_NAMES:
+    if PurePosixPath(path.lower()).name in LOCKFILE_NAMES:
         raise RuleViolation("The Engine protects lockfiles.")
     return path

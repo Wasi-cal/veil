@@ -4,6 +4,10 @@ from typing import Literal
 # --- branches ---
 FIX_BRANCH_PREFIX = "gozu/fix-"
 
+# --- paths ---
+# Gozu makes no ticket for a file in these directories. veil skips an older ticket that has one.
+IGNORED_DIRECTORIES = frozenset({".github"})
+
 # --- labels ---
 ISSUE_LABEL_PREFIX = "issue-"
 FAILED_FIX_LABEL = "veil-failed-fix"
@@ -37,6 +41,7 @@ STOPPED_TOKEN_EXPIRED = "token_expired"
 RAISED_AGAINST_FIX_BRANCH = "raised_against_fix_branch"
 FAILED_FIX = "failed_fix"
 NO_ISSUE_LABEL = "no_issue_label"
+IGNORED_PATH = "ignored_path"
 DUPLICATE_ISSUE = "duplicate_issue"
 SOURCE_PR_NOT_OPEN = "source_pr_not_open"
 
@@ -47,18 +52,15 @@ FixKind = Literal["open_pr", "fix_branch"]
 OPEN_PR: FixKind = "open_pr"
 FIX_BRANCH: FixKind = "fix_branch"
 
-# --- group_kinds ---
-GroupKind = Literal["shared", "high"]
-
-SHARED_GROUP: GroupKind = "shared"
-HIGH_GROUP: GroupKind = "high"
-
 # --- severity ---
 Bucket = Literal["high", "medium", "low"]
 
 HIGH: Bucket = "high"
 MEDIUM: Bucket = "medium"
 LOW: Bucket = "low"
+
+# The order in which the groups run. A budget that ends the run first spares the High tickets.
+BUCKET_RANK: dict[Bucket, int] = {HIGH: 0, MEDIUM: 1, LOW: 2}
 
 # Gozu uses the Sonar words. The plain words map to themselves.
 DEFAULT_SEVERITY_MAP: dict[str, Bucket] = {

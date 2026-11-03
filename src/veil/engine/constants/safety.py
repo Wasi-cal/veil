@@ -22,8 +22,6 @@ SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
 )
 
 # --- paths ---
-PROTECTED_DIRS = (".github/workflows",)
-
 LOCKFILE_NAMES = frozenset(
     {
         "uv.lock",

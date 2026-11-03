@@ -2,6 +2,8 @@ from veil.engine.constants.names import (
     DUPLICATE_ISSUE,
     FAILED_FIX,
     FIX_BRANCH_PREFIX,
+    IGNORED_DIRECTORIES,
+    IGNORED_PATH,
     NO_ISSUE_LABEL,
     RAISED_AGAINST_FIX_BRANCH,
     SKIPPED,
@@ -62,6 +64,8 @@ def _skip_reason(
         return RAISED_AGAINST_FIX_BRANCH
     if settings.failed_fix_label in ticket.labels:
         return FAILED_FIX
+    if _is_ignored_path(ticket.file):
+        return IGNORED_PATH
     if ticket.issue_label is None:
         return NO_ISSUE_LABEL
     if (ticket.repo, ticket.branch, ticket.issue_label) in issues_in_this_run:
@@ -75,3 +79,10 @@ def _skip_reason(
         branch_prefix=settings.branch_prefix,
     )
     return repo_provider.find_existing_fix(query)
+
+
+def _is_ignored_path(path: str) -> bool:
+    """True when the file sits inside an ignored directory, such as `.github`, at any depth."""
+    return any(
+        part in IGNORED_DIRECTORIES for part in path.replace("\\", "/").split("/")[:-1]
+    )

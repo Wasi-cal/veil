@@ -1,5 +1,7 @@
 # Grouping Fixes into PRs
 
+> ADR 0021 replaces the Shared PR and the High PR. Now each ticket gets one PR, and tickets of the same file share one. The rest of this page is history.
+
 The Engine puts Gozu Tickets into groups. Each group gets one Fix PR. A Shared PR carries Low and Medium Fixes. A High PR carries one High Fix, or the High Fixes that change the same file.
 
 ## What we decided

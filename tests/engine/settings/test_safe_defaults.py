@@ -27,7 +27,6 @@ def test_the_default_triggers_start_the_fewest_automatic_runs():
 def test_the_defaults_of_the_limits_are_the_numbers_of_the_decisions():
     settings = Settings()
 
-    assert settings.shared_pr_max == 10
     assert settings.read_file_max_lines == 300
     assert settings.search_max_matches == 50
     assert settings.tool_result_max_bytes == 8 * 1024

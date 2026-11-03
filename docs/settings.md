@@ -4,7 +4,7 @@ veil reads its settings from one file in the repo: `.gozu/jira-to-pr.yml`. The f
 
 Each key in the file is one setting. A key that is not in this list fails the run. A value of the wrong type or outside its range fails the run. A value that looks like a secret fails the run. The message names the setting and never repeats the value.
 
-The safety rules are code and are not settings. You cannot turn them off. They are: never merge, never touch the default branch, never edit `.github/workflows/`, no shell and no network for the model.
+The safety rules are code and are not settings. You cannot turn them off. They are: never merge, never touch the default branch, never read, list or edit anything in `.github/`, no shell and no network for the model.
 
 ## The fix loop
 
@@ -26,9 +26,8 @@ The safety rules are code and are not settings. You cannot turn them off. They a
 
 | Setting | Default | Range | What it does |
 |---|---|---|---|
-| `shared_pr_max` | 10 | 1 to 50 | The most fixes in one Shared PR. |
 | `branch_prefix` | `gozu/fix-` | a safe prefix | The start of the name of a Fix branch. |
-| `severity_map` | see below | words to buckets | Which bucket each severity word goes to: `low`, `medium` or `high`. A word that you name changes. The other words keep their default. |
+| `severity_map` | see below | words to buckets | Which bucket each severity word goes to: `low`, `medium` or `high`. The bucket sets only the order of the PRs: High first. A word that you name changes. The other words keep their default. |
 | `failed_fix_label` | `veil-failed-fix` | one word | The label on a ticket that has a Failed Fix. |
 | `in_review_status` | `In Review` | a status name | The status that a ticket gets after a PR opens. The Jira workflow must have it. |
 
