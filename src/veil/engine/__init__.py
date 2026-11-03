@@ -1,5 +1,4 @@
-from veil.engine.config.catalog import render_settings_catalog, settings_catalog
-from veil.engine.config.resolve import resolve_settings
+from veil.engine.config.parse import parse_settings
 from veil.engine.context import Context
 from veil.engine.errors.settings_error import SettingsError
 from veil.engine.interfaces.model_client import ModelClient
@@ -7,9 +6,9 @@ from veil.engine.interfaces.repo_provider import RepoProvider
 from veil.engine.interfaces.tracker import Tracker
 from veil.engine.interfaces.workspace import Workspace
 from veil.engine.models import (
-    DraftPr,
     FixQuery,
     ModelReply,
+    NewPr,
     RunReport,
     Settings,
     Ticket,
@@ -21,10 +20,10 @@ from veil.engine.secrets.redact import redact
 
 __all__ = [
     "Context",
-    "DraftPr",
     "FixQuery",
     "ModelClient",
     "ModelReply",
+    "NewPr",
     "RepoProvider",
     "RunReport",
     "Settings",
@@ -34,9 +33,7 @@ __all__ = [
     "ToolDefinition",
     "Tracker",
     "Workspace",
+    "parse_settings",
     "redact",
-    "render_settings_catalog",
-    "resolve_settings",
     "run",
-    "settings_catalog",
 ]

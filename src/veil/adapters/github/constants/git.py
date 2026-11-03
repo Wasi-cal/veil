@@ -2,6 +2,8 @@ GITHUB_URL = "https://github.com/"
 # GitHub accepts any user name with a token in basic authentication. This is the name that its docs use.
 TOKEN_USER = "x-access-token"
 REF_PREFIX = "refs/heads/"
+# The mode that `git ls-files -s` shows for a symlink.
+SYMLINK_MODE = "120000"
 AUTHOR_NAME = "Gozu Veil"
 AUTHOR_EMAIL = "veil@gozu.invalid"
 # Git needs these to reach GitHub through a proxy or with a company certificate.
@@ -17,4 +19,10 @@ NETWORK_VARIABLES = (
     "SSL_CERT_FILE",
     "SSL_CERT_DIR",
     "GIT_SSL_CAINFO",
+)
+# Git prints one of these when GitHub refuses the token. The token expired or somebody revoked it.
+LOGIN_REFUSED_MARKERS = (
+    "Invalid username or token",
+    "Authentication failed",
+    "returned error: 401",
 )

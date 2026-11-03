@@ -1,5 +1,7 @@
 # Settings schema, layers and validation
 
+**Status: superseded in part by ADR 0018.** The layers, the tighten rules and the catalog are deleted. The schema, the bounds and the checks stay.
+
 Every number and every name that the Engine uses is a setting (ticket GR-21). One schema serves both Shells. This ADR follows the decisions in GR-3 and GR-11.
 
 ## What we decided

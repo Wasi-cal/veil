@@ -4,9 +4,19 @@ from veil.adapters.github.models.pull_request import PullRequest
 class StubGitHubApi:
     """A GitHub API that keeps its PRs in a list. It filters as the real API does."""
 
-    def __init__(self, pull_requests: list[PullRequest] | None = None):
+    def __init__(
+        self,
+        pull_requests: list[PullRequest] | None = None,
+        default_branch: str = "main",
+    ):
         self.pull_requests: list[PullRequest] = list(pull_requests or [])
         self.created: list[PullRequest] = []
+        self._default_branch = default_branch
+        self.default_branch_questions = 0
+
+    def default_branch(self, repo: str) -> str:
+        self.default_branch_questions += 1
+        return self._default_branch
 
     def find_pull_requests(
         self, repo: str, head: str | None = None, label: str | None = None
@@ -19,7 +29,7 @@ class StubGitHubApi:
             and (label is None or label in pr.labels)
         ]
 
-    def create_draft_pr(
+    def create_pr(
         self,
         repo: str,
         head: str,
@@ -38,7 +48,7 @@ class StubGitHubApi:
             labels=labels,
             title=title,
             body=body,
-            draft=True,
+            draft=False,
         )
         self.pull_requests.append(pr)
         self.created.append(pr)

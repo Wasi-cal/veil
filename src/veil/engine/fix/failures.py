@@ -1,4 +1,4 @@
-from veil.engine.constants.outcomes import FAILED
+from veil.engine.constants.names import FAILED
 from veil.engine.context import Context
 from veil.engine.errors.failed_fix import FailedFix
 from veil.engine.models.report.run_report import RunReport
@@ -17,3 +17,4 @@ def record_failed_fix(
         ticket.key, context.redact(f"Failed Fix. {failed.reason}")
     )
     report.outcomes[ticket.key] = FAILED
+    report.reasons[ticket.key] = failed.reason

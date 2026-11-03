@@ -11,4 +11,5 @@ class RunEnvironment(BaseModel):
     repo: str
     workspace: Path
     event: str
+    event_path: Path | None
     summary_file: Path | None

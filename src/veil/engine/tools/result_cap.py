@@ -1,4 +1,4 @@
-from veil.engine.constants.tool_messages import NARROW_NOTE
+from veil.engine.constants.prompt import NARROW_NOTE
 
 
 def cap_result(text: str, limit: int) -> str:

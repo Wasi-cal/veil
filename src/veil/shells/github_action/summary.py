@@ -20,9 +20,12 @@ def write_summary(report: RunReport, path: Path | None) -> None:
     if report.outcomes:
         lines += [
             SUMMARY_TICKETS,
-            "| Ticket | Outcome |",
-            "| --- | --- |",
-            *(f"| {key} | {outcome} |" for key, outcome in report.outcomes.items()),
+            "| Ticket | Outcome | Reason |",
+            "| --- | --- | --- |",
+            *(
+                f"| {key} | {outcome} | {_cell(report.reasons.get(key, ''))} |"
+                for key, outcome in report.outcomes.items()
+            ),
             "",
         ]
     if report.skipped:
@@ -36,3 +39,8 @@ def write_summary(report: RunReport, path: Path | None) -> None:
         ]
     with path.open("a", encoding="utf-8") as handle:
         handle.write("\n".join(lines))
+
+
+def _cell(text: str) -> str:
+    """Make text safe for one cell of a Markdown table: one line, and no bare pipe."""
+    return " ".join(text.split()).replace("|", "\\|")

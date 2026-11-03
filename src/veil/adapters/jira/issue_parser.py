@@ -7,7 +7,6 @@ from veil.adapters.jira.constants.details import (
     DETAIL_LINE,
     DETAIL_REPOSITORY,
     DETAIL_SEVERITY,
-    UNKNOWN_BRANCH,
 )
 from veil.engine.models.ticket.ticket import Ticket
 
@@ -17,7 +16,8 @@ def ticket_from_issue(
 ) -> Ticket | None:
     """Build a ticket from a Jira issue that Gozurion made. Return None if the issue is not a finding of one line.
 
-    A roll-up ticket, a finding with no line and a ticket with an unknown branch give None.
+    A roll-up ticket, a finding with no line and a ticket with no branch give None.
+    Gozurion never writes a ticket without a branch, so this case does not come up.
     """
     key = issue["key"]
     fields = issue["fields"]
@@ -36,9 +36,7 @@ def ticket_from_issue(
     repo = details.get(DETAIL_REPOSITORY, "")
     severity = details.get(DETAIL_SEVERITY, "")
     finding = finding_text(description)
-    if not (path and line.isdigit() and repo and severity and finding):
-        return None
-    if not branch or branch == UNKNOWN_BRANCH:
+    if not (path and line.isdigit() and repo and severity and finding and branch):
         return None
     return Ticket(
         key=key,

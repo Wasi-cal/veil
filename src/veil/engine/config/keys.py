@@ -1,7 +1,7 @@
 from typing import Any
 
-from veil.engine.constants.secrets import SECRET_PATTERNS
-from veil.engine.constants.settings_messages import (
+from veil.engine.constants.safety import SECRET_PATTERNS
+from veil.engine.constants.settings_text import (
     KEY_LOOKS_LIKE_SECRET,
     KEY_NOT_TEXT,
     KEY_TOO_LONG,

@@ -17,10 +17,10 @@ from veil.adapters.github.git_command import (
     secret_values,
 )
 from veil.adapters.github.workspace import GitWorkspace
-from veil.engine.constants.fix_kinds import FIX_BRANCH, OPEN_PR, FixKind
+from veil.engine.constants.names import FIX_BRANCH, OPEN_PR, FixKind
 from veil.engine.errors.repo_provider_error import RepoProviderError
-from veil.engine.models.provider.draft_pr import DraftPr
 from veil.engine.models.provider.fix_query import FixQuery
+from veil.engine.models.provider.new_pr import NewPr
 
 
 def _same_repo(head_repo: str, repo: str) -> bool:
@@ -51,6 +51,7 @@ class GitHubRepoProvider:
             temp_root.mkdir(mode=DIR_MODE, parents=True, exist_ok=True)
         self._directories: list[Path] = []
         self._workspaces: dict[tuple[str, Path], GitWorkspace] = {}
+        self._default_branches: dict[str, str] = {}
 
     def __enter__(self) -> Self:
         return self
@@ -135,23 +136,42 @@ class GitHubRepoProvider:
         self._workspaces[(repo, workspace.path)] = workspace
         return workspace
 
-    def open_draft_pr(self, draft: DraftPr) -> str:
-        refuse_option_like(draft.head)
-        if not draft.head.startswith(self._branch_prefix) or draft.head == draft.base:
+    def _default_branch(self, repo: str) -> str:
+        """Ask GitHub once for each repo. The answer does not change during a run."""
+        if repo not in self._default_branches:
+            self._default_branches[repo] = self._api.default_branch(repo)
+        return self._default_branches[repo]
+
+    def open_pr(self, new_pr: NewPr) -> str:
+        refuse_option_like(new_pr.head)
+        if (
+            not new_pr.head.startswith(self._branch_prefix)
+            or new_pr.head == new_pr.base
+        ):
             raise RepoProviderError(
-                f"Refused to push {draft.head} for a PR against {draft.base}."
+                f"Refused to push {new_pr.head} for a PR against {new_pr.base}."
             )
-        for pr in self._api.find_pull_requests(draft.repo, head=draft.head):
-            if pr.state == OPEN and _same_repo(pr.head_repo, draft.repo):
+        default = self._default_branch(new_pr.repo)
+        if default in (new_pr.head, new_pr.base):
+            raise RepoProviderError(
+                f"Refused to open a PR for the default branch {default} of {new_pr.repo}."
+            )
+        for pr in self._api.find_pull_requests(new_pr.repo, head=new_pr.head):
+            if pr.state == OPEN and _same_repo(pr.head_repo, new_pr.repo):
                 return pr.url
         for (repo, _), workspace in self._workspaces.items():
-            if repo == draft.repo and workspace.has_branch(draft.head):
-                workspace.push(draft.head)
+            if repo == new_pr.repo and workspace.has_branch(new_pr.head):
+                workspace.push(new_pr.head)
                 break
         else:
             raise RepoProviderError(
-                f"No checkout of {draft.repo} holds the branch {draft.head}."
+                f"No checkout of {new_pr.repo} holds the branch {new_pr.head}."
             )
-        return self._api.create_draft_pr(
-            draft.repo, draft.head, draft.base, draft.title, draft.body, draft.labels
+        return self._api.create_pr(
+            new_pr.repo,
+            new_pr.head,
+            new_pr.base,
+            new_pr.title,
+            new_pr.body,
+            new_pr.labels,
         ).url

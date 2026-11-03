@@ -2,7 +2,6 @@ import io
 from pathlib import Path
 
 import yaml
-from pydantic import SecretStr
 
 from tests.adapters.github.support import TOKEN
 from tests.adapters.jira.support import API_TOKEN as JIRA_TOKEN
@@ -13,27 +12,9 @@ from veil.shells.shared.models.service_urls import ServiceUrls
 
 OPENAI_KEY = KEY_LIKE["sk-key"]
 JIRA_EMAIL = "bot@example.invalid"
-APP_KEY = (
-    "-----BEGIN " + "PRIVATE KEY-----\n" + "QUJD" * 20 + "\n-----END PRIVATE KEY-----"
-)
 SITE = "https://acme.example.invalid"
 SEARCH = ("POST", "/rest/api/3/search/jql")
 FIELDS = ("GET", "/rest/api/3/field")
-
-
-class FakeTokenSource:
-    """A token source that gives a fixed token or raises. The real source has its own tests."""
-
-    def __init__(self, token: str = TOKEN, error: Exception | None = None):
-        self.token = token
-        self.error = error
-        self.minted: list[str] = []
-
-    def mint(self, repo: str) -> SecretStr:
-        self.minted.append(repo)
-        if self.error:
-            raise self.error
-        return SecretStr(self.token)
 
 
 class SpyRun:
@@ -71,8 +52,7 @@ class World:
             "JIRA_EMAIL": JIRA_EMAIL,
             "JIRA_API_TOKEN": JIRA_TOKEN,
             "OPENAI_API_KEY": OPENAI_KEY,
-            "GOZU_APP_ID": "424242",
-            "GOZU_APP_PRIVATE_KEY": APP_KEY,
+            "GITHUB_TOKEN": TOKEN,
         }
         self.write_settings({"jira_site_url": SITE, "jira_project_keys": ["SEC"]})
         jira.routes[FIELDS] = (200, [])
@@ -91,13 +71,10 @@ class World:
             openai_api_url=self.github.url,
         )
 
-    def run_action(self, token_source=None, run=None, **changes):
+    def run_action(self, run=None, **changes):
         from veil.shells.github_action.run_action import run_action
 
         self.environ.update(changes)
         spy = run if run is not None else SpyRun(self.out)
-        source = token_source if token_source is not None else FakeTokenSource()
-        code = run_action(
-            self.environ, urls=self.urls, token_source=source, run=spy, out=self.out
-        )
-        return code, spy, source
+        code = run_action(self.environ, urls=self.urls, run=spy, out=self.out)
+        return code, spy

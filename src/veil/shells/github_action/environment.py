@@ -3,6 +3,7 @@ from pathlib import Path
 
 from veil.adapters.github.constants.repo_name import REPO_NAME
 from veil.shells.github_action.constants.environment import (
+    EVENT_PATH_VARIABLE,
     EVENT_VARIABLE,
     REPOSITORY_VARIABLE,
     SUMMARY_VARIABLE,
@@ -28,9 +29,11 @@ def read_run_environment(environ: Mapping[str, str]) -> RunEnvironment:
     if not workspace:
         raise ActionFailure(NO_WORKSPACE.format(name=WORKSPACE_VARIABLE))
     summary = environ.get(SUMMARY_VARIABLE)
+    event_path = environ.get(EVENT_PATH_VARIABLE)
     return RunEnvironment(
         repo=repo,
         workspace=Path(workspace),
         event=environ.get(EVENT_VARIABLE, ""),
+        event_path=Path(event_path) if event_path else None,
         summary_file=Path(summary) if summary else None,
     )

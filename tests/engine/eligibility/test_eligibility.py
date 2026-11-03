@@ -5,7 +5,7 @@ from tests.support.scenario import (
     both_attempts,
     make_context,
 )
-from veil.engine import Settings, run
+from veil.engine import run
 
 
 def test_ticket_raised_against_a_fix_branch_is_skipped(tmp_path):
@@ -93,28 +93,6 @@ def test_second_run_after_a_full_run_creates_nothing_new(tmp_path):
     assert repos.workspaces_opened == 1
     assert len(model.models_used) == calls_after_first_run
     assert len(tracker.comments_on("GR-100")) == 1
-
-
-def test_second_run_after_a_partial_run_fixes_only_the_tickets_that_were_left(
-    tmp_path,
-):
-    context, tracker, repos, _ = make_context(
-        tmp_path,
-        [*EDIT_THEN_FINISH, *EDIT_THEN_FINISH],
-        tokens_per_call=300,
-        settings=Settings(token_ceiling=500),
-        extra_tickets=[{"key": "GR-101"}],
-    )
-
-    first = run(context)
-    second = run(context)
-
-    assert first.outcomes == {"GR-100": "fixed", "GR-101": "left_for_next_run"}
-    assert second.outcomes == {"GR-100": "skipped", "GR-101": "fixed"}
-    assert len(repos.pull_requests) == 2
-    assert repos.workspaces_opened == 2
-    assert len(tracker.comments_on("GR-100")) == 1
-    assert len(tracker.comments_on("GR-101")) == 1
 
 
 def test_second_run_does_not_retry_or_comment_again_on_a_failed_fix(tmp_path):
@@ -226,3 +204,15 @@ def test_a_fix_branch_with_another_prefix_does_not_block_the_ticket(tmp_path):
     report = run(context)
 
     assert report.outcomes == {"GR-100": "fixed"}
+
+
+def test_ticket_for_a_file_in_the_github_dir_is_skipped(tmp_path):
+    context, tracker, repos, model = make_context(
+        tmp_path, EDIT_THEN_FINISH, file=".github/workflows/ci.yml"
+    )
+
+    report = run(context)
+
+    assert report.outcomes == {"GR-100": "skipped"}
+    assert report.skipped == {"ignored_path": ["GR-100"]}
+    assert_untouched(tracker, repos, model)

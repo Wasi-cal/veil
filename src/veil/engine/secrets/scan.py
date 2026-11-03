@@ -1,7 +1,7 @@
 import re
 from collections import Counter
 
-from veil.engine.constants.secrets import CREDENTIAL_KIND, SECRET_PATTERNS
+from veil.engine.constants.safety import CREDENTIAL_KIND, SECRET_PATTERNS
 
 
 def _secrets_in(text: str, values: tuple[str, ...]) -> list[tuple[str, str]]:

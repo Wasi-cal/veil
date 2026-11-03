@@ -1,6 +1,6 @@
 import pytest
 
-from veil.engine import Settings, SettingsError, resolve_settings
+from veil.engine import Settings, SettingsError, parse_settings
 
 
 def test_the_default_names_are_the_usual_variables():
@@ -11,9 +11,9 @@ def test_the_default_names_are_the_usual_variables():
     assert settings.openai_key_env == "OPENAI_API_KEY"
 
 
-def test_a_repo_layer_can_name_other_variables():
-    settings = resolve_settings(
-        repo={
+def test_the_settings_can_name_other_variables():
+    settings = parse_settings(
+        {
             "jira_email_env": "ACME_JIRA_USER",
             "jira_token_env": "ACME_JIRA_TOKEN",
             "openai_key_env": "ACME_OPENAI_KEY",
@@ -26,6 +26,6 @@ def test_a_repo_layer_can_name_other_variables():
 @pytest.mark.parametrize("name", ["jira token", "lower_case", "1ABC", "A-B", "", "A=B"])
 def test_a_name_that_is_not_a_variable_name_fails(name):
     with pytest.raises(SettingsError) as error:
-        resolve_settings(repo={"jira_token_env": name})
+        parse_settings({"jira_token_env": name})
 
     assert "jira_token_env" in str(error.value)

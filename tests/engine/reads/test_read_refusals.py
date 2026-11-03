@@ -28,6 +28,11 @@ SECRET = "TOPSECRET-9f3a"
         "ID_RSA",
         ".GIT/config",
         "keys\\id_rsa",
+        ".github/workflows/ci.yml",
+        ".github/CODEOWNERS",
+        ".GITHUB/Workflows/ci.yml",
+        ".github\\workflows\\ci.yml",
+        "sub/.github/workflows/ci.yml",
     ],
 )
 def test_read_file_refuses_secret_paths(tmp_path, path):
@@ -47,6 +52,24 @@ def test_search_skips_secret_files(tmp_path):
         tmp_path,
         [[search("value|TOPSECRET")], [GOOD_EDIT], [finish("Fixed.")]],
         files={"app.py": VULNERABLE, ".env": f"KEY={SECRET}\n"},
+    )
+
+    run(context)
+
+    result = model.received[1][-1]["content"]
+    assert "app.py:3:" in result
+    assert SECRET not in model.everything_received()
+
+
+def test_search_skips_the_github_folder(tmp_path):
+    context, _, _, model = make_context(
+        tmp_path,
+        [[search("value|TOPSECRET")], [GOOD_EDIT], [finish("Fixed.")]],
+        files={
+            "app.py": VULNERABLE,
+            ".github/workflows/ci.yml": f"run: echo {SECRET}\n",
+            ".github/CODEOWNERS": f"* @{SECRET}\n",
+        },
     )
 
     run(context)

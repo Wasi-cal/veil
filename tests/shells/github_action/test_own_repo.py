@@ -20,7 +20,7 @@ def test_the_tracker_of_the_action_returns_only_tickets_of_its_own_repo(world):
             seen.extend(t.key for t in context.tracker.open_tickets())
             return super().__call__(context)
 
-    code, _, _ = world.run_action(run=Caller(world.out))
+    code, _ = world.run_action(run=Caller(world.out))
 
     assert code == 0
     assert seen == ["SEC-1"]

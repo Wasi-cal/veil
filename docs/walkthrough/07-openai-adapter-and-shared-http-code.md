@@ -98,8 +98,6 @@ This file holds what the client needs from one reply.
 
 This file holds the code that all three adapters share to call a JSON API. It is its own file so the safety rules live in one place.
 
-* `plain_error(error)` — makes an error maker for a caller that does not need the HTTP status. It takes an error class. It returns a function that builds that error from the message and drops the status. The GitHub adapter and the Jira adapter call it.
-* `plain_error` returns a nested helper, an unnamed `lambda`. It takes the message and the status. It returns `error(message)`.
 * `require_https(url, error, service)` — refuses a URL that does not use https. It takes the URL, an error class and a service name. It raises the error with a message that names the service. A URL with http passes only for the hosts in `LOCAL_HOSTS`. It returns nothing. Each adapter calls it when it starts.
 * `call_json(service, error, secrets, base_url, method, path, headers, params, body, timeout)` — calls a JSON API. It builds the URL from the base URL and the path, adds query parameters and sends the body as JSON. It returns the decoded reply, or None for an empty reply. Every failure raises the error that `error` makes, with the credential values in `secrets` hidden. The error gets the HTTP status, or None when there was no answer or the reply was not JSON. A reply that is not JSON also raises. An error body keeps at most 500 characters.
 

@@ -14,11 +14,6 @@ from veil.adapters.no_redirect import open_without_redirect
 from veil.engine.secrets.redact import redact
 
 
-def plain_error(error: type[Exception]) -> Callable[[str, int | None], Exception]:
-    """An error factory for a caller that does not need the HTTP status."""
-    return lambda message, _status: error(message)
-
-
 def require_https(url: str, error: type[Exception], service: str) -> None:
     """Raise `error` unless the URL uses https. Only a local host may use http."""
     parts = urlsplit(url)

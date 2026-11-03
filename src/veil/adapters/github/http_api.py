@@ -6,12 +6,21 @@ from veil.adapters.github.constants.http import (
     API_URL,
     API_VERSION,
     PAGE_SIZE,
+    UNAUTHORIZED,
 )
 from veil.adapters.github.constants.pr_states import MERGED, PrState
 from veil.adapters.github.constants.repo_name import REPO_NAME
 from veil.adapters.github.models.pull_request import PullRequest
-from veil.adapters.json_http import call_json, plain_error, require_https
+from veil.adapters.json_http import call_json, require_https
 from veil.engine.errors.repo_provider_error import RepoProviderError
+from veil.engine.errors.token_expired import TokenExpired
+
+
+def _error(message: str, status: int | None) -> Exception:
+    """GitHub answers 401 to a token that expired or that somebody revoked."""
+    return (
+        TokenExpired(message) if status == UNAUTHORIZED else RepoProviderError(message)
+    )
 
 
 class HttpGitHubApi:
@@ -46,7 +55,14 @@ class HttpGitHubApi:
         found_prs = [self._pull_request(item) for item in raw]
         return [pr for pr in found_prs if head is None or pr.head_branch == head]
 
-    def create_draft_pr(
+    def default_branch(self, repo: str) -> str:
+        self._check_repo(repo)
+        name = self._call("GET", f"/repos/{repo}").get("default_branch")
+        if not isinstance(name, str) or not name:
+            raise RepoProviderError(f"GitHub gave no default branch for {repo}.")
+        return name
+
+    def create_pr(
         self,
         repo: str,
         head: str,
@@ -64,7 +80,7 @@ class HttpGitHubApi:
                 "head": head,
                 "base": base,
                 "body": body,
-                "draft": True,
+                "draft": False,
             },
         )
         if labels:
@@ -107,7 +123,7 @@ class HttpGitHubApi:
     ) -> Any:
         reply = call_json(
             service="GitHub",
-            error=plain_error(RepoProviderError),
+            error=_error,
             secrets=(self._token.get_secret_value(),),
             base_url=self._base_url,
             method=method,

@@ -21,6 +21,31 @@ WORKFLOW = ".github/workflows/ci.yml"
             id="workflow",
         ),
         pytest.param(
+            {WORKFLOW: "name: ci\n"},
+            edit_file(".GITHUB/Workflows/ci.yml", "name: ci", "name: evil"),
+            id="workflow-upper-case",
+        ),
+        pytest.param(
+            {WORKFLOW: "name: ci\n"},
+            edit_file(".github\\workflows\\ci.yml", "name: ci", "name: evil"),
+            id="workflow-backslashes",
+        ),
+        pytest.param(
+            {".github/CODEOWNERS": "* @owner\n"},
+            edit_file(".github/CODEOWNERS", "* @owner", "* @evil"),
+            id="github-codeowners",
+        ),
+        pytest.param(
+            {".github/dependabot.yml": "version: 2\n"},
+            edit_file(".github/dependabot.yml", "version: 2", "version: 3"),
+            id="github-dependabot",
+        ),
+        pytest.param(
+            {".github/actions/setup/action.yml": "name: setup\n"},
+            edit_file(".github/actions/setup/action.yml", "name: setup", "name: evil"),
+            id="github-local-action",
+        ),
+        pytest.param(
             {"uv.lock": "version = 1\n"},
             edit_file("uv.lock", "version = 1", "version = 2"),
             id="lockfile",
@@ -45,16 +70,6 @@ WORKFLOW = ".github/workflows/ci.yml"
             {},
             edit_file("app.py", VULNERABLE, " \n\t\n"),
             id="deletion-whitespace-only",
-        ),
-        pytest.param(
-            {WORKFLOW: "name: ci\n"},
-            edit_file(".GITHUB/Workflows/ci.yml", "name: ci", "name: evil"),
-            id="workflow-upper-case",
-        ),
-        pytest.param(
-            {WORKFLOW: "name: ci\n"},
-            edit_file(".github\\workflows\\ci.yml", "name: ci", "name: evil"),
-            id="workflow-backslashes",
         ),
         pytest.param(
             {}, edit_file("..\\evil.txt", "", "owned"), id="outside-repo-backslash"

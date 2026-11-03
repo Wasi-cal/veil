@@ -1,0 +1,38 @@
+Veil for Gozu Tickets
+Copyright (c) 2026 Calfus. All rights reserved.
+
+1. What you may do
+
+You may use the GitHub Action "Veil for Gozu Tickets" (Wasi-cal/veil) without charge.
+To use it, name it in a GitHub Actions workflow of your own and run the workflow.
+You may read the source code in this repository.
+You may fork the repository on GitHub, as the GitHub Terms of Service allow.
+
+2. What you may not do
+
+Without the written permission of the copyright holder, you may not:
+
+- copy, modify, merge, publish, distribute, sublicense or sell the source code,
+  the container image or the documentation, in whole or in part;
+- reverse engineer, decompile or disassemble any part of the container image;
+- use the source code, the container image or the documentation to make a
+  product or a service that competes with this Action;
+- remove this notice.
+
+3. Ownership
+
+The copyright holder keeps all rights that this license does not give to you.
+No right passes to you by implication.
+
+4. No warranty
+
+THE ACTION IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+THIS INCLUDES THE WARRANTIES OF MERCHANTABILITY, OF FITNESS FOR A PARTICULAR
+PURPOSE AND OF NON-INFRINGEMENT.
+
+5. Limit of liability
+
+THE COPYRIGHT HOLDER IS NOT LIABLE FOR ANY CLAIM, DAMAGE OR OTHER LIABILITY
+THAT COMES FROM THE USE OF THE ACTION. THIS INCLUDES CHANGES THAT THE ACTION
+MAKES TO YOUR CODE, AND THE COST OF THE SERVICES THAT THE ACTION CALLS.
+YOU ARE RESPONSIBLE FOR THE REVIEW OF EVERY PULL REQUEST THAT THE ACTION OPENS.

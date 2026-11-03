@@ -9,10 +9,12 @@ from veil.adapters.github.constants.git import (
     AUTHOR_EMAIL,
     AUTHOR_NAME,
     GITHUB_URL,
+    LOGIN_REFUSED_MARKERS,
     NETWORK_VARIABLES,
     TOKEN_USER,
 )
 from veil.engine.errors.repo_provider_error import RepoProviderError
+from veil.engine.errors.token_expired import TokenExpired
 from veil.engine.secrets.redact import redact
 
 
@@ -66,14 +68,20 @@ def git_environment(token: SecretStr, home: Path) -> dict[str, str]:
 def run_git(
     cwd: Path, env: dict[str, str], secrets: tuple[str, ...], *args: str
 ) -> str:
-    """Run git with this environment. A failure raises RepoProviderError with the credential values hidden."""
+    """Run git with this environment. A failure raises RepoProviderError with the credential values hidden.
+
+    If GitHub refused the login, the error is TokenExpired, a kind of RepoProviderError.
+    """
     try:
         result = subprocess.run(
             ["git", *args], cwd=cwd, env=env, check=True, capture_output=True
         )
     except subprocess.CalledProcessError as failure:
         detail = failure.stderr.decode(errors="replace").strip()
-        raise RepoProviderError(
-            redact(f"git {args[0]} failed. {detail}", secrets)
-        ) from None
+        error = (
+            TokenExpired
+            if any(marker in detail for marker in LOGIN_REFUSED_MARKERS)
+            else RepoProviderError
+        )
+        raise error(redact(f"git {args[0]} failed. {detail}", secrets)) from None
     return result.stdout.decode()

@@ -1,6 +1,6 @@
 from collections.abc import Mapping
 
-from veil.engine.constants.severity import HIGH
+from veil.engine.constants.names import HIGH
 
 
 def bucket_of(severity: str, severity_map: Mapping[str, str]) -> str:

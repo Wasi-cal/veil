@@ -6,6 +6,7 @@ from tests.fakes.github_fixtures import pull_json
 from tests.fakes.http_server import StubHttpServer
 from veil.adapters.github.http_api import HttpGitHubApi
 from veil.engine.errors.repo_provider_error import RepoProviderError
+from veil.engine.errors.token_expired import TokenExpired
 
 
 def api_for(server: StubHttpServer) -> HttpGitHubApi:
@@ -57,18 +58,18 @@ def test_it_finds_the_pull_requests_that_carry_a_label():
     assert search.query["q"] == ['repo:acme/app is:pr label:"issue-abc"']
 
 
-def test_it_opens_a_draft_pr_and_puts_the_labels_on_it():
+def test_it_opens_a_ready_pr_and_puts_the_labels_on_it():
     with StubHttpServer() as server:
         server.routes[("POST", "/repos/acme/app/pulls")] = (
             201,
-            pull_json(9, head="gozu/fix-GR-1", base="feature-x", draft=True),
+            pull_json(9, head="gozu/fix-GR-1", base="feature-x", draft=False),
         )
         server.routes[("POST", "/repos/acme/app/issues/9/labels")] = (
             200,
             [{"name": "issue-abc"}],
         )
 
-        pr = api_for(server).create_draft_pr(
+        pr = api_for(server).create_pr(
             "acme/app", "gozu/fix-GR-1", "feature-x", "Fix", "Body", ("issue-abc",)
         )
 
@@ -78,12 +79,12 @@ def test_it_opens_a_draft_pr_and_puts_the_labels_on_it():
         "head": "gozu/fix-GR-1",
         "base": "feature-x",
         "body": "Body",
-        "draft": True,
+        "draft": False,
     }
     assert label.body == {"labels": ["issue-abc"]}
     assert (pr.url, pr.draft, pr.labels) == (
         "https://github.example.invalid/acme/app/pull/9",
-        True,
+        False,
         ("issue-abc",),
     )
 
@@ -128,3 +129,55 @@ def test_a_redirect_never_carries_the_token_to_another_host():
 def test_the_adapter_refuses_a_url_that_is_not_https(url):
     with pytest.raises(RepoProviderError):
         HttpGitHubApi(SecretStr(TOKEN), base_url=url)
+
+
+def test_a_401_from_github_is_an_expired_token_error():
+    with StubHttpServer() as server:
+        server.routes[("GET", "/repos/acme/app/pulls")] = (
+            401,
+            {"message": "Bad credentials"},
+        )
+
+        with pytest.raises(TokenExpired) as failure:
+            api_for(server).find_pull_requests("acme/app", head="feature-x")
+
+    assert TOKEN not in str(failure.value)
+
+
+@pytest.mark.parametrize("status", [403, 404, 422, 500])
+def test_any_other_failure_of_github_is_not_an_expired_token(status):
+    with StubHttpServer() as server:
+        server.routes[("GET", "/repos/acme/app/pulls")] = (status, {"message": "no"})
+
+        with pytest.raises(RepoProviderError) as failure:
+            api_for(server).find_pull_requests("acme/app", head="feature-x")
+
+    assert not isinstance(failure.value, TokenExpired)
+
+
+def test_it_reads_the_default_branch_of_a_repository():
+    with StubHttpServer() as server:
+        server.routes[("GET", "/repos/acme/app")] = (200, {"default_branch": "trunk"})
+
+        branch = api_for(server).default_branch("acme/app")
+
+    assert branch == "trunk"
+    [request] = server.seen
+    assert request.authorization == f"Bearer {TOKEN}"
+
+
+@pytest.mark.parametrize("reply", [{}, {"default_branch": ""}, {"default_branch": 7}])
+def test_a_reply_without_a_default_branch_is_an_error(reply):
+    with StubHttpServer() as server:
+        server.routes[("GET", "/repos/acme/app")] = (200, reply)
+
+        with pytest.raises(RepoProviderError, match="default branch"):
+            api_for(server).default_branch("acme/app")
+
+
+def test_it_refuses_a_bad_repository_name_for_the_default_branch():
+    with StubHttpServer() as server:
+        with pytest.raises(RepoProviderError):
+            api_for(server).default_branch("acme/../app")
+
+        assert server.seen == []

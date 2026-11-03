@@ -8,7 +8,7 @@ from veil.engine.workspace.working_copy import WorkingCopy
 def ensure_no_secret(
     context: Context, working_copy: WorkingCopy, finish: FinishArgs
 ) -> None:
-    """Raise AttemptFailed if the Fix adds a secret to a file, to the commit message or to the explanation.
+    """Raise AttemptFailed if the Fix adds a secret to a file, to the commit message or to one of the three parts.
 
     A secret that was already in a file does not count.
     The reason names the kind of secret and where it is. It never holds the value.
@@ -20,7 +20,9 @@ def ensure_no_secret(
             raise _held("The change adds", found)
     for where, text in (
         ("The commit message holds", finish.commit_message),
-        ("The explanation holds", finish.explanation),
+        ("The part problem holds", finish.problem),
+        ("The part change holds", finish.change),
+        ("The part solves holds", finish.solves),
     ):
         found = find_secret(text, values)
         if found:

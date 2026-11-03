@@ -1,0 +1,55 @@
+# Tests veil, then builds and publishes the image of the Action, when you push a version tag such as v1.2.3.
+# The tag v1 moves to the new release. The file action.yml points at the image tag v1.
+# Every action below is pinned to a commit. The comment shows the version of that commit.
+name: release-image
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run lint-imports
+      - run: uv run pytest -q
+
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/veil
+          tags: |
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Move the major version tag
+        run: |
+          major="${GITHUB_REF_NAME%%.*}"
+          git tag -f "$major"
+          git push -f origin "refs/tags/$major"

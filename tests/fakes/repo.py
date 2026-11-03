@@ -3,8 +3,8 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from veil.engine import DraftPr, FixQuery
-from veil.engine.constants.fix_kinds import FixKind
+from veil.engine import FixQuery, NewPr
+from veil.engine.constants.names import FixKind
 
 
 def _git(cwd: Path, *args: str) -> str:
@@ -183,35 +183,38 @@ class FakeRepoProvider:
             return remote.base is None or remote.base == query.source_branch
         return remote.branch.startswith(query.branch_prefix)
 
-    def open_draft_pr(self, draft: DraftPr) -> str:
+    def open_pr(self, new_pr: NewPr) -> str:
         """Push the head branch to the fake origin and open a PR. Refuse any other push, as a real provider does."""
-        if not draft.head.startswith(self._branch_prefix) or draft.head == draft.base:
+        if (
+            not new_pr.head.startswith(self._branch_prefix)
+            or new_pr.head == new_pr.base
+        ):
             raise ValueError(
-                f"Refused to push {draft.head} for a PR against {draft.base}."
+                f"Refused to push {new_pr.head} for a PR against {new_pr.base}."
             )
         for pr in self.pull_requests:
-            if pr.repo == draft.repo and pr.head == draft.head:
+            if pr.repo == new_pr.repo and pr.head == new_pr.head:
                 return pr.url
-        clone = self._clone_with_branch(draft.repo, draft.head)
-        _git(clone.path, "push", "origin", draft.head)
-        url = f"https://github.example.invalid/{draft.repo}/pull/{len(self.pull_requests) + 1}"
+        clone = self._clone_with_branch(new_pr.repo, new_pr.head)
+        _git(clone.path, "push", "origin", new_pr.head)
+        url = f"https://github.example.invalid/{new_pr.repo}/pull/{len(self.pull_requests) + 1}"
         self._remote.append(
             FakeRemoteFix(
-                repo=draft.repo,
+                repo=new_pr.repo,
                 kind="open_pr",
-                branch=draft.head,
-                base=draft.base,
-                labels=draft.labels,
+                branch=new_pr.head,
+                base=new_pr.base,
+                labels=new_pr.labels,
             )
         )
         self.pull_requests.append(
             FakePullRequest(
-                repo=draft.repo,
-                head=draft.head,
-                base=draft.base,
-                title=draft.title,
-                body=draft.body,
-                draft=True,
+                repo=new_pr.repo,
+                head=new_pr.head,
+                base=new_pr.base,
+                title=new_pr.title,
+                body=new_pr.body,
+                draft=False,
                 url=url,
             )
         )

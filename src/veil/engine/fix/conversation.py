@@ -1,9 +1,9 @@
 import json
 from collections.abc import Callable
 
-from veil.engine.constants.tools import FINISH
+from veil.engine.constants.prompt import FINISH
 from veil.engine.errors.attempt_failed import AttemptFailed
-from veil.engine.fix.budget import ensure_budget
+from veil.engine.fix.budget import TicketBudget
 from veil.engine.fix.finish import read_finish
 from veil.engine.interfaces.model_client import ModelClient
 from veil.engine.models.config.settings import Settings
@@ -21,19 +21,23 @@ def converse(
     messages: list[dict],
     settings: Settings,
     report: RunReport,
+    budget: TicketBudget,
     progress: Callable[[int], None] | None = None,
+    finding_text: str = "",
 ) -> FinishArgs:
     """Run the tool calls of the model until it calls finish with valid arguments. Return them.
 
     A finish call that breaks the format gets an error text, and the model can try again.
-    Raise AttemptFailed at the step cap. Raise BudgetExhausted before a model call if the run used its token ceiling.
+    `finding_text` is the text of the ticket. A part that copies it breaks the format.
+    Raise AttemptFailed at the step cap. Raise BudgetExhausted before a model call if the ticket used its token cap.
     """
     tools = tool_definitions()
     steps = 0
     finish: FinishArgs | None = None
     while finish is None:
-        ensure_budget(report, settings)
+        budget.ensure()
         reply = model_client.next(messages, model, tools)
+        budget.spend(reply.tokens)
         report.tokens_used += reply.tokens
         if progress is not None:
             progress(report.tokens_used)
@@ -43,7 +47,7 @@ def converse(
         for call in reply.tool_calls:
             steps += 1
             if call.name == FINISH:
-                result = read_finish(call, settings)
+                result = read_finish(call, settings, finding_text)
                 if isinstance(result, FinishArgs):
                     finish = result
                     break

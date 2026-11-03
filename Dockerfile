@@ -1,7 +1,8 @@
 # The image of the Veil GitHub Action. It is built once and published. The Action installs nothing at run time.
-FROM ghcr.io/astral-sh/uv:latest AS uv
+# The base images are pinned to a digest. A new digest is a change that a person reviews.
+FROM ghcr.io/astral-sh/uv:0.12.1@sha256:cf4eedcaa81655197f625739489effcbe71b61ceb1506f332c3facae5deceded AS uv
 
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:b18b261e1b4974b4f321451ad5251ded85abb22c2b8b262da527dda1d031ab30
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src \

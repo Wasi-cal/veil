@@ -4,15 +4,17 @@ This page explains what the code does, step by step. Read `GLOSSARY.md` for the 
 
 ## The short version
 
-Veil takes open Gozu Tickets. Gozu makes a ticket when a developer raises a pull request and a scan finds a problem. We call that pull request the Source PR. Each ticket names one file and one line with a security finding. For each ticket, Veil asks an AI model to change the code. Then Veil opens a draft pull request. A human reviews the pull request.
+Veil takes open Gozu Tickets. Gozu makes a ticket when a developer raises a pull request and a scan finds a problem. We call that pull request the Source PR. Each ticket names one file and one line with a security finding. For each ticket, Veil asks an AI model to change the code. Then Veil opens a pull request. A human reviews the pull request.
 
 The part that does this work is the Engine. You start it with one function call: `run(context)`.
+
+Two diagrams show the flow: `docs/diagrams/how-veil-works.html` and `docs/diagrams/github-action-workflow.html`. Open them in a browser.
 
 ## What you give to the Engine
 
 The `context` holds five parts:
 
-- **settings**: the limits and the names, for example 25 steps, 200 changed lines and the label of a Failed Fix. `resolve_settings` makes them from four layers. See the section on settings and ADR 0010.
+- **settings**: the limits and the names, for example 25 steps, 200 changed lines and the label of a Failed Fix. `parse_settings` makes them from the repo file. See the section on settings and `docs/settings.md`.
 - **tracker**: the place where the tickets are. In real use this is Jira.
 - **repo provider**: gives a copy of the repository and opens pull requests. In real use this is GitHub.
 - **model client**: talks to the AI model.
@@ -25,19 +27,19 @@ The Engine knows only the shape of these parts. It does not know Jira, GitHub or
 The function `run` works in four stages:
 
 1. It skips the tickets that must not get a Fix (see the section "Which tickets the Engine skips").
-2. It puts the other tickets into groups. Each group gets one draft pull request (see the section "How the Engine groups tickets"). High groups come first.
+2. It puts the other tickets into groups. Each group gets one pull request (see the section "How the Engine groups tickets"). High groups come first.
 3. It fixes the tickets of each group, one after the other, in one checkout.
-4. It opens one draft pull request for each group.
+4. It opens one pull request for each group.
 
 For one group, the steps are:
 
 1. Open a copy of the repository. This is the branch of the Source PR. A group has one copy.
 2. For each ticket of the group, read the file that the ticket names. Refuse if the file may hold secrets.
 3. Build the first message to the model. It holds the repository, file, line, severity and finding. It also holds about 40 lines of code around the flagged line. The Engine marks the text from the ticket as untrusted data.
-4. Talk to the model. The model answers with tool calls. The Engine runs each call and sends the result back. This repeats until the model calls `finish`. Before each model call, the Engine checks the token ceiling.
-5. The model gives two things with `finish`: a commit message of one line, and an explanation of at most 3 sentences. If the format is wrong, the Engine gives an error and the model can try again.
+4. Talk to the model. The model answers with tool calls. The Engine runs each call and sends the result back. This repeats until the model calls `finish`. Before each model call, the Engine checks the token cap of the ticket.
+5. The model gives four things with `finish`: a commit message and three parts. The commit message is a Conventional Commit of at most 72 characters, for example `fix(security): replace eval with a safe parser`. The Engine adds the footer `Refs: <ticket>`. The part `problem` says why this code is a problem. The part `change` says what the model changed. The part `solves` says what the change solves. Each part has at most 3 sentences, and a sentence has at most 25 words. A part that copies the text of the ticket is refused. The prompt asks the model to write in ASD-STE100. The Engine checks only the number of sentences and the length of a sentence. If the format is wrong, the Engine gives an error and the model can try again.
 6. Check the change. It must not be empty. It must have 200 changed lines or fewer. Each edited file must still parse. The added lines, the commit message and the explanation must hold no secret (see the section "Secrets"). Then the Engine makes one commit for this Fix. The next ticket starts from that commit, so it sees the earlier Fixes.
-7. After the last ticket, publish. The Engine opens one draft pull request that targets the branch of the Source PR. The body holds the explanation of each Fix. It adds a comment with the link on each ticket and moves each ticket to In Review.
+7. After the last ticket, publish. The Engine opens one pull request that targets the branch of the Source PR. The title is the commit subject and the ticket, or `fix(security): resolve N findings (…)` for many tickets. The body has a summary, then one section for each ticket. A section has the three parts of the Fix under the labels "Why this is a problem", "What changed" and "What this solves". The Engine also adds a comment with the link and the same three parts on each ticket. It moves each ticket to In Review.
 
 If the first attempt fails, the Engine starts one more attempt with the strong model (see the section "When an attempt fails").
 
@@ -51,20 +53,21 @@ The Engine gives each ticket a Severity Bucket from the severity map. The map is
 | `MAJOR`, `MEDIUM` | Medium |
 | `MINOR`, `INFO`, `LOW` | Low |
 
-A severity word that is not in the map is High. The ticket then gets its own PR and a person looks at it.
+A severity word that is not in the map is High. The bucket sets only the order of the PRs. High goes first.
 
-| Bucket | Group |
+| Tickets | Group |
 |---|---|
-| Low and Medium | One Shared PR for each repository and each Source PR branch. It holds at most 10 tickets (setting `shared_pr_max`). The other tickets wait for the next run. |
-| High | One High PR for each ticket. |
-| High, same file | High tickets that flag the same file in the same Source PR go into one PR, because their Fixes overlap. The body of the PR gives the reason. |
+| One ticket | One PR. The severity does not matter. |
+| Same file | Tickets that flag the same file in the same Source PR go into one PR, because their Fixes overlap. The body of the PR gives the reason. |
+
+There is no cap. One hundred tickets on one hundred files give one hundred PRs. The PRs run in this order: High, then Medium, then Low. PRs of equal rank keep the order of the tickets.
 
 Other rules:
 
 - A Failed Fix stays out of the PR. The PR holds only the Fixes that passed. A ticket that ends as a Failed Fix leaves no edit in the PR.
-- If the token ceiling stops the run in the middle of a group, the Engine still publishes the Fixes that passed. The current ticket and the later tickets wait for the next run.
-- The branch of a Shared PR starts with the branch prefix (setting `branch_prefix`, default `gozu/fix-`), the word `shared` and the key of the first Fix that passed. The branch of a High PR starts with the prefix and that key. A ticket that failed gives no name. So a later run can make a new PR for that ticket without a branch clash.
-- All PRs are drafts. The Engine merges nothing.
+- A ticket that uses its token cap in the middle of a group becomes a Failed Fix. The Fixes that passed are still published. The later tickets of the group go on.
+- The branch of a PR starts with the branch prefix (setting `branch_prefix`, default `gozu/fix-`) and the key of the first Fix that passed. A ticket that failed gives no name. So a later run can make a new PR for that ticket without a branch clash.
+- Every PR opens ready for review. The Engine merges nothing.
 
 ## Which tickets the Engine skips
 
@@ -74,6 +77,7 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 |---|---|
 | `raised_against_fix_branch` | The finding is on a Fix branch. That is a branch that starts with `gozu/fix-` or with the setting `branch_prefix`. A human decides what happens to it. |
 | `failed_fix` | The ticket has the label `veil-failed-fix`. It stays untouched until a human deletes the label. |
+| `ignored_path` | The file of the ticket is inside `.github/`, at any depth. Gozu makes no ticket for these files now. This catches an older ticket. |
 | `no_issue_label` | The ticket has no label that starts with `issue-`. The Engine cannot prove that no PR exists. |
 | `source_pr_not_open` | The branch of the ticket has no open PR. The developer merged or closed the Source PR, or the branch never had a PR. |
 | `duplicate_issue` | An earlier ticket in this run has the same issue label on the same Source PR branch. It is the same finding, so the Engine keeps the first ticket. |
@@ -82,7 +86,9 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 
 A skipped ticket opens no checkout, uses no tokens and gets no comment. The run report lists each skipped ticket under its reason.
 
-This makes a second run safe. The Engine puts the issue label on each draft PR that it opens. The next run finds the PR and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
+The run report has a table with one row for each ticket: the ticket, the outcome and the reason. A Failed Fix has the same reason in the report as in its Jira comment. The Engine hides credentials in the reason.
+
+This makes a second run safe. The Engine puts the issue label on each PR that it opens. The next run finds the PR and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
 
 If the tracker lists a ticket twice, the Engine uses it once. If two tickets have the same issue label on the same Source PR branch, the Engine fixes the first one. It skips the second because the first PR already exists.
 
@@ -106,58 +112,56 @@ A Failed Fix happens when the second attempt fails too. The Engine then does thr
 
 The Engine then goes on with the next ticket. A Failed Fix is not an error. The run does not stop.
 
-## The token ceiling
+## The token cap of a ticket
 
-The run counts the tokens that the model API reports. It counts all attempts of all tickets together. The default ceiling is 100,000 tokens.
+The Engine counts the tokens that the model API reports. Each ticket has its own count. The count holds all attempts of that ticket. The default cap is 100,000 tokens for each ticket. There is no cap for the whole run.
 
-Before each model call, the Engine checks the count. If the count is at the ceiling, the run stops. This is not a Failed Fix. The Engine does these things:
+Before each model call, the Engine checks the count of the ticket. If the count is at the cap, the Engine stops the work on that ticket. The ticket becomes a Failed Fix:
 
-- It does not comment on the ticket, add a label or change its status. This applies to the current ticket and to all the tickets after it.
-- It puts the outcome `left_for_next_run` in the run report for each of these tickets.
-- It never throws away a finished fix. If the last call of a fix passes the ceiling, the Engine still publishes the fix. The next call does not start.
+- The Engine drops the edits of the ticket.
+- It adds the label `veil-failed-fix` and a comment with the reason. The ticket stays open.
+- The run goes on with the next ticket. The next ticket has a new count.
+- It never throws away a finished fix. If the last call of a fix passes the cap, the Engine still publishes the fix. The next call does not start.
 
-The cheap model name, the strong model name and the ceiling are settings.
+The run report still shows the tokens that all tickets used.
+
+The cheap model name, the strong model name and the cap are settings.
 
 ## The GitHub Action Shell
 
 The Action is the first Shell (ADR 0013). It runs the Engine once for the repo of the workflow. `run_action(environ)` is its entry point.
 
 1. It reads the repo, the workspace and the event from the runner. It loads `.gozu/jira-to-pr.yml` as the repo settings.
-2. It checks the event. `schedule`, `workflow_dispatch` and `repository_dispatch` may run. Each one needs its setting to be on. Any other event fails.
-3. It reads the Jira and OpenAI credentials from the variables that the settings name. It masks them in the log.
-4. It mints a GitHub App installation token for this repo alone. It checks the token and masks it.
+2. It checks the event. `schedule`, `workflow_dispatch`, `repository_dispatch` and `pull_request` may run. Each one needs its setting to be on. Any other event fails. A `pull_request` event runs only for a PR from this repo. The Action reads the head of the PR from the event file of the runner. A PR from a fork or from a deleted repo ends the run with a notice, before the Action reads a secret. A run on a PR sees only the tickets of the branch of that PR.
+3. It reads the Jira and OpenAI credentials from the variables that the settings name. It reads the `GITHUB_TOKEN` of the workflow. It masks all three in the log.
+4. It builds the context from them. The token covers this repo for this job only.
 5. It builds the context, runs the Engine, closes the checkouts and writes the run report to the step summary.
 
 Any failure before step 5 stops the run with one error line and exit code 1. No ticket changes. A Failed Fix is not a failure.
 
-## The service Shell
+A ticket needs all of these before the Action fixes it:
 
-The service is the second Shell (ADR 0014). It runs the Engine for one repo inside a Temporal workflow.
+- The label `veil-eligible`, or the label that the setting `eligible_label` names. If you set `eligible_label` to an empty text, a ticket needs no such label. Then veil takes every open ticket without an assignee in the project keys.
+- A label that starts with `issue-`. It names the finding. The Engine copies it to the Fix PR. A title of the form `repo | file | line | title` and the other labels are in `docs/ticket-contract.md`.
+- A Details list with the repository, the file (`Component`), the line, the severity and the exact branch. A branch is required. There is no unknown branch.
+- An open PR from that branch in that repository.
+- A status that is not done, and no assignee.
 
-1. The workflow ID comes from the repo name. A second start for the same repo joins the active run.
-2. The activity `read_settings` reads the settings snapshot. The workflow keeps it.
-3. The activity `run_engine` mints the GitHub token, runs the Engine once and returns the run report.
-4. The Engine reports its tokens after each model call and each ticket. The activity sends each report as a heartbeat.
-5. Temporal retries only an infrastructure failure, at most twice. A retry uses the same snapshot. It lowers the token ceiling by the tokens of the last heartbeat.
+Two repo settings must fit the site. The Jira workflow must have the status that `in_review_status` names, or you must set the setting to a status that exists. The repo must allow GitHub Actions to create pull requests (Settings, Actions, General).
 
-No credential goes into a workflow input, a result or a failure message. A worker deletes old checkouts when it starts.
+## The service Shell (deferred)
+
+The org-wide service was to be the second Shell. It is not in the code now. veil runs on one repo through the GitHub Action. ADR 0017 keeps the decisions of the service. The code is deleted on purpose, and git history keeps it (commit `0bcf11c`).
 
 ## Settings
 
-Every number and every name that the Engine uses is a setting. Each setting has a default in code, a type, a minimum and a maximum. `docs/settings-catalog.md` lists them all. The declaration of the settings makes it. A test fails if the file is old.
+Every number and every name that the Engine uses is a setting. The model `Settings` holds them all, each with a default, a type and a range. `docs/settings.md` lists them. A test fails if a setting is missing from that file.
 
-Four layers make the settings of one run. A later layer wins:
+The settings of a run come from one file in the repo: `.gozu/jira-to-pr.yml`. A Shell reads the YAML with `load_settings_file` and gives a plain mapping to `parse_settings`. The Engine reads no file.
 
-1. The defaults in code.
-2. The org settings.
-3. The repo settings. The Action reads them from `.gozu/jira-to-pr.yml`.
-4. The overrides of one run.
+`parse_settings` checks every key. These fail: a key that is not a setting, a value of the wrong type and a value outside the range. A value that looks like a secret fails too. The failure comes before the Engine touches any ticket. The message lists every problem and never repeats a value.
 
-A repo can only tighten a value that the org set. The catalog gives a rule for each setting. A repo can lower a limit and add refused file patterns. It can raise a severity bucket and turn a trigger off. It can choose its own models and labels. It cannot change anything else that the org set.
-
-`resolve_settings(org, repo, overrides)` checks every layer. These fail: a key that is not a setting, a value of the wrong type and a value outside the bounds. A repo value that loosens the org value fails too. It also refuses a value that looks like a secret. The failure comes before the Engine touches any ticket. The message lists every problem and never repeats a value. The Engine reads no file. A Shell reads the YAML with `load_settings_file` and passes plain mappings.
-
-The org service keeps its settings in PostgreSQL (ADR 0011). Redis caches the slow reads, and a Redis outage never stops a run (ADR 0012). It reads one settings snapshot at the start of a run, and the whole run uses it. A change in the database applies to the next run.
+A settings store in PostgreSQL with a Redis cache, and org settings above the repo file, are deferred (ADR 0017).
 
 The safety rules are code. They are not settings. A setting with the name of a safety rule is an unknown key.
 
@@ -179,7 +183,7 @@ A tool never raises an error. If a call is wrong, the tool returns text that sta
 
 No secret may reach a commit, a PR, a Jira comment or a run report. The Engine uses two guards:
 
-1. **The scan.** Before the Engine commits a Fix, it checks the files that the Fix edits, the commit message and the explanation. It looks for the credential values of this run. It also looks for these patterns. They are private key headers, AWS key ids, GitHub tokens, Google API keys, Slack tokens, keys that start with `sk-` and Atlassian API tokens. A match fails the attempt. The strong model gets one more try. The reason names the kind of secret and where it is. It never holds the value. The scan runs before the syntax check, so a parser error cannot repeat a secret. A secret that was already in a file does not count, because the Fix did not add it. So a Fix that edits a line next to an old key can pass.
+1. **The scan.** Before the Engine commits a Fix, it checks the files that the Fix edits, the commit message and the three parts. It looks for the credential values of this run. It also looks for these patterns. They are private key headers, AWS key ids, GitHub tokens, Google API keys, Slack tokens, keys that start with `sk-` and Atlassian API tokens. A match fails the attempt. The strong model gets one more try. The reason names the kind of secret and where it is. It never holds the value. The scan runs before the syntax check, so a parser error cannot repeat a secret. A secret that was already in a file does not count, because the Fix did not add it. So a Fix that edits a line next to an old key can pass.
 2. **The redaction.** The Engine replaces each credential value and each text that matches a secret pattern with `[redacted]`. It does this in every text that it sends. These texts are the first prompt to the model and the PR title and body. They are also the commit message, every Jira comment, the reason of a Failed Fix and the run report. Two matches that overlap become one `[redacted]`. The Engine exports the function `redact`. Adapters and Shells use it for their own logs and errors.
 
 The Engine does not change errors that leave `run()`, for example a git error with a token in it. The repo provider must redact those errors before it raises them. The real repo provider does this and raises `RepoProviderError`. See ADR 0007. The real Jira tracker does the same and raises `TrackerError`. See ADR 0008. The real model client does the same and raises `ModelClientError`. See ADR 0009.
@@ -190,7 +194,9 @@ A credential value must have at least 8 characters and must not be only white sp
 
 These rules are code. Settings cannot turn them off.
 
-- The Engine never edits `.github/workflows/`, lockfiles or secret files.
+- The Engine never reads, lists, searches or edits anything in `.github/`. It never edits lockfiles or secret files.
+- The Engine never opens a PR from or against the default branch of the repo. The repo provider asks GitHub for the name once for each repo, just before it pushes.
+- The Engine never follows a symlink. A path that holds a symlink, in the file or in a folder of the path, is refused. A listing does not show symlinks. Without this rule, a symlink could hide `.github/` or `.env` behind a plain name.
 - The Engine never creates or deletes a file.
 - The Engine never reads `.env` files, keys or `.git/`.
 - The Engine never touches a path outside the repository.
@@ -207,7 +213,7 @@ These rules are code. Settings cannot turn them off.
 | What a tool does | `tools/handlers/` |
 | A rule about paths, the diff limit or the syntax check | `workspace/` |
 | How the Engine finds and hides secrets | `secrets/` |
-| How the layers of settings merge, and the settings catalog | `config/` |
+| How the settings file is checked | `config/` |
 | What the Engine needs from Jira, GitHub or the model | `interfaces/` |
 | The shape of a ticket, a setting or the report | `models/` |
 | A fixed value, such as a limit or a tool name | `constants/` (an adapter has its own `constants/`) |
@@ -218,7 +224,7 @@ A folder imports only from the folders below it. The file `run.py` is at the top
 
 Almost every test calls `run(context)` with three fakes. The model fake plays a script of tool calls. The repo fake uses real local git repositories. The test then checks the result: pull requests, commits, ticket comments, labels and the report. The tests do not call the internal functions.
 
-Example: the script says "edit one line, then finish". The test checks that one draft pull request exists and that the ticket is In Review.
+Example: the script says "edit one line, then finish". The test checks that one pull request exists and that the ticket is In Review.
 
 ## One example from start to end
 
@@ -230,6 +236,6 @@ Ticket GR-100 says: "Line 3 of `app.py` uses `eval(input())`."
 4. The `WorkingCopy` checks the edit and writes it. The result is "Edit applied."
 5. The model calls `finish`.
 6. The Engine checks the change. One line changed. The file still parses.
-7. The Engine commits, opens a draft pull request and comments on GR-100. GR-100 moves to In Review.
+7. The Engine commits, opens a pull request and comments on GR-100. GR-100 moves to In Review.
 
 If the model calls `edit_file` on `.env`, the result is `Refused:` and nothing changes. The model can try another edit.

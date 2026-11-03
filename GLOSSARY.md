@@ -13,23 +13,19 @@ The code change that addresses one Gozu Ticket. It has its own commit.
 _Avoid_: Patch, remediation
 
 **Fix PR**:
-A draft pull request that the agent opens. It contains one or more Fixes. It targets the branch of the Source PR.
+A pull request that the agent opens, ready for review. It contains one or more Fixes. It targets the branch of the Source PR.
 _Avoid_: Bot PR, auto-PR
 
 **Source PR**:
 The open pull request that a developer raised and that Gozu scanned. A Gozu Ticket belongs to it. The Engine fixes the code in its branch and bases the Fix PR on that branch.
 _Avoid_: Parent PR, original PR
 
-**Shared PR**:
-The Fix PR that carries the Low and Medium Fixes for one repository and one Source PR branch. It holds at most the cap of the Shared PR, 10 Fixes by default.
-_Avoid_: Batch PR, bulk PR
-
-**High PR**:
-A Fix PR that carries the Fix for a single High-severity Gozu Ticket. It carries more than one Fix if the High Fixes change the same file.
-_Avoid_: Critical PR, separate PR
+**Fix group**:
+The Gozu Tickets that go into one Fix PR. One ticket gives one group. Tickets that flag the same file in the same Source PR share a group, because their Fixes overlap. There is no cap on the number of groups.
+_Avoid_: Shared PR, High PR, batch
 
 **Severity Bucket**:
-The group of a Gozu Ticket by severity. The bucket decides which kind of Fix PR the ticket goes into. Low and Medium go together. High goes on its own. A setting, the severity map, gives the bucket of each severity word.
+The group of a Gozu Ticket by severity: High, Medium or Low. The bucket sets the order of the Fix groups, High first. It does not decide which tickets share a PR. A setting, the severity map, gives the bucket of each severity word.
 _Avoid_: Priority tier
 
 **Credential**:
@@ -40,9 +36,9 @@ _Avoid_: Password, key (a key can also be a ticket key)
 A credential value of the run, or a text that matches a known secret pattern, for example a private key header. A Fix must never hold a secret, and the Engine never sends one.
 _Avoid_: Sensitive data
 
-**Token ceiling**:
-The most tokens that one run may use. The code also calls it the budget. At the ceiling the run stops. The Engine publishes the Fixes that passed and leaves the other tickets for the next run.
-_Avoid_: Quota, limit (the diff limit is another rule)
+**Ticket token cap**:
+The most tokens that one ticket may use, over all its attempts. The code also calls it the budget. A ticket that uses its cap becomes a Failed Fix. The run goes on with the next ticket. There is no cap for the whole run.
+_Avoid_: Quota, limit (the diff limit is another rule), token ceiling (the old name)
 
 **Failed Fix**:
 A Gozu Ticket that the agent could not fix safely. The ticket stays open with a comment and a marker label. It stays open until a human asks for another attempt.
@@ -59,3 +55,8 @@ _Avoid_: Mode, wrapper
 **Settings snapshot**:
 The settings rows of the org and of the repos of one run, read from the database at one point in time. The service reads it once at the start of a run, and the whole run uses it. A change in the database applies to the next run.
 _Avoid_: Config cache, settings copy
+
+**Stopped run**:
+A run that ended before it handled every ticket, because GitHub refused the token. The token of a job expires after one hour. The report says `token_expired`. Each ticket without an outcome stays open for the next run.
+_Avoid_: Failed run (a Failed Fix is another thing)
+

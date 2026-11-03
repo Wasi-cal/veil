@@ -86,7 +86,7 @@ def test_secret_like_text_that_is_already_in_the_file_does_not_block_the_fix(tmp
 
     assert report.outcomes == {"GR-100": "fixed"}
     [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == ["Fix the finding."]
+    assert repos.commit_subjects_on(pr) == ["fix(security): fix the finding"]
 
 
 @pytest.mark.parametrize(

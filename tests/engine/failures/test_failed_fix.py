@@ -35,14 +35,21 @@ def test_ticket_file_that_is_not_in_the_repo_is_a_failed_fix(tmp_path):
     assert "missing.py" in comment
 
 
-@pytest.mark.parametrize("file", [".env", "../outside.py", "keys/server.pem"])
+@pytest.mark.parametrize(
+    "file",
+    [".env", "../outside.py", "keys/server.pem"],
+)
 def test_ticket_that_points_at_a_secret_or_outside_file_is_a_failed_fix_and_nothing_is_read(
     tmp_path, file
 ):
     context, tracker, repos, model = make_context(
         tmp_path,
         [[finish("Done.")]],
-        files={"app.py": "x = 1\n", ".env": "KEY=1\n", "keys/server.pem": "PEM\n"},
+        files={
+            "app.py": "x = 1\n",
+            ".env": "KEY=1\n",
+            "keys/server.pem": "PEM\n",
+        },
         file=file,
         line=1,
     )
