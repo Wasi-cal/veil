@@ -16,11 +16,12 @@ from veil.engine.constants.limits import (
     MAX_URL_CHARS,
     MIN_TOOL_RESULT_MAX_BYTES,
     ON_DEMAND_ENABLED,
+    PULL_REQUEST_ENABLED,
     READ_FILE_MAX_LINES,
     SCHEDULE_ENABLED,
     SEARCH_MAX_MATCHES,
     STEP_CAP,
-    TOKEN_CEILING,
+    TICKET_TOKEN_CAP,
     TOOL_RESULT_MAX_BYTES,
 )
 from veil.engine.constants.names import (
@@ -83,8 +84,8 @@ class Settings(BaseModel):
         default=(), max_length=MAX_LIST_ENTRIES
     )
 
-    # The budget
-    token_ceiling: int = Field(default=TOKEN_CEILING, ge=1, le=5_000_000)
+    # The budget. The cap is for one ticket, over all its attempts.
+    ticket_token_cap: int = Field(default=TICKET_TOKEN_CAP, ge=1, le=5_000_000)
 
     # The order of the groups and the names that the Engine writes
     branch_prefix: str = Field(
@@ -132,6 +133,7 @@ class Settings(BaseModel):
     schedule_enabled: bool = Field(default=SCHEDULE_ENABLED)
     on_demand_enabled: bool = Field(default=ON_DEMAND_ENABLED)
     event_enabled: bool = Field(default=EVENT_ENABLED)
+    pull_request_enabled: bool = Field(default=PULL_REQUEST_ENABLED)
 
     @field_validator("branch_prefix")
     @classmethod

@@ -140,39 +140,6 @@ def test_tickets_of_different_source_prs_get_separate_prs(tmp_path):
     )
 
 
-def test_at_the_token_ceiling_the_fixes_that_passed_are_published_and_the_rest_wait(
-    tmp_path,
-):
-    """Ticket one needs 600 tokens. Ticket two starts at 600 and reaches 900. The ceiling is 800."""
-    context, tracker, repos, _ = make_context(
-        tmp_path,
-        [*fix_of("a.py", "Fix a"), *fix_of("b.py", "Fix b"), *fix_of("c.py", "Fix c")],
-        tokens_per_call=300,
-        files={"a.py": BUGGY, "b.py": BUGGY, "c.py": BUGGY},
-        file="a.py",
-        settings=Settings(token_ceiling=800),
-        extra_tickets=[
-            {"key": "GR-101", "file": "b.py"},
-            {"key": "GR-102", "file": "c.py"},
-        ],
-    )
-
-    report = run(context)
-
-    assert report.outcomes == {
-        "GR-100": "fixed",
-        "GR-101": "left_for_next_run",
-        "GR-102": "left_for_next_run",
-    }
-    assert report.tokens_used == 900
-    [pr] = repos.pull_requests
-    assert repos.commit_subjects_on(pr) == ["fix(security): Fix a"]
-    assert repos.changed_paths_on(pr) == {"a.py"}
-    for key in ("GR-101", "GR-102"):
-        assert tracker.comments_on(key) == []
-        assert tracker.labels_on(key) == []
-
-
 def test_a_second_run_after_the_prs_creates_nothing(tmp_path):
     context, tracker, repos, model = make_context(
         tmp_path,

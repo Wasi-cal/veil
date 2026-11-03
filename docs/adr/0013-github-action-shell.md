@@ -22,7 +22,7 @@ The Action runs the Engine on one repo from a GitHub workflow (ticket GR-24, dec
 ## What we accept for now
 
 - No run used a real GitHub token, a real Jira site or a real OpenAI key. The tests use stubs and a local git remote.
-- Nobody built the image. The Docker daemon was off. The name `ghcr.io/calfus/veil` in `action.yml` and in the example is a placeholder. GR-29 sets the real name, builds the image and tests it.
+- (ADR 0025 sets the real image name `ghcr.io/wasi-cal/veil`. The image was built and run locally on 2026-11-03.) Nobody built the image at the time of this ADR. The Docker daemon was off. The name `ghcr.io/calfus/veil` in `action.yml` and in the example is a placeholder. GR-29 sets the real name, builds the image and tests it.
 - The image holds only what the Action needs. The service code and its dependencies are removed.
 - Only github.com works. GitHub Enterprise Server needs a setting for the API address and the git address.
 - The base images of the `Dockerfile` have no pinned version, and the image runs as root. GR-29 pins them. The runner needs root for the workspace.

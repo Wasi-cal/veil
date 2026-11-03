@@ -108,3 +108,38 @@ def test_a_branch_that_no_checkout_holds_cannot_be_pushed(tmp_path):
 
     assert TOKEN not in str(error.value)
     assert api.created == []
+
+
+def test_a_pr_against_the_default_branch_is_refused_and_nothing_is_pushed(tmp_path):
+    make_remote(tmp_path, branches={"feature-x": {"app.py": "value = 'feature'\n"}})
+    api = StubGitHubApi(default_branch="feature-x")
+    provider = make_provider(tmp_path, api=api)
+    workspace = provider.open_workspace("acme/app", "feature-x")
+    workspace.write_file("app.py", "fixed\n")
+    workspace.commit(FIX_BRANCH, "Fix the bug")
+    before = remote_branch_heads(tmp_path)
+
+    with pytest.raises(RepoProviderError, match="default branch"):
+        provider.open_pr(new_pr())
+
+    assert remote_branch_heads(tmp_path) == before
+    assert api.created == []
+
+
+def test_a_fix_branch_that_is_the_default_branch_is_refused(tmp_path):
+    provider, api = committed_fix(tmp_path)
+    api._default_branch = FIX_BRANCH
+
+    with pytest.raises(RepoProviderError, match="default branch"):
+        provider.open_pr(new_pr())
+
+    assert api.created == []
+
+
+def test_the_default_branch_is_asked_once_for_each_repo(tmp_path):
+    provider, api = committed_fix(tmp_path)
+
+    provider.open_pr(new_pr())
+    provider.open_pr(new_pr())
+
+    assert api.default_branch_questions == 1

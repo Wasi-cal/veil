@@ -120,5 +120,61 @@ def test_a_symlink_that_leaves_the_checkout_is_refused(tmp_path):
     (tmp_path / "secret.txt").write_text("outside\n")
     (workspace.path / "link.txt").symlink_to(tmp_path / "secret.txt")
 
-    with pytest.raises(RepoProviderError):
+    with pytest.raises(FileNotFoundError):
         workspace.read_file("link.txt")
+    with pytest.raises(FileNotFoundError):
+        workspace.write_file("link.txt", "x")
+
+    assert (tmp_path / "secret.txt").read_text() == "outside\n"
+
+
+def provider_with_symlinks(tmp_path):
+    """A remote whose main branch has a workflow, a .env file and three symlinks to them."""
+    make_remote(tmp_path)
+    work = tmp_path / "seed" / "acme" / "app"
+    (work / ".github" / "workflows").mkdir(parents=True)
+    (work / ".github" / "workflows" / "ci.yml").write_text("name: ci\n")
+    (work / ".env").write_text("KEY=1\n")
+    (work / "docs").mkdir()
+    (work / "docs" / "ci.yml").symlink_to("../.github/workflows/ci.yml")
+    (work / "docs" / "dot-github").symlink_to("../.github")
+    (work / "notes.txt").symlink_to(".env")
+    git(work, "add", "-A")
+    git(work, "commit", "-m", "add links")
+    git(work, "push", "origin", "main")
+    (tmp_path / "tmp").mkdir()
+    return make_provider(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "path", ["docs/ci.yml", "docs/dot-github/workflows/ci.yml", "notes.txt"]
+)
+def test_a_path_that_holds_a_symlink_is_neither_read_nor_written(tmp_path, path):
+    workspace = provider_with_symlinks(tmp_path).open_workspace("acme/app", "main")
+
+    with pytest.raises(FileNotFoundError):
+        workspace.read_file(path)
+    with pytest.raises(FileNotFoundError):
+        workspace.write_file(path, "name: evil\n")
+
+    assert (
+        workspace.path / ".github" / "workflows" / "ci.yml"
+    ).read_text() == "name: ci\n"
+    assert (workspace.path / ".env").read_text() == "KEY=1\n"
+
+
+def test_the_listing_hides_symlinks_and_keeps_files(tmp_path):
+    workspace = provider_with_symlinks(tmp_path).open_workspace("acme/app", "main")
+
+    names = workspace.list_files()
+
+    assert {"app.py", ".env", ".github/workflows/ci.yml"} <= set(names)
+    assert not {"docs/ci.yml", "docs/dot-github", "notes.txt"} & set(names)
+
+
+def test_a_normal_file_next_to_a_symlink_still_works(tmp_path):
+    workspace = provider_with_symlinks(tmp_path).open_workspace("acme/app", "main")
+
+    workspace.write_file("app.py", "fixed\n")
+
+    assert workspace.read_file("app.py") == "fixed\n"

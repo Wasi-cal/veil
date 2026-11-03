@@ -36,9 +36,9 @@ _Avoid_: Password, key (a key can also be a ticket key)
 A credential value of the run, or a text that matches a known secret pattern, for example a private key header. A Fix must never hold a secret, and the Engine never sends one.
 _Avoid_: Sensitive data
 
-**Token ceiling**:
-The most tokens that one run may use. The code also calls it the budget. At the ceiling the run stops. The Engine publishes the Fixes that passed and leaves the other tickets for the next run.
-_Avoid_: Quota, limit (the diff limit is another rule)
+**Ticket token cap**:
+The most tokens that one ticket may use, over all its attempts. The code also calls it the budget. A ticket that uses its cap becomes a Failed Fix. The run goes on with the next ticket. There is no cap for the whole run.
+_Avoid_: Quota, limit (the diff limit is another rule), token ceiling (the old name)
 
 **Failed Fix**:
 A Gozu Ticket that the agent could not fix safely. The ticket stays open with a comment and a marker label. It stays open until a human asks for another attempt.

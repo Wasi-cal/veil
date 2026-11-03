@@ -82,7 +82,7 @@ def test_safety_rules_are_not_settings(setting):
         {"tool_result_max_bytes": 0},
         {"read_file_max_lines": 0},
         {"search_max_matches": 0},
-        {"token_ceiling": 0},
+        {"ticket_token_cap": 0},
         {"cheap_model": ""},
         {"strong_model": ""},
     ],
@@ -92,5 +92,5 @@ def test_settings_reject_nonsense_limits(bad):
         Settings(**bad)
 
 
-def test_default_token_ceiling_is_100_000():
-    assert Settings().token_ceiling == 100_000
+def test_default_ticket_token_cap_is_100_000():
+    assert Settings().ticket_token_cap == 100_000

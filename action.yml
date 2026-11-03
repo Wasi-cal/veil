@@ -1,5 +1,9 @@
-name: Veil
+name: Veil for Gozu Tickets
 description: Fix the open Gozu Tickets of this repo and open Fix PRs, ready for review.
+author: Calfus
+branding:
+  icon: git-pull-request
+  color: purple
 runs:
   using: docker
-  image: docker://ghcr.io/calfus/veil:v1
+  image: docker://ghcr.io/wasi-cal/veil:v1

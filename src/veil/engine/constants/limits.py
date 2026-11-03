@@ -7,7 +7,7 @@ DIFF_LIMIT = 200
 READ_FILE_MAX_LINES = 300
 SEARCH_MAX_MATCHES = 50
 TOOL_RESULT_MAX_BYTES = 8 * 1024
-TOKEN_CEILING = 100_000
+TICKET_TOKEN_CAP = 100_000
 EXPLANATION_MAX_SENTENCES = 3
 MIN_SECRET_LENGTH = 8
 MIN_TOOL_RESULT_MAX_BYTES = 256
@@ -28,6 +28,8 @@ MAX_LIST_ENTRIES = 200
 SCHEDULE_ENABLED = False
 ON_DEMAND_ENABLED = True
 EVENT_ENABLED = True
+# A run on a pull request is an option. A run on a fork never starts, whatever the setting says.
+PULL_REQUEST_ENABLED = False
 
 # --- explanation ---
 # A mark ends a sentence if white space or the end of the text follows it. "a.py" does not end one.

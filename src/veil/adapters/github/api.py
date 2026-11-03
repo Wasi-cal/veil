@@ -15,6 +15,10 @@ class GitHubApi(Protocol):
         """
         ...
 
+    def default_branch(self, repo: str) -> str:
+        """Return the name of the default branch of the repository, for example main."""
+        ...
+
     def create_pr(
         self,
         repo: str,

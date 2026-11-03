@@ -4,12 +4,12 @@ import posixpath
 from fnmatch import fnmatchcase
 from pathlib import PurePosixPath
 
+from veil.engine.constants.names import IGNORED_DIRECTORIES
 from veil.engine.constants.safety import (
     LOCKFILE_NAMES,
     READ_REFUSED_DIRS,
     READ_REFUSED_PATTERNS,
 )
-from veil.engine.constants.names import IGNORED_DIRECTORIES
 from veil.engine.errors.rule_violation import RuleViolation
 
 

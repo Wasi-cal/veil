@@ -1,5 +1,5 @@
 # Example workflow for the Veil GitHub Action. Copy it to .github/workflows/veil.yml in your repo.
-# Pin the Action to a full tag or a commit SHA when you copy it.
+# Pin the Action to a full version tag, such as v1.0.0, or to a commit SHA when you copy it.
 name: veil
 
 on:
@@ -9,7 +9,12 @@ on:
   # To start a run from Jira, send a repository_dispatch event, then add it here:
   # repository_dispatch:
   #   types: [veil-run]
-  # Never add pull_request. A run on a fork pull request must not get secrets.
+  # To run on a pull request, add the trigger below and set pull_request_enabled: true
+  # in .gozu/jira-to-pr.yml. The run sees only the tickets of the branch of that PR.
+  # A pull request from a fork never runs. Gozu must write the tickets before the run starts.
+  # pull_request:
+  #   types: [opened, reopened]
+  # Never use pull_request_target. It gives secrets to code from a fork.
 
 permissions:
   contents: write
@@ -27,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: calfus/veil@v1
+      - uses: Wasi-cal/veil@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}

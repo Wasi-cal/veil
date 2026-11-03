@@ -1,2 +1,2 @@
 class BudgetExhausted(Exception):
-    """The run used its token ceiling. The Engine stops. It does not touch the rest of the tickets."""
+    """The ticket used its token cap. The Engine stops the work on that ticket and makes it a Failed Fix."""

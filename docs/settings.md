@@ -20,7 +20,7 @@ The safety rules are code and are not settings. You cannot turn them off. They a
 | `search_max_matches` | 50 | 1 to 500 | The most matches that one search gives. |
 | `explanation_max_sentences` | 3 | 1 to 10 | The most sentences in each of the three parts of the explanation. |
 | `extra_refused_read_patterns` | none | a list | Files that the model may not read, in addition to the built-in list. |
-| `token_ceiling` | 100000 | 1 to 5000000 | The most tokens that one run may use. |
+| `ticket_token_cap` | 100000 | 1 to 5000000 | The most tokens that one ticket may use, over all its attempts. A ticket that uses its cap becomes a Failed Fix. The run goes on. |
 
 ## Grouping and names
 
@@ -53,6 +53,7 @@ A variable name has capital letters, digits and underscores. It may not start wi
 | `schedule_enabled` | `false` | Allow runs from the `schedule` event. |
 | `on_demand_enabled` | `true` | Allow runs from `workflow_dispatch`. |
 | `event_enabled` | `true` | Allow runs from `repository_dispatch`. |
+| `pull_request_enabled` | `false` | Allow runs from `pull_request`. A run sees only the tickets of the branch of that PR. A PR from a fork never runs. |
 
 The cron time is in the workflow file, not here.
 
@@ -61,5 +62,5 @@ The cron time is in the workflow file, not here.
 ```yaml
 jira_site_url: "https://yourco.atlassian.net"
 jira_project_keys: ["SEC"]
-token_ceiling: 30000
+ticket_token_cap: 30000
 ```

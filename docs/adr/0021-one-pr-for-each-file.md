@@ -14,5 +14,5 @@ The owner of the project decided this on 2026-11-03. It changes ADR 0005.
 ## What this costs
 
 - **A repo file with `shared_pr_max` fails.** The key is now an unknown setting.
-- **More PRs to review.** A run can open one PR for each file. The token ceiling and the steps of each attempt still limit the work.
+- **More PRs to review.** A run can open one PR for each file. The token cap of each ticket and the steps of each attempt still limit the work (ADR 0022).
 - **A ticket that needs a change in `.github/` cannot be fixed.** The attempt fails, and the ticket gets the label `veil-failed-fix`. A person fixes it.

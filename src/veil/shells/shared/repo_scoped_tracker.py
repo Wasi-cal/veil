@@ -6,14 +6,21 @@ class RepoScopedTracker:
     """A tracker that shows the Engine only the tickets of one repo. Each run works on one repo only.
 
     The GitHub token of a run covers one repo. A ticket of another repo must never reach the Engine.
+    A run for a pull request gives its branch too. Then the Engine sees only the tickets of that branch.
     """
 
-    def __init__(self, inner: Tracker, repo: str) -> None:
+    def __init__(self, inner: Tracker, repo: str, branch: str | None = None) -> None:
         self._inner = inner
         self._repo = repo
+        self._branch = branch
 
     def open_tickets(self) -> list[Ticket]:
-        return [t for t in self._inner.open_tickets() if t.repo == self._repo]
+        return [
+            t
+            for t in self._inner.open_tickets()
+            if t.repo == self._repo
+            and (self._branch is None or t.branch == self._branch)
+        ]
 
     def add_comment(self, key: str, text: str) -> None:
         self._inner.add_comment(key, text)

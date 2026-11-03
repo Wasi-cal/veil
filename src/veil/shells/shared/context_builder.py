@@ -26,6 +26,7 @@ def build_context(
     github_token: SecretStr,
     urls: ServiceUrls,
     repo: str,
+    branch: str | None = None,
     metadata_cache: MetadataCache | None = None,
     temp_root: Path | None = None,
     progress: Callable[[int], None] | None = None,
@@ -33,7 +34,7 @@ def build_context(
     """Build the Engine context from the real adapters. Return the repo provider too, so the caller can close it.
 
     The GitHub token goes to the repo provider and its API only. The Jira token goes to the tracker only.
-    The OpenAI key goes to the model client only. A Shell may also give a Jira metadata cache, a root for the checkouts and a progress callback. The tracker shows the Engine the tickets of this repo only.
+    The OpenAI key goes to the model client only. A Shell may also give a Jira metadata cache, a root for the checkouts and a progress callback. The tracker shows the Engine the tickets of this repo only, and of one branch if the caller gives a branch.
     """
     provider = GitHubRepoProvider(
         token=github_token,
@@ -53,7 +54,7 @@ def build_context(
         )
         context = Context(
             settings=settings,
-            tracker=RepoScopedTracker(jira_tracker, repo),
+            tracker=RepoScopedTracker(jira_tracker, repo, branch),
             repo_provider=provider,
             model_client=OpenAIModelClient(
                 HttpOpenAIApi(credentials.openai_key, base_url=urls.openai_api_url)

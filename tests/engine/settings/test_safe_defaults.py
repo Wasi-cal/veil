@@ -12,7 +12,7 @@ def test_the_default_models_are_a_small_one_and_a_mid_tier_one_and_not_the_flags
 def test_the_default_budget_is_low():
     settings = Settings()
 
-    assert settings.token_ceiling == 100_000
+    assert settings.ticket_token_cap == 100_000
     assert settings.max_attempts == 2
 
 
@@ -22,6 +22,7 @@ def test_the_default_triggers_start_the_fewest_automatic_runs():
     assert settings.schedule_enabled is False
     assert settings.on_demand_enabled is True
     assert settings.event_enabled is True
+    assert settings.pull_request_enabled is False
 
 
 def test_the_defaults_of_the_limits_are_the_numbers_of_the_decisions():

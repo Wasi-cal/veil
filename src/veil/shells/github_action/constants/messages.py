@@ -1,8 +1,11 @@
 NO_REPOSITORY = "The variable {name} is not set. The runner sets it."
 BAD_REPOSITORY = "The variable {name} does not hold a repository name."
 NO_WORKSPACE = "The variable {name} is not set. Run actions/checkout first."
-UNSUPPORTED_EVENT = "The event {event} cannot start a run. Use schedule, workflow_dispatch or repository_dispatch."
+UNSUPPORTED_EVENT = "The event {event} cannot start a run. Use schedule, workflow_dispatch, repository_dispatch or pull_request."
 TRIGGER_OFF = "Skipped the run. The event {event} is off. Turn on the setting {setting} to allow it."
+NO_EVENT_FILE = "The variable {name} is not set or does not name a file. The runner sets it for a pull_request event."
+BAD_EVENT_FILE = "The event file does not hold the head of a pull request."
+FORK_PULL_REQUEST = "Skipped the run. The pull request comes from another repo, such as a fork. A fork never gets a secret."
 CREDENTIAL_MISSING = "The variable {name} is not set or is empty."
 CREDENTIAL_TOO_SHORT = "The variable {name} is too short to be a credential."
 RESERVED_NAME = (

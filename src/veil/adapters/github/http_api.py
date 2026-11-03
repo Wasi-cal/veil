@@ -55,6 +55,13 @@ class HttpGitHubApi:
         found_prs = [self._pull_request(item) for item in raw]
         return [pr for pr in found_prs if head is None or pr.head_branch == head]
 
+    def default_branch(self, repo: str) -> str:
+        self._check_repo(repo)
+        name = self._call("GET", f"/repos/{repo}").get("default_branch")
+        if not isinstance(name, str) or not name:
+            raise RepoProviderError(f"GitHub gave no default branch for {repo}.")
+        return name
+
     def create_pr(
         self,
         repo: str,

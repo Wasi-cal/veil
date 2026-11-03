@@ -153,3 +153,31 @@ def test_any_other_failure_of_github_is_not_an_expired_token(status):
             api_for(server).find_pull_requests("acme/app", head="feature-x")
 
     assert not isinstance(failure.value, TokenExpired)
+
+
+def test_it_reads_the_default_branch_of_a_repository():
+    with StubHttpServer() as server:
+        server.routes[("GET", "/repos/acme/app")] = (200, {"default_branch": "trunk"})
+
+        branch = api_for(server).default_branch("acme/app")
+
+    assert branch == "trunk"
+    [request] = server.seen
+    assert request.authorization == f"Bearer {TOKEN}"
+
+
+@pytest.mark.parametrize("reply", [{}, {"default_branch": ""}, {"default_branch": 7}])
+def test_a_reply_without_a_default_branch_is_an_error(reply):
+    with StubHttpServer() as server:
+        server.routes[("GET", "/repos/acme/app")] = (200, reply)
+
+        with pytest.raises(RepoProviderError, match="default branch"):
+            api_for(server).default_branch("acme/app")
+
+
+def test_it_refuses_a_bad_repository_name_for_the_default_branch():
+    with StubHttpServer() as server:
+        with pytest.raises(RepoProviderError):
+            api_for(server).default_branch("acme/../app")
+
+        assert server.seen == []

@@ -38,9 +38,7 @@ def test_the_schedule_trigger_is_off_by_default(world):
     assert (code, spy.contexts) == (0, [])
 
 
-@pytest.mark.parametrize(
-    "event", ["pull_request", "pull_request_target", "push", "issue_comment", ""]
-)
+@pytest.mark.parametrize("event", ["pull_request_target", "push", "issue_comment", ""])
 def test_any_other_event_is_refused_before_a_token_or_a_ticket_is_touched(world, event):
     code, spy = world.run_action(GITHUB_EVENT_NAME=event)
 

@@ -14,7 +14,7 @@ def test_it_runs_the_engine_once_with_the_repo_settings_and_the_github_token(wor
         {
             "jira_site_url": "https://acme.example.invalid",
             "jira_project_keys": ["SEC"],
-            "token_ceiling": 5000,
+            "ticket_token_cap": 5000,
         }
     )
 
@@ -22,7 +22,7 @@ def test_it_runs_the_engine_once_with_the_repo_settings_and_the_github_token(wor
 
     assert code == 0
     [context] = spy.contexts
-    assert context.settings.token_ceiling == 5000
+    assert context.settings.ticket_token_cap == 5000
     assert context.settings.jira_project_keys == ("SEC",)
     assert set(context.credential_values) == {TOKEN, JIRA_TOKEN, OPENAI_KEY}
 

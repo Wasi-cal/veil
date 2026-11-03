@@ -1,7 +1,6 @@
 from veil.engine.constants.names import STOPPED_TOKEN_EXPIRED
 from veil.engine.context import Context
 from veil.engine.eligibility.select import distinct, select_eligible
-from veil.engine.errors.budget_exhausted import BudgetExhausted
 from veil.engine.errors.token_expired import TokenExpired
 from veil.engine.fix.group import fix_group
 from veil.engine.fix.left_over import leave_for_next_run
@@ -14,7 +13,7 @@ def run(context: Context) -> RunReport:
     """Fix the eligible Gozu Tickets. Return the report of the run.
 
     The Engine skips a ticket that has a fix already. It puts the rest into groups. Each group gets one Fix PR.
-    At the token ceiling the run stops. The Fixes that passed are published. The other tickets stay untouched for the next run.
+    Each ticket has its own token cap. A ticket that uses its cap becomes a Failed Fix, and the run goes on.
     If GitHub refuses the token, the run stops. It cannot publish. It leaves the rest for the next run and reports why.
     """
     report = RunReport()
@@ -29,14 +28,8 @@ def run(context: Context) -> RunReport:
 
 def _fix(context: Context, tickets: list[Ticket], report: RunReport) -> None:
     eligible = select_eligible(tickets, context.repo_provider, context.settings, report)
-    groups = plan_groups(eligible, context.settings)
-    planned = [ticket for group in groups for ticket in group.tickets]
-    for group in groups:
-        try:
-            fix_group(context, group, report)
-        except BudgetExhausted:
-            _leave_unhandled(planned, report)
-            break
+    for group in plan_groups(eligible, context.settings):
+        fix_group(context, group, report)
 
 
 def _leave_unhandled(tickets: list[Ticket], report: RunReport) -> None:

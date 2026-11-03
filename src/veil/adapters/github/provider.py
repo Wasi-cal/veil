@@ -51,6 +51,7 @@ class GitHubRepoProvider:
             temp_root.mkdir(mode=DIR_MODE, parents=True, exist_ok=True)
         self._directories: list[Path] = []
         self._workspaces: dict[tuple[str, Path], GitWorkspace] = {}
+        self._default_branches: dict[str, str] = {}
 
     def __enter__(self) -> Self:
         return self
@@ -135,6 +136,12 @@ class GitHubRepoProvider:
         self._workspaces[(repo, workspace.path)] = workspace
         return workspace
 
+    def _default_branch(self, repo: str) -> str:
+        """Ask GitHub once for each repo. The answer does not change during a run."""
+        if repo not in self._default_branches:
+            self._default_branches[repo] = self._api.default_branch(repo)
+        return self._default_branches[repo]
+
     def open_pr(self, new_pr: NewPr) -> str:
         refuse_option_like(new_pr.head)
         if (
@@ -143,6 +150,11 @@ class GitHubRepoProvider:
         ):
             raise RepoProviderError(
                 f"Refused to push {new_pr.head} for a PR against {new_pr.base}."
+            )
+        default = self._default_branch(new_pr.repo)
+        if default in (new_pr.head, new_pr.base):
+            raise RepoProviderError(
+                f"Refused to open a PR for the default branch {default} of {new_pr.repo}."
             )
         for pr in self._api.find_pull_requests(new_pr.repo, head=new_pr.head):
             if pr.state == OPEN and _same_repo(pr.head_repo, new_pr.repo):

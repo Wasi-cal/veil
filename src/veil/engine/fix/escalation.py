@@ -1,8 +1,10 @@
 from veil.engine.constants.limits import STRONG_MODEL_ATTEMPT
 from veil.engine.context import Context
 from veil.engine.errors.attempt_failed import AttemptFailed
+from veil.engine.errors.budget_exhausted import BudgetExhausted
 from veil.engine.errors.failed_fix import FailedFix
 from veil.engine.fix.attempt import attempt
+from veil.engine.fix.budget import TicketBudget
 from veil.engine.interfaces.workspace import Workspace
 from veil.engine.models.fix.fix import Fix
 from veil.engine.models.report.run_report import RunReport
@@ -16,11 +18,30 @@ def fix_ticket(
 
     A failed attempt discards its edits, so the next attempt starts from clean files.
     With the setting `max_attempts` at 1, the Engine tries the cheap model only.
-    Raise FailedFix if every attempt fails.
+    The ticket has one token budget for all its attempts. At the cap the Engine stops the work on the ticket.
+    Raise FailedFix if every attempt fails or the ticket uses its token cap.
     """
     settings = context.settings
+    budget = TicketBudget(settings.ticket_token_cap)
     try:
-        return attempt(context, ticket, report, settings.cheap_model, workspace)
+        return _attempts(context, ticket, report, budget, workspace)
+    except BudgetExhausted:
+        workspace.discard_changes()
+        raise FailedFix(
+            f"The ticket used its token cap of {budget.cap} tokens."
+        ) from None
+
+
+def _attempts(
+    context: Context,
+    ticket: Ticket,
+    report: RunReport,
+    budget: TicketBudget,
+    workspace: Workspace,
+) -> Fix:
+    settings = context.settings
+    try:
+        return attempt(context, ticket, report, budget, settings.cheap_model, workspace)
     except AttemptFailed as first:
         workspace.discard_changes()
         if settings.max_attempts < STRONG_MODEL_ATTEMPT:
@@ -30,6 +51,7 @@ def fix_ticket(
                 context,
                 ticket,
                 report,
+                budget,
                 settings.strong_model,
                 workspace,
                 failure=context.redact(first.reason),
