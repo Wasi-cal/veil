@@ -16,8 +16,8 @@ def ticket_from_issue(
 ) -> Ticket | None:
     """Build a ticket from a Jira issue that Gozurion made. Return None if the issue is not a finding of one line.
 
-    A roll-up ticket, a finding with no line and a ticket with no branch give None.
-    Gozurion never writes a ticket without a branch, so this case does not come up.
+    A ticket with no line, no severity or no branch gives None.
+    Gozurion writes one ticket for each finding and never writes a ticket without a branch, so this case does not come up.
     """
     key = issue["key"]
     fields = issue["fields"]

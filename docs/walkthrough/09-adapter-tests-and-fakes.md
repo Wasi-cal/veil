@@ -299,7 +299,7 @@ This file proves that `open_tickets` builds Gozu Tickets from Jira issues. It ch
 - `test_the_search_asks_for_open_unassigned_tickets_with_the_eligible_label` — the tracker searches. The body of the request has the expected search text.
 - `test_the_eligible_label_comes_from_the_settings` — the settings name the label `fix-me`. The search text uses that label.
 - `test_every_page_of_the_search_is_read` — the first page has a next page token. The tracker reads both pages in order and sends the token with the second request.
-- `test_a_ticket_that_is_not_a_finding_of_one_line_is_skipped` — a roll-up issue, an issue with no line and an issue with branch `unknown` are in the answer. The tracker returns only the valid ticket.
+- `test_a_ticket_that_is_not_a_finding_of_one_line_is_skipped` — an issue with no severity, an issue with no line and an issue with branch `unknown` are in the answer. The tracker returns only the valid ticket.
 - `test_a_scanner_that_gives_a_plain_path_works_too` — the component is a plain path with no prefix. The ticket file equals that path.
 - `test_a_bullet_in_the_finding_text_never_beats_the_details_list` — a bullet that says `Line: 99` comes before the Details list. The ticket line comes from the Details list.
 - `test_a_path_with_a_colon_keeps_its_folders` — the component path holds a colon. The ticket file keeps the whole path.
