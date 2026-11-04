@@ -51,6 +51,24 @@ Commit: 0123456789
 
 A package finding also has `Package`, `Installed version` and `Fixed version` after `Component`. The section "Recommended action" follows when the scanner gives one.
 
+A package finding, for example a Trivy finding, has no `Line`. It has the three package lines after `Component`:
+
+```
+Repository: acme/app
+Component: package.json
+Package: lodash
+Installed version: 4.17.15
+Fixed version: 4.17.21
+Type: vulnerability
+Rule: CVE-2021-23337
+Severity: HIGH
+Source: trivy
+Branch: main
+Commit: fedcba9876
+```
+
+A ticket with a `Package` line and no `Line` is valid for veil. The golden ticket "a package finding with the package lines" shows it in full.
+
 ### Other fields
 
 The issue type is Bug. The priority comes from the severity: CRITICAL is Highest, HIGH is High, MEDIUM is Medium, and LOW and INFO are Low.
