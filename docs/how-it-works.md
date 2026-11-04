@@ -93,6 +93,15 @@ This makes a second run safe. The Engine puts the issue label on each PR that it
 
 If the tracker lists a ticket twice, the Engine uses it once. If two tickets have the same issue label on the same Source PR branch, the Engine fixes the first one. It skips the second because the first PR already exists.
 
+## Package tickets
+
+A package ticket comes from a scan of the dependencies, for example a Trivy finding. It has a `Package` line, the installed version and the fixed version (a list of versions, for example `1.2.5, 2.0.1`). It has no `Line`. A ticket with no `Line` and no `Package` line stays skipped.
+
+- The first prompt gives the package and the two versions, and says that the fix is an edit of the manifest (`package.json`, `pyproject.toml`, `requirements.txt`).
+- If the file of the ticket is a lockfile, the Engine uses the manifest in the same folder. It never reads or edits the lockfile (see "The safety rules"). The Engine does not regenerate the lockfile. The PR says so.
+- The PR heading names the package and the manifest, with no line: `## GR-100 · package `flask` in `requirements.txt``.
+- The ticket versions feed the Breaking change check (ADR 0028). If every fixed version is a major jump from the installed version, and no other reason names the package, the Fix is flagged.
+
 ## When an attempt fails
 
 An attempt fails at the step cap, when the model calls `finish` and made no change, or when an edited file does not parse. Then the Engine starts one more attempt with the strong model. This second attempt has these rules:
