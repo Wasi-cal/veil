@@ -83,7 +83,19 @@ def _parse(reply: object, key: str) -> ApiResponse:
                 call_id=item["call_id"], name=item["name"], arguments=item["arguments"]
             )
         )
-    return ApiResponse(function_calls=tuple(calls), total_tokens=_tokens(reply))
+    total = _tokens(reply)
+    usage = reply["usage"]
+    return ApiResponse(
+        function_calls=tuple(calls),
+        total_tokens=total,
+        input_tokens=_count(usage, "input_tokens"),
+        output_tokens=_count(usage, "output_tokens"),
+    )
+
+
+def _count(usage: dict, name: str) -> int:
+    value = usage.get(name)
+    return value if isinstance(value, int) else 0
 
 
 def _tokens(reply: dict) -> int:

@@ -10,3 +10,6 @@ class ModelReply(BaseModel):
 
     tool_calls: list[ToolCall]
     tokens: int = Field(ge=0)
+    # The split of `tokens`. A reply that counts only the total leaves both at 0.
+    input_tokens: int = Field(default=0, ge=0)
+    output_tokens: int = Field(default=0, ge=0)

@@ -10,3 +10,5 @@ class ApiResponse(BaseModel):
 
     function_calls: tuple[ApiFunctionCall, ...]
     total_tokens: int = Field(ge=0)
+    input_tokens: int = Field(default=0, ge=0)
+    output_tokens: int = Field(default=0, ge=0)

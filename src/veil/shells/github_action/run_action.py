@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from collections.abc import Callable, Mapping
@@ -106,9 +107,15 @@ def _run(
     context, provider = build_context(
         settings, jira, credentials, token, urls, env.repo, branch
     )
+    handler = logging.StreamHandler(out)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    log = logging.getLogger("veil")
+    log.addHandler(handler)
+    log.setLevel(logging.INFO)
     try:
         report = run(context)
     finally:
+        log.removeHandler(handler)
         provider.close()
     write_summary(report.redacted(context.redact), env.summary_file)
     return 0

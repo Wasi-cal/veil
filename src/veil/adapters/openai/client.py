@@ -51,6 +51,8 @@ class OpenAIModelClient:
                 for call in response.function_calls
             ],
             tokens=response.total_tokens,
+            input_tokens=response.input_tokens,
+            output_tokens=response.output_tokens,
         )
 
     def _create(self, model: str, items: list[dict], tools: list[dict]) -> ApiResponse:

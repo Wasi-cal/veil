@@ -1,3 +1,5 @@
+import logging
+
 from veil.engine.constants.names import (
     DUPLICATE_ISSUE,
     FAILED_FIX,
@@ -14,6 +16,8 @@ from veil.engine.models.config.settings import Settings
 from veil.engine.models.provider.fix_query import FixQuery
 from veil.engine.models.report.run_report import RunReport
 from veil.engine.models.ticket.ticket import Ticket
+
+log = logging.getLogger(__name__)
 
 
 def distinct(tickets: list[Ticket]) -> list[Ticket]:
@@ -48,6 +52,7 @@ def select_eligible(
                 (ticket.repo, ticket.branch, ticket.issue_label or "")
             )
         else:
+            log.info("%s: skipped. %s.", ticket.key, reason)
             report.outcomes[ticket.key] = SKIPPED
             report.skipped.setdefault(reason, []).append(ticket.key)
     return eligible

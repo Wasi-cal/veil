@@ -37,7 +37,7 @@ def converse(
     while finish is None:
         budget.ensure()
         reply = model_client.next(messages, model, tools)
-        budget.spend(reply.tokens)
+        budget.spend(model, reply)
         report.tokens_used += reply.tokens
         if progress is not None:
             progress(report.tokens_used)

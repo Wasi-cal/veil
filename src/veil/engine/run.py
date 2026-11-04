@@ -1,3 +1,5 @@
+import logging
+
 from veil.engine.constants.names import STOPPED_TOKEN_EXPIRED
 from veil.engine.context import Context
 from veil.engine.eligibility.select import distinct, select_eligible
@@ -7,6 +9,8 @@ from veil.engine.fix.left_over import leave_for_next_run
 from veil.engine.grouping.plan import plan_groups
 from veil.engine.models.report.run_report import RunReport
 from veil.engine.models.ticket.ticket import Ticket
+
+log = logging.getLogger(__name__)
 
 
 def run(context: Context) -> RunReport:
@@ -18,16 +22,19 @@ def run(context: Context) -> RunReport:
     """
     report = RunReport()
     tickets = distinct(context.tracker.open_tickets())
+    log.info("Found %d open ticket(s).", len(tickets))
     try:
         _fix(context, tickets, report)
     except TokenExpired:
         _leave_unhandled(tickets, report)
         report.stopped = STOPPED_TOKEN_EXPIRED
+    log.info("Run done. Tokens used: %d.", report.tokens_used)
     return report.redacted(context.redact)
 
 
 def _fix(context: Context, tickets: list[Ticket], report: RunReport) -> None:
     eligible = select_eligible(tickets, context.repo_provider, context.settings, report)
+    log.info("%d ticket(s) are eligible.", len(eligible))
     for group in plan_groups(eligible, context.settings):
         fix_group(context, group, report)
 

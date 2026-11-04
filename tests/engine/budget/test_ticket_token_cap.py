@@ -36,6 +36,34 @@ def test_a_ticket_that_passes_its_cap_is_a_failed_fix_and_the_run_goes_on(tmp_pa
     assert report.reasons["GR-100"].startswith("The ticket used its token cap of 800")
 
 
+def test_the_report_splits_the_tokens_of_each_ticket_by_model(tmp_path):
+    context, _, _, _ = make_context(
+        tmp_path,
+        {
+            "small": [*toggle_edits(2), *EDIT_THEN_FINISH],
+            "big": toggle_edits(2),
+        },
+        tokens_per_call=300,
+        settings=Settings(
+            step_cap=2, cheap_model="small", strong_model="big", ticket_token_cap=800
+        ),
+        extra_tickets=[{"key": "GR-101", "line": 3}],
+    )
+
+    report = run(context)
+
+    failed, fixed = report.usage["GR-100"], report.usage["GR-101"]
+    assert failed.escalated
+    assert (failed.input, failed.output, failed.total) == (600, 300, 900)
+    assert {m: t.total for m, t in failed.by_model.items()} == {
+        "small": 600,
+        "big": 300,
+    }
+    assert not fixed.escalated
+    assert list(fixed.by_model) == ["small"]
+    assert (fixed.input, fixed.output) == (400, 200)
+
+
 def test_the_cap_is_for_each_ticket_and_not_for_the_run(tmp_path):
     """Each Fix needs 600 tokens. The cap is 800. The run uses 1800 tokens."""
     context, _, repos, _ = make_context(

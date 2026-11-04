@@ -1,3 +1,5 @@
+import logging
+
 from veil.engine.constants.names import FIXED
 from veil.engine.context import Context
 from veil.engine.fix.pr_text import pr_body, pr_title, ticket_comment
@@ -5,6 +7,8 @@ from veil.engine.models.fix.fix import Fix
 from veil.engine.models.group.fix_group import FixGroup
 from veil.engine.models.provider.new_pr import NewPr
 from veil.engine.models.report.run_report import RunReport
+
+log = logging.getLogger(__name__)
 
 
 def publish(
@@ -37,3 +41,4 @@ def publish(
         context.tracker.set_status(fix.ticket.key, context.settings.in_review_status)
         report.outcomes[fix.ticket.key] = FIXED
     report.pull_requests.append(pr_url)
+    log.info("Opened %s for %s.", pr_url, ", ".join(f.ticket.key for f in fixes))

@@ -101,7 +101,13 @@ class FakeModelClient:
         for call in queue.pop(0):
             self._call_count += 1
             calls.append(call.model_copy(update={"id": f"call_{self._call_count}"}))
-        return ModelReply(tool_calls=calls, tokens=self._tokens_per_call)
+        tokens = self._tokens_per_call
+        return ModelReply(
+            tool_calls=calls,
+            tokens=tokens,
+            input_tokens=tokens - tokens // 3,
+            output_tokens=tokens // 3,
+        )
 
 
 def _check_conversation(messages: list[dict]) -> None:
