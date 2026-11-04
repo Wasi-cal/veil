@@ -90,7 +90,9 @@ def test_every_page_of_the_search_is_read():
 
 
 def test_a_ticket_that_is_not_a_finding_of_one_line_or_has_no_branch_is_skipped():
-    no_severity = issue_json("SEC-8", details=["Repository: acme/app", "Source: sonarqube"])
+    no_severity = issue_json(
+        "SEC-8", details=["Repository: acme/app", "Source: sonarqube"]
+    )
     no_line = issue_json("SEC-9", details=gozurion_details(line=None))
     no_branch = issue_json(
         "SEC-10",

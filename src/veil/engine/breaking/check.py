@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 
+from veil.engine.breaking.manifest import manifest_reasons
 from veil.engine.breaking.public_interface import interface_reasons
 
 
@@ -12,5 +13,8 @@ def breaking_reasons(changes: Iterable[tuple[str, str, str]]) -> list[str]:
     return [
         reason
         for path, before, after in changes
-        for reason in interface_reasons(path, before, after)
+        for reason in (
+            *interface_reasons(path, before, after),
+            *manifest_reasons(path, before, after),
+        )
     ]
