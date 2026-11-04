@@ -83,6 +83,8 @@ PROBLEM_LABEL = "Why this is a problem"
 CHANGE_LABEL = "What changed"
 BREAKING_HEADING = "Breaking change"
 SOLVES_LABEL = "What this solves"
+# A package Fix edits the manifest only. The PR says that the lockfile stays as it is.
+LOCKFILE_NOTE = "The lockfile is not regenerated. Update it with the package manager."
 
 # --- the standard of commits and PRs ---
 # A commit subject is a Conventional Commit: "fix(security): replace eval with a safe parser".

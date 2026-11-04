@@ -5,6 +5,7 @@ from veil.engine.errors.failed_fix import FailedFix
 from veil.engine.errors.rule_violation import RuleViolation
 from veil.engine.fix.budget import TicketBudget
 from veil.engine.fix.conversation import converse
+from veil.engine.fix.package import manifest_target
 from veil.engine.fix.prompt import first_prompt, system_prompt
 from veil.engine.fix.secret_check import ensure_no_secret
 from veil.engine.interfaces.workspace import Workspace
@@ -31,6 +32,7 @@ def attempt(
     Raise FailedFix if the Engine cannot read the file of the ticket.
     """
     settings = context.settings
+    ticket = manifest_target(ticket)
     budget.ensure()
     working_copy = WorkingCopy(workspace, settings)
     try:
@@ -64,7 +66,7 @@ def attempt(
     ensure_no_secret(context, working_copy, finish)
     working_copy.verify()
     reasons = [finish.breaking_reason] if finish.breaking_reason else []
-    reasons += breaking_reasons(working_copy.changes())
+    reasons += breaking_reasons(working_copy.changes(), ticket)
     reasons = reasons[:MAX_BREAKING_REASONS]
     return Fix(
         ticket=ticket,

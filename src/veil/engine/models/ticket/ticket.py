@@ -9,11 +9,14 @@ class Ticket(BaseModel):
     key: str
     repo: str
     file: str
-    line: int
+    line: int | None = None
     severity: str
     finding: str
     branch: str
     labels: tuple[str, ...]
+    package: str | None = None
+    installed_version: str | None = None
+    fixed_version: str | None = None
 
     @property
     def issue_label(self) -> str | None:

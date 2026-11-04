@@ -5,6 +5,7 @@ from veil.engine.constants.names import (
     CHANGE_LABEL,
     COMMIT_FOOTER_KEY,
     COMMIT_PREFIX,
+    LOCKFILE_NOTE,
     PROBLEM_LABEL,
     SOLVES_LABEL,
     SUMMARY_HEADING,
@@ -46,8 +47,15 @@ def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
         breaking = (
             f"**{BREAKING_HEADING}**\n{_reason_lines(fix)}\n\n" if fix.breaking else ""
         )
+        place = (
+            f"package `{ticket.package}` in `{ticket.file}`"
+            if ticket.package
+            else f"`{ticket.file}:{ticket.line}`"
+        )
+        note = f"{LOCKFILE_NOTE}\n\n" if ticket.package else ""
         sections.append(
-            f"## {ticket.key} · `{ticket.file}:{ticket.line}`\n\n"
+            f"## {ticket.key} · {place}\n\n"
+            f"{note}"
             f"{breaking}"
             f"**{PROBLEM_LABEL}**\n{fix.problem}\n\n"
             f"**{CHANGE_LABEL}**\n{fix.change}\n\n"

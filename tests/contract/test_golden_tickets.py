@@ -20,9 +20,17 @@ def test_veil_reads_the_golden_tickets_of_the_gozu_ticket_contract(case):
 
     ticket = ticket_from_issue(issue, {})
 
-    if finding["line"] is None:
-        assert ticket is None  # A finding with no line is not a one-line finding.
+    if finding["line"] is None and "package" not in finding:
+        assert ticket is None  # No line and no Package line: not a finding veil can fix.
         return
+    if finding["line"] is None:
+        assert ticket is not None
+        assert (ticket.package, ticket.installed_version, ticket.fixed_version) == (
+            finding["package"],
+            finding["installed_version"],
+            finding["fixed_version"],
+        )
+        assert ticket.line is None
     assert ticket is not None
     assert (ticket.repo, ticket.file, ticket.line) == (
         finding["repo"],

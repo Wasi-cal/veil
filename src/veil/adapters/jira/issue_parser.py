@@ -4,7 +4,10 @@ from veil.adapters.jira.constants.details import (
     CUSTOM_FIELD_NAMES,
     DETAIL_BRANCH,
     DETAIL_COMPONENT,
+    DETAIL_FIXED_VERSION,
+    DETAIL_INSTALLED_VERSION,
     DETAIL_LINE,
+    DETAIL_PACKAGE,
     DETAIL_REPOSITORY,
     DETAIL_SEVERITY,
 )
@@ -14,9 +17,9 @@ from veil.engine.models.ticket.ticket import Ticket
 def ticket_from_issue(
     issue: dict, custom_ids: dict[str, str] | None = None
 ) -> Ticket | None:
-    """Build a ticket from a Jira issue that Gozurion made. Return None if the issue is not a finding of one line.
+    """Build a ticket from a Jira issue that Gozurion made. Return None if the issue is not a finding of one line or of one package.
 
-    A ticket with no line, no severity or no branch gives None.
+    A ticket with no line and no `Package` line, no severity or no branch gives None.
     Gozurion writes one ticket for each finding and never writes a ticket without a branch, so this case does not come up.
     """
     key = issue["key"]
@@ -36,17 +39,28 @@ def ticket_from_issue(
     repo = details.get(DETAIL_REPOSITORY, "")
     severity = details.get(DETAIL_SEVERITY, "")
     finding = finding_text(description)
-    if not (path and line.isdigit() and repo and severity and finding and branch):
+    package = details.get(DETAIL_PACKAGE, "")
+    if not (
+        path
+        and (line.isdigit() or package)
+        and repo
+        and severity
+        and finding
+        and branch
+    ):
         return None
     return Ticket(
         key=key,
         repo=repo,
         file=path,
-        line=int(line),
+        line=int(line) if line.isdigit() else None,
         severity=severity,
         finding=finding,
         branch=branch,
         labels=tuple(fields.get("labels", [])),
+        package=package or None,
+        installed_version=details.get(DETAIL_INSTALLED_VERSION) or None,
+        fixed_version=details.get(DETAIL_FIXED_VERSION) or None,
     )
 
 

@@ -5,11 +5,14 @@ def make_ticket(
     key: str = "GR-100",
     repo: str = "acme/app",
     file: str = "app.py",
-    line: int = 1,
+    line: int | None = 1,
     severity: str = "Medium",
     finding: str = "Avoid eval on user input.",
     branch: str = "feature",
     labels: tuple[str, ...] | None = None,
+    package: str | None = None,
+    installed_version: str | None = None,
+    fixed_version: str | None = None,
 ) -> Ticket:
     """Build a ticket. Each key gets its own issue label, so tickets do not share one."""
     return Ticket(
@@ -21,6 +24,9 @@ def make_ticket(
         finding=finding,
         branch=branch,
         labels=(f"issue-{key.lower()}",) if labels is None else labels,
+        package=package,
+        installed_version=installed_version,
+        fixed_version=fixed_version,
     )
 
 

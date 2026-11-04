@@ -129,3 +129,17 @@ def _raised(old: str, new: str) -> bool:
 
 def _padded(version: tuple[int, ...], size: int) -> tuple[int, ...]:
     return (version + (0,) * size)[:size]
+
+
+def ticket_jump_reasons(
+    path: str, package: str, installed: str | None, fixed: str | None
+) -> list[str]:
+    """A reason when every fixed version on a package ticket is a major jump from the installed version."""
+    if not (installed and fixed):
+        return []
+    versions = [version.strip() for version in fixed.split(",") if version.strip()]
+    if not versions or not all(_major_changed(installed, v) for v in versions):
+        return []
+    return [
+        MAJOR_REASON.format(name=package, path=path, old=installed, new=versions[0])
+    ]
