@@ -15,7 +15,7 @@ def one_fix(explanation, commit_message="replace eval with int"):
     ]
 
 
-def test_the_title_of_a_pr_with_one_ticket_is_its_commit_subject_and_its_key(tmp_path):
+def test_the_title_of_a_pr_with_one_ticket_is_its_key_and_its_commit_subject(tmp_path):
     context, _, repos, _ = make_context(
         tmp_path, one_fix("Replaced eval with int."), severity="Medium"
     )
@@ -23,7 +23,7 @@ def test_the_title_of_a_pr_with_one_ticket_is_its_commit_subject_and_its_key(tmp
     run(context)
 
     [pr] = repos.pull_requests
-    assert pr.title == "fix(security): replace eval with int (GR-100)"
+    assert pr.title == "GR-100 | fix(security): replace eval with int"
 
 
 def test_an_explanation_with_a_long_sentence_is_refused_and_the_model_gets_a_second_try(

@@ -24,8 +24,8 @@ def three_tickets(tmp_path, severities, settings=None):
 
 
 def opened_in_order(repos):
-    """The ticket key of each PR, in the order in which veil opened the PRs. The title ends with the key."""
-    return [pr.title.rsplit("(", 1)[1].rstrip(")") for pr in repos.pull_requests]
+    """The ticket key of each PR, in the order in which veil opened the PRs. The title starts with the key."""
+    return [pr.title.split(" | ", 1)[0] for pr in repos.pull_requests]
 
 
 def keys(*names):

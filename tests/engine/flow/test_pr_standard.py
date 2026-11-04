@@ -51,14 +51,14 @@ def test_the_commit_names_its_ticket_in_a_footer(tmp_path):
     assert message.strip().splitlines() == [GOOD, "", "Refs: GR-100"]
 
 
-def test_the_pr_title_is_the_commit_subject_and_the_ticket_key(tmp_path):
+def test_the_pr_title_starts_with_the_ticket_key_then_the_commit_subject(tmp_path):
     _, _, repos = run_with(tmp_path, [FIRST, [finish_call(GOOD)]])
 
     [pr] = repos.pull_requests
-    assert pr.title == f"{GOOD} (GR-100)"
+    assert pr.title == f"GR-100 | {GOOD}"
 
 
-def test_the_title_of_a_pr_of_two_fixes_counts_the_findings_and_names_the_tickets(
+def test_the_title_of_a_pr_of_two_fixes_names_the_tickets_then_counts_the_findings(
     tmp_path,
 ):
     scripts = [
@@ -77,7 +77,7 @@ def test_the_title_of_a_pr_of_two_fixes_counts_the_findings_and_names_the_ticket
     )
 
     [pr] = repos.pull_requests
-    assert pr.title == "fix(security): resolve 2 findings (GR-100, GR-101)"
+    assert pr.title == "GR-100 | GR-101 | fix(security): resolve 2 findings in a.py"
 
 
 def test_the_body_has_one_section_for_each_ticket_and_no_empty_summary(tmp_path):

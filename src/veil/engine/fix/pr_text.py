@@ -1,8 +1,9 @@
+import posixpath
+
 from veil.engine.constants.names import (
     CHANGE_LABEL,
     COMMIT_FOOTER_KEY,
     COMMIT_PREFIX,
-    PR_TITLE_KEYS_SHOWN,
     PROBLEM_LABEL,
     SOLVES_LABEL,
     SUMMARY_HEADING,
@@ -17,18 +18,18 @@ def commit_text(fix: Fix) -> str:
 
 
 def pr_title(fixes: list[Fix]) -> str:
-    """The title of the PR, in the form of a Conventional Commit.
+    """The title of the PR: the tickets first, then a short Conventional Commit.
 
-    One fix: its commit subject and its ticket, for example "fix(security): replace eval (VT-10)".
-    More fixes: the count and the tickets, for example "fix(security): resolve 3 findings (VT-1, VT-2, VT-3)".
+    One fix: its ticket and its commit subject, for example "VT-10 | fix(security): replace eval".
+    More fixes: every ticket, then the count and the file, for example
+    "VT-1 | VT-2 | VT-3 | fix(security): resolve 3 findings in app.py".
     """
     keys = [fix.ticket.key for fix in fixes]
+    head = " | ".join(keys)
     if len(keys) == 1:
-        return f"{fixes[0].commit_message} ({keys[0]})"
-    shown = ", ".join(keys[:PR_TITLE_KEYS_SHOWN])
-    rest = len(keys) - PR_TITLE_KEYS_SHOWN
-    names = shown if rest <= 0 else f"{shown} and {rest} more"
-    return f"{COMMIT_PREFIX}resolve {len(keys)} findings ({names})"
+        return f"{head} | {fixes[0].commit_message}"
+    file = posixpath.basename(fixes[0].ticket.file.replace("\\", "/"))
+    return f"{head} | {COMMIT_PREFIX}resolve {len(keys)} findings in {file}"
 
 
 def pr_body(group: FixGroup, fixes: list[Fix]) -> str:

@@ -85,6 +85,4 @@ SOLVES_LABEL = "What this solves"
 COMMIT_PREFIX = "fix(security): "
 COMMIT_SUBJECT_MAX_LENGTH = 72
 COMMIT_FOOTER_KEY = "Refs"
-# A PR title names this many tickets. More tickets end with "and N more".
-PR_TITLE_KEYS_SHOWN = 3
 SUMMARY_HEADING = "## Summary"

@@ -24,8 +24,7 @@ repo | file.py | 42 | Rule title
 | Label | Meaning |
 |---|---|
 | `issue-<id>` | The identity of the finding: the first 20 characters of the SHA-1 of `repo`, `file`, `line`, `rule` and `type` joined by `\|`. The same finding gives the same label from every tool and on every branch. |
-| `source-<tool>` | The scanner: `semgrep`, `trivy` or `sonarqube`. |
-| `repo-<owner>-<name>` | The repository, in lower case. Filter a board by it. |
+| `<tool>` | The scanner: `semgrep`, `trivy` or `sonarqube`. |
 | `branch-<branch>` | The branch that the scan ran on. |
 
 veil adds `veil-failed-fix` to a ticket that it cannot fix. A person or a Jira rule adds `veil-eligible`, if the setting `eligible_label` asks for it.
@@ -57,8 +56,8 @@ The issue type is Bug. The priority comes from the severity: CRITICAL is Highest
 ## The commit and the PR (veil)
 
 - **Commit subject:** a Conventional Commit, `fix(security): replace eval with ast.literal_eval`. It has at most 72 characters and no full stop at the end. The footer is `Refs: VT-10`.
-- **PR title, one ticket:** the commit subject and the ticket, `fix(security): replace eval with ast.literal_eval (VT-10)`.
-- **PR title, many tickets:** `fix(security): resolve 3 findings (VT-10, VT-11, VT-12)`. More than three tickets end with `and N more`.
+- **PR title, one ticket:** the ticket, then the commit subject, `VT-10 | fix(security): replace eval with ast.literal_eval`.
+- **PR title, many tickets:** the tickets, then the count and the file, `VT-10 | VT-11 | VT-12 | fix(security): resolve 3 findings in app.py`. Every ticket is named, however many there are.
 - **PR body:** one section for each ticket, `## VT-10 · path/to/file.py:42`. Each section has three parts: **Why this is a problem**, **What changed** and **What this solves**. A PR of several tickets starts with `## Summary` and the reason for the group.
 - **PR state:** open and ready for review. veil never merges. A person reviews it and merges it.
 - **Language:** ASD-STE100. A sentence has at most 25 words.

@@ -6,10 +6,10 @@ Gozurion and the Gozu CLI write the tickets. veil reads them and opens the PRs. 
 
 - **One contract.** `docs/ticket-contract.md` says how a ticket looks: the title, the labels and the Details list. The same page is in Gozurion and in the Gozu CLI. Golden tickets in `tests/contract/golden_tickets.json` are in all three repos. Each repo has a test against them. `gozu/scripts/check-ticket-contract.sh` fails if the copies differ.
 - **The title carries the repository and the file.** The form is `repo | file | line | title`, with at most 120 characters. A board shows what and where without a click. The Details list keeps the owner and the full path.
-- **The labels are a fixed set.** They are `issue-<id>`, `source-<tool>`, `repo-<owner>-<name>` and `branch-<branch>`. The identity in `issue-<id>` is the same formula in both writers. So one finding gives one ticket, also when both tools scan one repo.
+- **The labels are a fixed set.** They are `issue-<id>`, `<tool>` and `branch-<branch>`. The identity in `issue-<id>` is the same formula in both writers. So one finding gives one ticket, also when both tools scan one repo.
 - **A ticket always has a repository and a branch.** A tool that finds none stops before it writes. veil skips a ticket that has none.
 - **Commits are Conventional Commits.** The subject is `fix(security): <summary>`, at most 72 characters, with no full stop. The footer is `Refs: <ticket>`. The Engine sends a different subject back to the model.
-- **PR titles name the ticket.** One ticket: the commit subject and the ticket. Many tickets: `fix(security): resolve N findings (…)`.
+- **PR titles start with the tickets.** One ticket: `VT-10 | <commit subject>`. Many tickets: `VT-10 | VT-11 | fix(security): resolve N findings in <file>`.
 - **PR bodies have a fixed shape.** A summary, then one section for each ticket with the three parts: why it is a problem, what changed and what it solves. The model writes them in its own words. The Engine refuses a copy of the ticket.
 
 ## What we accept for now
