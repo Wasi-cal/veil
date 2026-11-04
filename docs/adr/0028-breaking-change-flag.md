@@ -8,7 +8,7 @@ The owner of the project decided this on 2026-11-04. The plan is in the Jira map
 - **The flag has two values.** A Fix is a Breaking change or it is not. There are no kinds and no levels. A suspicion counts, but only with a concrete reason.
 - **The model says it in the `finish` call.** `finish` has a required `breaking` and a `breaking_reason`. The reason is required when `breaking` is true. It follows the rules of the three parts: at most 3 sentences, at most 25 words in a sentence, no copy of the ticket and no secret. A bad answer gets an error text and the model can finish again, inside the existing caps. This adds no model call.
 - **A person decides what to do.** The flag never blocks a Fix. The Fix PR still opens, ready for review (ADR 0020).
-- **The Engine can add to the flag, and never remove it.** Later tickets add Engine checks. A check never clears a flag that the model set.
+- **The Engine adds to the flag, and never removes it.** The Engine checks the edited files with no model call. The first check finds a public Python function, class or method that is removed, renamed or has parameters that can break a caller. A check never clears a flag that the model set. A Fix shows at most 5 reasons, and the reason of the model comes first.
 
 ## What this costs
 

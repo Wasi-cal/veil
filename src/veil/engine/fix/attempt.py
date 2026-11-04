@@ -1,3 +1,5 @@
+from veil.engine.breaking.check import breaking_reasons
+from veil.engine.constants.breaking import MAX_BREAKING_REASONS
 from veil.engine.context import Context
 from veil.engine.errors.failed_fix import FailedFix
 from veil.engine.errors.rule_violation import RuleViolation
@@ -61,12 +63,15 @@ def attempt(
     )
     ensure_no_secret(context, working_copy, finish)
     working_copy.verify()
+    reasons = [finish.breaking_reason] if finish.breaking_reason else []
+    reasons += breaking_reasons(working_copy.changes())
+    reasons = reasons[:MAX_BREAKING_REASONS]
     return Fix(
         ticket=ticket,
         commit_message=finish.commit_message,
         problem=finish.problem,
         change=finish.change,
         solves=finish.solves,
-        breaking=finish.breaking,
-        breaking_reason=finish.breaking_reason,
+        breaking=bool(reasons),
+        breaking_reasons=tuple(reasons),
     )

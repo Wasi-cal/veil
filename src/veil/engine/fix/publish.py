@@ -40,7 +40,9 @@ def publish(
         if fix.breaking:
             # The label comes first. If the comment fails, the label still shows the reviewer.
             context.tracker.add_label(fix.ticket.key, BREAKING_LABEL)
-            report.breaking[fix.ticket.key] = context.redact(fix.breaking_reason or "")
+            report.breaking[fix.ticket.key] = context.redact(
+                " ".join(fix.breaking_reasons)
+            )
         context.tracker.add_comment(
             fix.ticket.key, context.redact(ticket_comment(pr_url, fix))
         )

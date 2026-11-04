@@ -54,6 +54,13 @@ class WorkingCopy:
             (before, self._current[path]) for path, before in self._originals.items()
         ]
 
+    def changes(self) -> list[tuple[str, str, str]]:
+        """The path, the old text and the new text of each file that this attempt edited."""
+        return [
+            (path, before, self._current[path])
+            for path, before in self._originals.items()
+        ]
+
     def verify(self) -> None:
         """Run the checks at `finish`. Raise AttemptFailed if the change is empty or does not parse."""
         changed = changed_lines(self._originals, self._current)

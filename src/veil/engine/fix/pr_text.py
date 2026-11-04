@@ -44,7 +44,7 @@ def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
     for fix in fixes:
         ticket = fix.ticket
         breaking = (
-            f"**{BREAKING_HEADING}**\n{fix.breaking_reason}\n\n" if fix.breaking else ""
+            f"**{BREAKING_HEADING}**\n{_reason_lines(fix)}\n\n" if fix.breaking else ""
         )
         sections.append(
             f"## {ticket.key} · `{ticket.file}:{ticket.line}`\n\n"
@@ -58,7 +58,11 @@ def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
 
 def ticket_comment(pr_url: str, fix: Fix) -> str:
     """The comment on the ticket: the link to the PR, the breaking reason if there is one, then the three parts."""
-    breaking = f"{BREAKING_HEADING}: {fix.breaking_reason}\n" if fix.breaking else ""
+    breaking = (
+        f"{BREAKING_HEADING}: {' '.join(fix.breaking_reasons)}\n"
+        if fix.breaking
+        else ""
+    )
     return (
         f"The Engine opened a Fix PR: {pr_url}\n"
         f"{breaking}"
@@ -66,3 +70,10 @@ def ticket_comment(pr_url: str, fix: Fix) -> str:
         f"{CHANGE_LABEL}: {fix.change}\n"
         f"{SOLVES_LABEL}: {fix.solves}"
     )
+
+
+def _reason_lines(fix: Fix) -> str:
+    """One reason as plain text. Several reasons as a list, one line each."""
+    if len(fix.breaking_reasons) == 1:
+        return fix.breaking_reasons[0]
+    return "\n".join(f"- {reason}" for reason in fix.breaking_reasons)
