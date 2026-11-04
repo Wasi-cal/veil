@@ -29,6 +29,8 @@ repo | file.py | 42 | Rule title
 
 veil adds `veil-failed-fix` to a ticket that it cannot fix. A person or a Jira rule adds `veil-eligible`, if the setting `eligible_label` asks for it.
 
+veil adds `breaking-change` to a ticket whose Fix PR may break something outside the lines that it edits. veil adds it to the Fix PR too. Only a person removes it. Gozurion and the Gozu CLI never read or write it.
+
 The old label `source-key-<scanner key>` is not written any more. The Gozu CLI still searches for it, to find a ticket that it made before this contract.
 
 ### Description
@@ -58,6 +60,6 @@ The issue type is Bug. The priority comes from the severity: CRITICAL is Highest
 - **Commit subject:** a Conventional Commit, `fix(security): replace eval with ast.literal_eval`. It has at most 72 characters and no full stop at the end. The footer is `Refs: VT-10`.
 - **PR title, one ticket:** the ticket, then the commit subject, `VT-10 | fix(security): replace eval with ast.literal_eval`.
 - **PR title, many tickets:** the tickets, then the count and the file, `VT-10 | VT-11 | VT-12 | fix(security): resolve 3 findings in app.py`. Every ticket is named, however many there are.
-- **PR body:** one section for each ticket, `## VT-10 · path/to/file.py:42`. Each section has three parts: **Why this is a problem**, **What changed** and **What this solves**. A PR of several tickets starts with `## Summary` and the reason for the group.
+- **PR body:** one section for each ticket, `## VT-10 · path/to/file.py:42`. Each section has three parts: **Why this is a problem**, **What changed** and **What this solves**. A Fix that may break something has a first part, **Breaking change**, with the reason. A PR of several tickets starts with `## Summary` and the reason for the group.
 - **PR state:** open and ready for review. veil never merges. A person reviews it and merges it.
 - **Language:** ASD-STE100. A sentence has at most 25 words.

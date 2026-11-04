@@ -2,6 +2,7 @@ from pathlib import Path
 
 from veil.engine.models.report.run_report import RunReport
 from veil.shells.github_action.constants.messages import (
+    SUMMARY_BREAKING,
     SUMMARY_ESCALATED,
     SUMMARY_PRS,
     SUMMARY_SKIPPED,
@@ -33,6 +34,14 @@ def write_summary(report: RunReport, path: Path | None) -> None:
                 _ticket_row(report, key, outcome)
                 for key, outcome in report.outcomes.items()
             ),
+            "",
+        ]
+    if report.breaking:
+        lines += [
+            SUMMARY_BREAKING,
+            "| Ticket | Reason |",
+            "| --- | --- |",
+            *(f"| {key} | {_cell(text)} |" for key, text in report.breaking.items()),
             "",
         ]
     escalated = [(key, usage) for key, usage in report.usage.items() if usage.escalated]

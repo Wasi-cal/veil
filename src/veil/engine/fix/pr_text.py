@@ -1,6 +1,7 @@
 import posixpath
 
 from veil.engine.constants.names import (
+    BREAKING_HEADING,
     CHANGE_LABEL,
     COMMIT_FOOTER_KEY,
     COMMIT_PREFIX,
@@ -42,8 +43,12 @@ def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
         sections.append(f"{SUMMARY_HEADING}\n\n{group.reason}")
     for fix in fixes:
         ticket = fix.ticket
+        breaking = (
+            f"**{BREAKING_HEADING}**\n{fix.breaking_reason}\n\n" if fix.breaking else ""
+        )
         sections.append(
             f"## {ticket.key} · `{ticket.file}:{ticket.line}`\n\n"
+            f"{breaking}"
             f"**{PROBLEM_LABEL}**\n{fix.problem}\n\n"
             f"**{CHANGE_LABEL}**\n{fix.change}\n\n"
             f"**{SOLVES_LABEL}**\n{fix.solves}"
@@ -52,9 +57,11 @@ def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
 
 
 def ticket_comment(pr_url: str, fix: Fix) -> str:
-    """The comment on the ticket: the link to the PR, then the three parts."""
+    """The comment on the ticket: the link to the PR, the breaking reason if there is one, then the three parts."""
+    breaking = f"{BREAKING_HEADING}: {fix.breaking_reason}\n" if fix.breaking else ""
     return (
         f"The Engine opened a Fix PR: {pr_url}\n"
+        f"{breaking}"
         f"{PROBLEM_LABEL}: {fix.problem}\n"
         f"{CHANGE_LABEL}: {fix.change}\n"
         f"{SOLVES_LABEL}: {fix.solves}"

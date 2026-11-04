@@ -32,6 +32,7 @@ class FakePullRequest(BaseModel):
     body: str
     draft: bool
     url: str
+    labels: tuple[str, ...] = ()
 
 
 class FakeClone(BaseModel):
@@ -234,6 +235,7 @@ class FakeRepoProvider:
                 body=new_pr.body,
                 draft=False,
                 url=url,
+                labels=new_pr.labels,
             )
         )
         return url

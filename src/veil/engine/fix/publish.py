@@ -1,6 +1,6 @@
 import logging
 
-from veil.engine.constants.names import FIXED
+from veil.engine.constants.names import BREAKING_LABEL, FIXED
 from veil.engine.context import Context
 from veil.engine.fix.pr_text import pr_body, pr_title, ticket_comment
 from veil.engine.models.fix.fix import Fix
@@ -25,16 +25,22 @@ def publish(
     """
     if not fixes:
         return
+    breaking = [fix for fix in fixes if fix.breaking]
+    issue_labels = tuple(label for fix in fixes if (label := fix.ticket.issue_label))
     new_pr = NewPr(
         repo=group.repo,
         head=branch,
         base=group.branch,
         title=context.redact(pr_title(fixes)),
         body=context.redact(pr_body(group, fixes)),
-        labels=tuple(label for fix in fixes if (label := fix.ticket.issue_label)),
+        labels=(*issue_labels, BREAKING_LABEL) if breaking else issue_labels,
     )
     pr_url = context.repo_provider.open_pr(new_pr)
     for fix in fixes:
+        if fix.breaking:
+            # The label comes first. If the comment fails, the label still shows the reviewer.
+            context.tracker.add_label(fix.ticket.key, BREAKING_LABEL)
+            report.breaking[fix.ticket.key] = context.redact(fix.breaking_reason or "")
         context.tracker.add_comment(
             fix.ticket.key, context.redact(ticket_comment(pr_url, fix))
         )

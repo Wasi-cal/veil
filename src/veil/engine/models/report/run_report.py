@@ -9,6 +9,8 @@ class RunReport(BaseModel):
     pull_requests: list[str] = Field(default_factory=list)
     outcomes: dict[str, str] = Field(default_factory=dict)
     reasons: dict[str, str] = Field(default_factory=dict)
+    # The tickets whose Fix may break something, with the reason of each.
+    breaking: dict[str, str] = Field(default_factory=dict)
     usage: dict[str, TicketUsage] = Field(default_factory=dict)
     skipped: dict[str, list[str]] = Field(default_factory=dict)
     tokens_used: int = 0
@@ -20,6 +22,7 @@ class RunReport(BaseModel):
             pull_requests=[redact(url) for url in self.pull_requests],
             outcomes={redact(key): outcome for key, outcome in self.outcomes.items()},
             reasons={redact(key): redact(text) for key, text in self.reasons.items()},
+            breaking={redact(key): redact(text) for key, text in self.breaking.items()},
             usage={redact(key): usage for key, usage in self.usage.items()},
             skipped={
                 reason: [redact(key) for key in keys]

@@ -11,6 +11,8 @@ IGNORED_DIRECTORIES = frozenset({".github"})
 # --- labels ---
 ISSUE_LABEL_PREFIX = "issue-"
 FAILED_FIX_LABEL = "veil-failed-fix"
+# The label that veil adds to a ticket and a Fix PR when the Fix may break something. Only a person removes it.
+BREAKING_LABEL = "breaking-change"
 # The label that marks a Gozu Ticket as one that the Engine may fix. A setting can change it.
 DEFAULT_ELIGIBLE_LABEL = "veil-eligible"
 
@@ -79,6 +81,7 @@ DEFAULT_SEVERITY_MAP: dict[str, Bucket] = {
 # The labels of the three parts of the explanation of a Fix. They stay the same in the PR and in the ticket comment.
 PROBLEM_LABEL = "Why this is a problem"
 CHANGE_LABEL = "What changed"
+BREAKING_HEADING = "Breaking change"
 SOLVES_LABEL = "What this solves"
 
 # --- the standard of commits and PRs ---

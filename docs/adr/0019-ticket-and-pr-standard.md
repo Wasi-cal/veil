@@ -10,7 +10,7 @@ Gozurion and the Gozu CLI write the tickets. veil reads them and opens the PRs. 
 - **A ticket always has a repository and a branch.** A tool that finds none stops before it writes. veil skips a ticket that has none.
 - **Commits are Conventional Commits.** The subject is `fix(security): <summary>`, at most 72 characters, with no full stop. The footer is `Refs: <ticket>`. The Engine sends a different subject back to the model.
 - **PR titles start with the tickets.** One ticket: `VT-10 | <commit subject>`. Many tickets: `VT-10 | VT-11 | fix(security): resolve N findings in <file>`.
-- **PR bodies have a fixed shape.** A summary, then one section for each ticket with the three parts: why it is a problem, what changed and what it solves. The model writes them in its own words. The Engine refuses a copy of the ticket.
+- **PR bodies have a fixed shape.** A summary, then one section for each ticket with the three parts: why it is a problem, what changed and what it solves. A Fix that the model flags as a Breaking change (ADR 0028) has a first part, "Breaking change", with the reason. The model writes them in its own words. The Engine refuses a copy of the ticket.
 
 ## What we accept for now
 
