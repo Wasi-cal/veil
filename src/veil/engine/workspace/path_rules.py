@@ -41,11 +41,10 @@ def check_readable(path: str, extra_patterns: tuple[str, ...] = ()) -> str:
         for pattern in patterns
     ):
         raise RuleViolation("This file may hold secrets.")
+    if parts[-1] in LOCKFILE_NAMES:
+        raise RuleViolation("The Engine does not read or edit lockfiles.")
     return path
 
 
 def check_editable(path: str, extra_patterns: tuple[str, ...] = ()) -> str:
-    path = check_readable(path, extra_patterns)
-    if PurePosixPath(path.lower()).name in LOCKFILE_NAMES:
-        raise RuleViolation("The Engine protects lockfiles.")
-    return path
+    return check_readable(path, extra_patterns)

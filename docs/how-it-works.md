@@ -195,7 +195,7 @@ A credential value must have at least 8 characters and must not be only white sp
 
 These rules are code. Settings cannot turn them off.
 
-- The Engine never reads, lists, searches or edits anything in `.github/`. It never edits lockfiles or secret files.
+- The Engine never reads, lists, searches or edits anything in `.github/`, a lockfile or a secret file. The model can edit a manifest. It cannot read or edit the lockfile, so the Fix PR does not regenerate it.
 - The Engine never opens a PR from or against the default branch of the repo. The repo provider asks GitHub for the name once for each repo, just before it pushes.
 - The Engine never follows a symlink. A path that holds a symlink, in the file or in a folder of the path, is refused. A listing does not show symlinks. Without this rule, a symlink could hide `.github/` or `.env` behind a plain name.
 - The Engine never creates or deletes a file.
