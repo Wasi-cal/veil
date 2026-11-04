@@ -1,4 +1,10 @@
-from pydantic import BaseModel, ConfigDict, ValidationInfo, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 
 class FinishArgs(BaseModel):
@@ -14,6 +20,8 @@ class FinishArgs(BaseModel):
     problem: str
     change: str
     solves: str
+    breaking: bool
+    breaking_reason: str | None = None
 
     @field_validator("commit_message")
     @classmethod
@@ -32,3 +40,13 @@ class FinishArgs(BaseModel):
         if not value:
             raise ValueError(f"The part {info.field_name} is empty.")
         return value
+
+    @model_validator(mode="after")
+    def _reason_when_breaking(self) -> "FinishArgs":
+        reason = (self.breaking_reason or "").strip()
+        if self.breaking and not reason:
+            raise ValueError(
+                "The part breaking_reason is empty. Give a reason when breaking is true."
+            )
+        object.__setattr__(self, "breaking_reason", reason if self.breaking else None)
+        return self

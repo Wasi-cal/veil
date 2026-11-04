@@ -37,7 +37,7 @@ def test_a_missing_file_gives_no_settings(tmp_path):
 def test_the_loaded_settings_are_checked_by_the_schema(
     tmp_path,
 ):
-    path = write(tmp_path, "step_cap: 12\nstep_capp: 5\ndiff_limit: 99999\n")
+    path = write(tmp_path, "step_cap: 12\nstep_capp: 5\nsearch_max_matches: 99999\n")
 
     with pytest.raises(SettingsError) as error:
         parse_settings(load_settings_file(path))
@@ -45,7 +45,7 @@ def test_the_loaded_settings_are_checked_by_the_schema(
     lines = str(error.value).splitlines()
     assert len(lines) == 2
     assert "unknown setting step_capp." in lines
-    assert any(line.startswith("diff_limit must be at most") for line in lines)
+    assert any(line.startswith("search_max_matches must be at most") for line in lines)
 
 
 def test_text_that_is_not_yaml_gives_a_clear_error_with_a_line_and_no_content(tmp_path):
@@ -80,7 +80,7 @@ def test_a_file_cannot_make_the_loader_run_code(tmp_path):
 
 
 def test_a_key_that_appears_twice_is_an_error_and_never_a_silent_last_wins(tmp_path):
-    path = write(tmp_path, "step_cap: 1\ndiff_limit: 5\nstep_cap: 100\n")
+    path = write(tmp_path, "step_cap: 1\nread_file_max_lines: 5\nstep_cap: 100\n")
 
     with pytest.raises(SettingsError, match="step_cap appears twice"):
         load_settings_file(path)

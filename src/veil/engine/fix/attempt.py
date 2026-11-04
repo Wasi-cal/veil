@@ -67,4 +67,6 @@ def attempt(
         problem=finish.problem,
         change=finish.change,
         solves=finish.solves,
+        breaking=finish.breaking,
+        breaking_reason=finish.breaking_reason,
     )

@@ -7,7 +7,7 @@ from veil.engine.errors.model_client_error import ModelClientError
 FINISH = (
     "c1",
     "finish",
-    '{"commit_message": "x", "problem": "p", "change": "c", "solves": "s"}',
+    '{"commit_message": "x", "problem": "p", "change": "c", "solves": "s", "breaking": false}',
 )
 
 

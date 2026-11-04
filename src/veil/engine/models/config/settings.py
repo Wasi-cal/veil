@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from pydantic_core import PydanticCustomError
 
 from veil.engine.constants.limits import (
-    DIFF_LIMIT,
     EVENT_ENABLED,
     EXPLANATION_MAX_SENTENCES,
     MAX_ATTEMPTS,
@@ -69,7 +68,6 @@ class Settings(BaseModel):
     )
     max_attempts: int = Field(default=MAX_ATTEMPTS, ge=1, le=2)
     step_cap: int = Field(default=STEP_CAP, ge=1, le=100)
-    diff_limit: int = Field(default=DIFF_LIMIT, ge=0, le=2000)
     tool_result_max_bytes: int = Field(
         default=TOOL_RESULT_MAX_BYTES,
         ge=MIN_TOOL_RESULT_MAX_BYTES,

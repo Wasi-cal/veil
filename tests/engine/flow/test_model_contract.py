@@ -17,7 +17,11 @@ def test_the_model_gets_the_five_tools_with_a_description_and_a_schema(tmp_path)
         "problem",
         "change",
         "solves",
+        "breaking",
+        "breaking_reason",
     }
+    assert "breaking" in tools["finish"].parameters["required"]
+    assert "breaking_reason" not in tools["finish"].parameters["required"]
 
 
 def test_the_conversation_starts_with_a_system_message_that_sets_the_rules(tmp_path):

@@ -32,4 +32,3 @@ def test_the_defaults_of_the_limits_are_the_numbers_of_the_decisions():
     assert settings.search_max_matches == 50
     assert settings.tool_result_max_bytes == 8 * 1024
     assert settings.step_cap == 25
-    assert settings.diff_limit == 200

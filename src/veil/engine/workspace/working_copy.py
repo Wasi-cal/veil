@@ -45,10 +45,6 @@ class WorkingCopy:
             )
         originals = {**self._originals, path: self._originals.get(path, current)}
         currents = {**self._current, path: updated}
-        if changed_lines(originals, currents) > self._settings.diff_limit:
-            raise EditRejected(
-                f"Refused: The edit crosses the diff limit of {self._settings.diff_limit} changed lines."
-            )
         self._workspace.write_file(path, updated)
         self._originals, self._current = originals, currents
 
@@ -59,12 +55,8 @@ class WorkingCopy:
         ]
 
     def verify(self) -> None:
-        """Run the checks at `finish`. Raise AttemptFailed if the change is empty, too large or does not parse."""
+        """Run the checks at `finish`. Raise AttemptFailed if the change is empty or does not parse."""
         changed = changed_lines(self._originals, self._current)
         if changed == 0:
             raise AttemptFailed("The model finished and made no change.")
-        if changed > self._settings.diff_limit:
-            raise AttemptFailed(
-                f"The change has more than {self._settings.diff_limit} changed lines. This crosses the diff limit."
-            )
         check_parses(self._current)

@@ -38,7 +38,7 @@ _Avoid_: Sensitive data
 
 **Ticket token cap**:
 The most tokens that one ticket may use, over all its attempts. The code also calls it the budget. A ticket that uses its cap becomes a Failed Fix. The run goes on with the next ticket. There is no cap for the whole run.
-_Avoid_: Quota, limit (the diff limit is another rule), token ceiling (the old name)
+_Avoid_: Quota, limit, token ceiling (the old name)
 
 **Failed Fix**:
 A Gozu Ticket that the agent could not fix safely. The ticket stays open with a comment and a marker label. It stays open until a human asks for another attempt.

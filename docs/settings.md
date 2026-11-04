@@ -14,7 +14,6 @@ The safety rules are code and are not settings. You cannot turn them off. They a
 | `strong_model` | `gpt-6.1-terra` | any name | The model for the second attempt. |
 | `max_attempts` | 2 | 1 to 2 | The attempts for one ticket. With 1, the strong model never runs. |
 | `step_cap` | 25 | 1 to 100 | The most tool calls in one attempt. |
-| `diff_limit` | 200 | 0 to 2000 | The most changed lines in one fix. |
 | `tool_result_max_bytes` | 8192 | 256 to 65536 | The most bytes of one tool result that the model sees. |
 | `read_file_max_lines` | 300 | 1 to 2000 | The most lines that one read gives. |
 | `search_max_matches` | 50 | 1 to 500 | The most matches that one search gives. |

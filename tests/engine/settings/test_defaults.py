@@ -10,10 +10,6 @@ from tests.support.scenario import (
 from veil.engine import Settings, run
 
 
-def numbered(count, value):
-    return "".join(f"line {n} {value}\n" for n in range(count))
-
-
 def test_default_step_cap_is_25_tool_calls(tmp_path):
     flips = [(f"value = {n}", f"value = {n + 1}") for n in range(24)]
     script = [[edit_file("app.py", *pair)] for pair in flips]
@@ -38,27 +34,6 @@ def test_default_step_cap_is_25_tool_calls(tmp_path):
     assert_failed_fix(tracker, repos, run(context))
 
 
-@pytest.mark.parametrize(("lines", "outcome"), [(200, "fixed"), (201, "failed")])
-def test_default_diff_limit_is_200_changed_lines(tmp_path, lines, outcome):
-    """Replacing N lines changes N lines, so 200 lines is exactly the limit."""
-    context, _, _, _ = make_context(
-        tmp_path,
-        both_attempts(
-            [
-                [edit_file("data.txt", numbered(lines, "a"), numbered(lines, "b"))],
-                [finish("Done.")],
-            ]
-        ),
-        files={"data.txt": numbered(lines, "a")},
-        file="data.txt",
-        line=1,
-    )
-
-    report = run(context)
-
-    assert report.outcomes == {"GR-100": outcome}
-
-
 @pytest.mark.parametrize(
     "setting",
     [
@@ -78,7 +53,6 @@ def test_safety_rules_are_not_settings(setting):
     [
         {"step_cap": 0},
         {"step_cap": -1},
-        {"diff_limit": -1},
         {"tool_result_max_bytes": 0},
         {"read_file_max_lines": 0},
         {"search_max_matches": 0},

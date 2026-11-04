@@ -47,6 +47,7 @@ def read_finish(
     """Return the arguments of a finish call. If they break the format, return an error text for the model.
 
     Each of the three parts must be short, with short sentences. No part may copy the text of the ticket.
+    The reason of a breaking Fix follows the same rules.
     """
     try:
         args = FinishArgs.model_validate(call.arguments)
@@ -59,7 +60,10 @@ def read_finish(
             f"It has at most {COMMIT_SUBJECT_MAX_LENGTH} characters and no full stop at the end."
         )
     limit = settings.explanation_max_sentences
-    for name in ("problem", "change", "solves"):
+    names = ["problem", "change", "solves"]
+    if args.breaking:
+        names.append("breaking_reason")
+    for name in names:
         text = getattr(args, name)
         if count_sentences(text) > limit:
             return f"Error: The part {name} has more than {limit} sentences. Use at most {limit} sentences."

@@ -9,9 +9,9 @@ def test_with_no_values_the_settings_are_the_defaults():
 
 
 def test_the_values_change_only_the_settings_that_they_name():
-    settings = parse_settings({"step_cap": 20, "diff_limit": 100})
+    settings = parse_settings({"step_cap": 20, "search_max_matches": 10})
 
-    assert (settings.step_cap, settings.diff_limit) == (20, 100)
+    assert (settings.step_cap, settings.search_max_matches) == (20, 10)
     assert settings.read_file_max_lines == Settings().read_file_max_lines
 
 
@@ -51,13 +51,13 @@ def test_a_value_of_the_wrong_type_or_out_of_bounds_fails_with_a_clear_message(
 
 def test_every_problem_is_in_one_message():
     with pytest.raises(SettingsError) as error:
-        parse_settings({"step_cap": 0, "nope": 1, "diff_limit": "x"})
+        parse_settings({"step_cap": 0, "nope": 1, "search_max_matches": "x"})
 
     lines = str(error.value).splitlines()
     assert len(lines) == 3
     assert any(line.startswith("step_cap") for line in lines)
     assert any(line.startswith("unknown setting nope") for line in lines)
-    assert any(line.startswith("diff_limit") for line in lines)
+    assert any(line.startswith("search_max_matches") for line in lines)
 
 
 @pytest.mark.parametrize("values", [["not", "a", "mapping"], "text", 5])

@@ -28,22 +28,27 @@ def finish(
     problem: str = "The input reaches eval, so it can run any code.",
     solves: str = "The input is now only a number.",
     prefix: bool = True,
+    breaking: bool = False,
+    breaking_reason: str | None = None,
 ) -> ToolCall:
     """A finish call. `explanation` is the text of the part `change`.
+
+    `breaking` says if the Fix may break something. `breaking_reason` is left out when it is None.
 
     `commit_message` is the summary. The call adds the Conventional Commit prefix, unless it is there or `prefix` is False.
     """
     if prefix and not commit_message.startswith(COMMIT_PREFIX):
         commit_message = COMMIT_PREFIX + commit_message
-    return ToolCall(
-        name="finish",
-        arguments={
-            "commit_message": commit_message,
-            "problem": problem,
-            "change": explanation,
-            "solves": solves,
-        },
-    )
+    arguments = {
+        "commit_message": commit_message,
+        "problem": problem,
+        "change": explanation,
+        "solves": solves,
+        "breaking": breaking,
+    }
+    if breaking_reason is not None:
+        arguments["breaking_reason"] = breaking_reason
+    return ToolCall(name="finish", arguments=arguments)
 
 
 class FakeModelClient:

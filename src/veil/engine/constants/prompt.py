@@ -19,6 +19,13 @@ SYSTEM_PROMPT = (
     "The part solves says what the change solves. "
     "Write each part in your own words about this code. Do not copy the text of the ticket. "
     "Each part has at most {max_sentences} sentences. "
+    "Also say if the fix may break something. Set breaking to true if something outside the lines that you edit may stop working or work differently. "
+    "Examples: a name that other code uses is removed or renamed. A parameter or a return value changes. "
+    "The code now refuses input that it accepted before. A dependency has a new major version or a new runtime requirement. "
+    "Search for other uses of the code before you set breaking to false. "
+    "If you are not sure, set breaking to true and give a concrete reason. "
+    "The part breaking_reason says what may break and where. It follows the same rules as the other parts. "
+    "Give no breaking_reason if breaking is false. "
     "Write the commit message and the three parts in ASD-STE100 Simplified Technical English. "
     "Use short sentences of at most 25 words. Use the active voice. "
     "Do not use semicolons. Do not use phrasal verbs such as kick off or reach out. "
@@ -40,7 +47,7 @@ TOOL_DESCRIPTIONS = {
     SEARCH: "Find the lines that match a regular expression in the files of the repository.",
     LIST_DIR: "List the files and the folders in a directory of the repository.",
     EDIT_FILE: "Replace the first match of an exact text in a file with a new text. You cannot make or delete files.",
-    FINISH: "Call this when the fix is complete. Give a one-line commit message and three short parts: problem, change and solves. Write them in ASD-STE100 Simplified Technical English.",
+    FINISH: "Call this when the fix is complete. Give a one-line commit message, three short parts (problem, change and solves) and breaking. Give breaking_reason if breaking is true. Write them in ASD-STE100 Simplified Technical English.",
 }
 
 # --- tool_messages ---
