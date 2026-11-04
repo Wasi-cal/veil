@@ -41,6 +41,30 @@ def test_ticket_with_a_fix_branch_that_carries_its_label_is_skipped(tmp_path):
     assert_untouched(tracker, repos, model)
 
 
+def test_ticket_with_a_merged_fix_pr_is_skipped_so_no_tokens_are_spent_again(tmp_path):
+    context, tracker, repos, model = make_context(tmp_path, EDIT_THEN_FINISH)
+    repos.seed_merged_pull_request(
+        "acme/app", "gozu/fix-earlier", labels=("issue-gr-100",), base="feature"
+    )
+
+    report = run(context)
+
+    assert report.outcomes == {"GR-100": "skipped"}
+    assert report.skipped == {"merged_pr": ["GR-100"]}
+    assert_untouched(tracker, repos, model)
+
+
+def test_a_merged_fix_pr_of_another_source_pr_does_not_block_this_ticket(tmp_path):
+    context, _, repos, _ = make_context(tmp_path, EDIT_THEN_FINISH)
+    repos.seed_merged_pull_request(
+        "acme/app", "gozu/fix-earlier", labels=("issue-gr-100",), base="other-branch"
+    )
+
+    report = run(context)
+
+    assert report.outcomes == {"GR-100": "fixed"}
+
+
 def test_a_fix_for_another_ticket_does_not_block_this_ticket(tmp_path):
     context, _, repos, _ = make_context(tmp_path, EDIT_THEN_FINISH)
     repos.seed_pull_request("acme/app", "gozu/fix-other", labels=("issue-gr-999",))

@@ -27,6 +27,8 @@ concurrency:
 
 jobs:
   veil:
+    # Never start on a Fix branch of veil. This saves the minutes of the runner.
+    if: ${{ !startsWith(github.head_ref, 'gozu/fix-') && !startsWith(github.ref_name, 'gozu/fix-') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

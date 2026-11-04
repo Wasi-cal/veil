@@ -5,6 +5,8 @@ EVENT_VARIABLE = "GITHUB_EVENT_NAME"
 SUMMARY_VARIABLE = "GITHUB_STEP_SUMMARY"
 # The file with the data of the event. The runner sets it. A pull request event has the head of the PR in it.
 EVENT_PATH_VARIABLE = "GITHUB_EVENT_PATH"
+# The branch or tag that started the run. For a pull_request event it is not the branch of the PR.
+REF_NAME_VARIABLE = "GITHUB_REF_NAME"
 # The largest event file that the Action reads.
 EVENT_FILE_MAX_BYTES = 10 * 1024 * 1024
 

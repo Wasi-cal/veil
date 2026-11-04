@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The workspace, step by step</title>
+<style>
+:root{--bg:#f5f4ed;--panel:#fff;--ink:#1f1e1d;--muted:#5f5e5a;--line:#d3d1c7;--soft:#f1efe8;
+--purple-f:#EEEDFE;--purple-s:#534AB7;--purple-t:#3C3489;
+--teal-f:#E1F5EE;--teal-s:#0F6E56;--teal-t:#085041;
+--blue-f:#E6F1FB;--blue-s:#185FA5;--blue-t:#0C447C;
+--green-f:#EAF3DE;--green-s:#3B6D11;--green-t:#27500A;
+--amber-f:#FAEEDA;--amber-s:#854F0B;--amber-t:#633806;
+--red-f:#FCEBEB;--red-s:#A32D2D;--red-t:#791F1F;
+--gray-f:#F1EFE8;--gray-s:#5F5E5A;--gray-t:#444441}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--panel:#1f1e1d;--ink:#f5f4ed;--muted:#b0aea5;--line:#3d3d3a;--soft:#262624;
+--purple-f:#3C3489;--purple-s:#AFA9EC;--purple-t:#CECBF6;
+--teal-f:#085041;--teal-s:#5DCAA5;--teal-t:#9FE1CB;
+--blue-f:#0C447C;--blue-s:#85B7EB;--blue-t:#B5D4F4;
+--green-f:#27500A;--green-s:#97C459;--green-t:#C0DD97;
+--amber-f:#633806;--amber-s:#EF9F27;--amber-t:#FAC775;
+--red-f:#791F1F;--red-s:#F09595;--red-t:#F7C1C1;
+--gray-f:#444441;--gray-s:#B4B2A9;--gray-t:#D3D1C7}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Anthropic Sans","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:1040px;margin:0 auto;padding:36px 20px 72px}
+h1{font-size:32px;line-height:1.15;margin:0 0 6px;font-weight:500;letter-spacing:-.01em}
+h2{font-size:22px;margin:52px 0 4px;font-weight:500}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--purple-f);border:1px solid var(--purple-s);color:var(--purple-t);font-size:15px;margin-right:10px;vertical-align:2px}
+p{margin:0 0 12px;color:var(--muted)}
+.lead{font-size:18px;max-width:760px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0 8px}
+.scroll{overflow-x:auto}
+code,.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.86em}
+code{background:var(--gray-f);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--gray-t)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);margin:16px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1px solid}
+.purple{--f:var(--purple-f);--s:var(--purple-s);--t:var(--purple-t)}
+.teal{--f:var(--teal-f);--s:var(--teal-s);--t:var(--teal-t)}
+.blue{--f:var(--blue-f);--s:var(--blue-s);--t:var(--blue-t)}
+.green{--f:var(--green-f);--s:var(--green-s);--t:var(--green-t)}
+.amber{--f:var(--amber-f);--s:var(--amber-s);--t:var(--amber-t)}
+.red{--f:var(--red-f);--s:var(--red-s);--t:var(--red-t)}
+.gray{--f:var(--gray-f);--s:var(--gray-s);--t:var(--gray-t)}
+.box{background:var(--f);border:1px solid var(--s);border-radius:10px;padding:10px 14px;color:var(--t)}
+.box b{display:block;font-weight:500}
+.box small{display:block;color:var(--s);font-size:13px;line-height:1.4}
+.src{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.src a{font:12.5px ui-monospace,Menlo,monospace;color:var(--blue-s);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:3px 9px}
+.src a:hover{border-color:var(--muted)}
+
+/* 1. the stack */
+.stack{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:0 22px;align-items:stretch}
+.layer{display:contents}
+.layer .box{margin:0;grid-column:1}
+.layer .side{grid-column:2;align-self:center;font-size:13.5px;color:var(--muted);padding:0 0 0 14px;border-left:3px solid var(--line)}
+.arrow{grid-column:1;text-align:center;color:var(--muted);line-height:1;font-size:20px;padding:5px 0}
+.seam{grid-column:1 / -1;display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;margin:8px 0}
+.seam::before,.seam::after{content:"";flex:1;border-top:2px dashed var(--line)}
+.methods{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.methods span{background:var(--panel);border:1px solid var(--s);border-radius:6px;padding:1px 8px;font:12.5px ui-monospace,Menlo,monospace;color:var(--t)}
+
+/* 2. the matrix */
+.matrix{display:grid;grid-template-columns:118px repeat(6,minmax(138px,1fr));gap:6px;min-width:960px}
+.matrix .h{font-size:13px;font-weight:500;text-align:center;padding:8px 6px;border-radius:8px;background:var(--soft);border:1px solid var(--line)}
+.matrix .h span{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.matrix .lane{font-size:13px;font-weight:500;display:flex;align-items:center;padding:6px 8px;color:var(--t)}
+.matrix .c{font-size:13px;line-height:1.4;padding:8px 9px;border-radius:8px;background:var(--f);border:1px solid var(--s);color:var(--t)}
+.matrix .c.none{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.matrix .c code{font-size:11.5px;padding:0 4px}
+
+/* 3. one edit */
+.flow{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:8px 18px;align-items:stretch}
+.flow .step{display:flex;gap:12px;align-items:center}
+.flow .num{flex:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--panel);border:1px solid var(--muted);color:var(--ink)}
+.flow .box{flex:1}
+.flow .no{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--red-t)}
+.flow .no::before{content:"✕";flex:none;width:22px;height:22px;border-radius:50%;background:var(--red-f);border:1px solid var(--red-s);display:flex;align-items:center;justify-content:center;font-size:11px}
+.flow .no span{background:var(--red-f);border:1px solid var(--red-s);border-radius:8px;padding:5px 10px;flex:1}
+.flow .down{grid-column:1;text-align:left;padding-left:9px;color:var(--muted);line-height:1;font-size:16px}
+.flow .none{visibility:hidden}
+
+/* 4. old and new */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+pre{margin:0;font:13px/1.6 ui-monospace,"SF Mono",Menlo,monospace;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 0;overflow-x:auto}
+pre span{display:block;padding:0 14px;white-space:pre}
+pre .del{background:var(--red-f);color:var(--red-t)}
+pre .add{background:var(--green-f);color:var(--green-t)}
+pre .ln{color:var(--muted);display:inline-block;width:2.2em}
+.cap{font-size:13px;font-weight:500;margin:0 0 6px;color:var(--ink)}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.three .box small{margin-top:4px}
+.three .res{margin-top:8px;font-size:13px;background:var(--panel);border:1px solid var(--s);border-radius:7px;padding:5px 9px;color:var(--t)}
+.join{display:flex;justify-content:center;gap:8px;color:var(--muted);font-size:20px;margin:6px 0 0}
+.note{margin-top:14px;font-size:14px;background:var(--amber-f);border:1px solid var(--amber-s);color:var(--amber-t);border-radius:10px;padding:10px 14px}
+.note b{font-weight:500}
+
+svg{display:block;width:100%;height:auto}
+svg text{fill:var(--ink);font-family:"Anthropic Sans","Inter",system-ui,sans-serif}
+svg .th{font-size:15px;font-weight:500}
+svg .ts{font-size:12.5px;fill:var(--muted)}
+svg .n rect{fill:var(--f);stroke:var(--s);stroke-width:1.2}
+svg .n .th{fill:var(--t)}
+svg .n .ts{fill:var(--s)}
+svg .a{fill:none;stroke:var(--muted);stroke-width:1.6;stroke-linecap:round}
+svg .a.red{stroke:var(--red-s)}
+.ah{fill:var(--muted)}
+@media (max-width:760px){.stack{grid-template-columns:1fr}.layer .side{grid-column:1;border-left:0;padding:4px 0 10px}.flow{grid-template-columns:1fr}.two,.three{grid-template-columns:1fr}.flow .none{display:none}}
+</style>
+</head>
+<body>
+<main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M1 1 L9 5 L1 9 Z"/></marker>
+</defs></svg>
+
+<h1>The workspace, step by step</h1>
+<p class="lead">veil never edits your branch. It edits a private clone, checks every change, and saves the result as a commit. This page shows how, in five pictures.</p>
+<div class="legend">
+  <span><i style="background:var(--blue-f);border-color:var(--blue-s)"></i>the AI model</span>
+  <span><i style="background:var(--purple-f);border-color:var(--purple-s)"></i>Engine (rules)</span>
+  <span><i style="background:var(--teal-f);border-color:var(--teal-s)"></i>adapter (git, disk)</span>
+  <span><i style="background:var(--green-f);border-color:var(--green-s)"></i>success</span>
+  <span><i style="background:var(--red-f);border-color:var(--red-s)"></i>refusal</span>
+</div>
+
+<!-- 1 -->
+<h2><span class="n">1</span>Who does what, from the model to the disk</h2>
+<p>The word "workspace" means the clone, and also the code that guards it. The Engine decides what is allowed. The adapter only does what it is told.</p>
+<div class="card">
+  <div class="stack">
+    <div class="layer">
+      <div class="box blue"><b>AI model</b><small>asks for <code>edit_file(path, old, new)</code>. It sends text. It cannot touch a file.</small></div>
+      <div class="side">The model has five tools and no shell.</div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="layer">
+      <div class="box purple"><b>WorkingCopy</b><small>checks the rules and remembers each file before and after the edit</small>
+        <div class="methods"><span>read</span><span>edit</span><span>edits</span><span>verify</span></div></div>
+      <div class="side">Engine layer. It knows nothing about git.</div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="layer">
+      <div class="box gray"><b>Workspace (the interface)</b><small>the five things the Engine may ask of a clone</small>
+        <div class="methods"><span>read_file</span><span>list_files</span><span>write_file</span><span>commit</span><span>discard_changes</span></div></div>
+      <div class="side">A small contract. A fake in the tests plays the same role.</div>
+    </div>
+    <div class="seam">the Engine ends here, the adapters begin</div>
+    <div class="layer">
+      <div class="box teal"><b>GitWorkspace</b><small>runs <code>git</code> and reads and writes files in the clone. It refuses a path that holds a symlink or leaves the clone.</small></div>
+      <div class="side">Adapter layer. It knows git and has no safety rules of its own, except the path guard.</div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="layer">
+      <div class="box gray"><b>The clone on disk</b><small>a temporary folder on the runner: <code>/tmp/veil-…/checkout</code>. One clone for each group.</small></div>
+      <div class="side">Deleted at the end of the run.</div>
+    </div>
+  </div>
+  <div class="src">
+    <a href="../../src/veil/engine/workspace/working_copy.py" target="_blank">engine/workspace/working_copy.py:11</a>
+    <a href="../../src/veil/engine/interfaces/workspace.py" target="_blank">engine/interfaces/workspace.py</a>
+    <a href="../../src/veil/adapters/github/workspace.py" target="_blank">adapters/github/workspace.py:8</a>
+  </div>
+</div>
+
+<!-- 2 -->
+<h2><span class="n">2</span>The life of one workspace</h2>
+<p>Read each column from left to right. Read each row to see who holds the truth at that moment. The memory of the <code>WorkingCopy</code> lives for one attempt. The clone lives for the whole run.</p>
+<div class="card scroll">
+  <div class="matrix">
+    <div></div>
+    <div class="h">1 · Open<span>start of a group</span></div>
+    <div class="h">2 · Attempt<span>the edit loop</span></div>
+    <div class="h">3 · Finish<span>the model says done</span></div>
+    <div class="h">4 · Commit<span>a Fix passed</span></div>
+    <div class="h">5 · Publish<span>end of the group</span></div>
+    <div class="h">6 · Close<span>end of the run</span></div>
+
+    <div class="lane purple">Engine</div>
+    <div class="c purple"><code>open_workspace</code> with your Source PR branch</div>
+    <div class="c purple">The model calls <code>edit_file</code>, <code>read_file</code> and <code>search</code></div>
+    <div class="c purple"><code>verify()</code> and the secret scan</div>
+    <div class="c purple"><code>workspace.commit</code> with the Fix text</div>
+    <div class="c purple"><code>open_pr</code>, then Jira comments</div>
+    <div class="c purple"><code>provider.close()</code> in a <code>finally</code> step</div>
+
+    <div class="lane purple">WorkingCopy memory</div>
+    <div class="c none">empty</div>
+    <div class="c purple">A new one for each attempt. It stores the <b>first</b> text of each edited file and the <b>latest</b> text.</div>
+    <div class="c purple">Read for the checks. Failure: the attempt ends and the memory goes.</div>
+    <div class="c none">gone. The attempt is over.</div>
+    <div class="c none">—</div>
+    <div class="c none">—</div>
+
+    <div class="lane teal">Clone on disk</div>
+    <div class="c teal"><code>git clone --depth 1</code> into a new temp folder</div>
+    <div class="c teal">Files change. Nothing is saved in git yet.</div>
+    <div class="c teal">Fail: <code>discard_changes</code> puts the files back</div>
+    <div class="c teal">The branch <code>gozu/fix-…</code> is made. One commit.</div>
+    <div class="c teal"><code>git push</code> of that one branch</div>
+    <div class="c teal">The folder is deleted</div>
+
+    <div class="lane gray">GitHub</div>
+    <div class="c none">read only</div>
+    <div class="c none">nothing</div>
+    <div class="c none">nothing</div>
+    <div class="c none">nothing</div>
+    <div class="c green">The branch and the Fix PR appear</div>
+    <div class="c green">They stay. A person reviews them.</div>
+  </div>
+  <div class="src">
+    <a href="../../src/veil/engine/fix/group.py" target="_blank">engine/fix/group.py:27-45</a>
+    <a href="../../src/veil/adapters/github/provider.py" target="_blank">adapters/github/provider.py:108</a>
+    <a href="../../src/veil/engine/fix/attempt.py" target="_blank">engine/fix/attempt.py:17</a>
+    <a href="../../src/veil/shells/github_action/run_action.py" target="_blank">shells/github_action/run_action.py:115</a>
+  </div>
+</div>
+<p>One group can hold several tickets (tickets of the same file). They share one clone. Each ticket gets a new <code>WorkingCopy</code>. A failed ticket is undone with <code>discard_changes</code> before the next ticket starts.</p>
+
+<!-- 3 -->
+<h2><span class="n">3</span>Inside one <code>edit_file</code> call</h2>
+<p>The model sends a path, the text to find (<code>old</code>) and the text to put in (<code>new</code>). The Engine runs every check <em>before</em> it writes. A refusal goes back to the model as text, and the model can try again.</p>
+<div class="card">
+  <div class="flow">
+    <div class="step"><span class="num">1</span><div class="box purple"><b>Is the path allowed?</b><small>inside the repo, not <code>.github/</code>, not a secret file, not a lockfile</small></div></div>
+    <div class="no"><span>Refused: the Engine stays away from this folder.</span></div>
+    <div class="down">↓</div><div class="none"></div>
+
+    <div class="step"><span class="num">2</span><div class="box purple"><b>Is it a real file?</b><small>the clone must hold it, and no folder of the path is a symlink. New files are not allowed.</small></div></div>
+    <div class="no"><span>Refused: not a file in the repository.</span></div>
+    <div class="down">↓</div><div class="none"></div>
+
+    <div class="step"><span class="num">3</span><div class="box purple"><b>Is <code>old</code> in the file?</b><small>the file means the latest text: the model sees its own earlier edits</small></div></div>
+    <div class="no"><span>Refused: the text to replace is not in the file.</span></div>
+    <div class="down">↓</div><div class="none"></div>
+
+    <div class="step"><span class="num">4</span><div class="box purple"><b>Replace the first match</b><small><code>current.replace(old, new, 1)</code>. Nothing is written yet.</small></div></div>
+    <div class="none"></div>
+    <div class="down">↓</div><div class="none"></div>
+
+    <div class="step"><span class="num">5</span><div class="box purple"><b>Does the file stay non-empty?</b><small>an edit that empties a file is a deletion</small></div></div>
+    <div class="no"><span>Refused: deletions are not allowed.</span></div>
+    <div class="down">↓</div><div class="none"></div>
+
+    <div class="step"><span class="num">6</span><div class="box purple"><b>Is the whole change within the diff limit?</b><small>changed lines of all edited files, at most 200 by default</small></div></div>
+    <div class="no"><span>Refused: the edit crosses the diff limit.</span></div>
+    <div class="down">↓</div><div class="none"></div>
+
+    <div class="step"><span class="num">7</span><div class="box teal"><b>Write the file</b><small><code>workspace.write_file(path, updated)</code> changes the clone on disk</small></div></div>
+    <div class="none"></div>
+    <div class="down">↓</div><div class="none"></div>
+
+    <div class="step"><span class="num">8</span><div class="box green"><b>Remember it</b><small>store the first text of this file (once) and the new text. The model gets <code>Edit applied.</code></small></div></div>
+    <div class="none"></div>
+  </div>
+  <div class="src">
+    <a href="../../src/veil/engine/workspace/working_copy.py" target="_blank">engine/workspace/working_copy.py:28</a>
+    <a href="../../src/veil/engine/workspace/path_rules.py" target="_blank">engine/workspace/path_rules.py:44</a>
+    <a href="../../src/veil/engine/tools/handlers/edit_file.py" target="_blank">engine/tools/handlers/edit_file.py:7</a>
+    <a href="../../src/veil/adapters/github/workspace.py" target="_blank">adapters/github/workspace.py:19</a>
+  </div>
+</div>
+
+<!-- 4 -->
+<h2><span class="n">4</span>Old and new: what the memory holds</h2>
+<p>You may have heard that <code>edit()</code> returns the old and the new lines. It does not. <code>edit()</code> returns nothing. It takes <code>old</code> and <code>new</code> from the model. It <em>stores</em> two things for each edited file: the text before the first edit, and the text now. Three checks use that pair.</p>
+<div class="card">
+  <div class="two">
+    <div>
+      <p class="cap">before: stored on the first edit of the file</p>
+<pre><span><span class="ln">1</span>import ast</span><span class="del"><span class="ln">2</span>value = eval(input())</span><span><span class="ln">3</span>print(value)</span></pre>
+    </div>
+    <div>
+      <p class="cap">now: the latest text, after <code>edit_file("app.py", "eval(input())", "int(input())")</code></p>
+<pre><span><span class="ln">1</span>import ast</span><span class="add"><span class="ln">2</span>value = int(input())</span><span><span class="ln">3</span>print(value)</span></pre>
+    </div>
+  </div>
+  <div class="join">↓ ↓ ↓</div>
+  <div class="three">
+    <div class="box purple"><b>Diff limit</b><small><code>changed_lines(originals, currents)</code> compares the pair line by line. It runs at every edit and again at the end.</small>
+      <div class="res">here: 1 changed line, limit 200</div></div>
+    <div class="box purple"><b>Parse check</b><small><code>check_parses(current)</code> parses the latest text of each <code>.py</code>, <code>.json</code> and <code>.toml</code> file. It only parses, it never runs code.</small>
+      <div class="res">here: <code>ast.parse</code> passes</div></div>
+    <div class="box purple"><b>Secret scan</b><small><code>edits()</code> hands the pair to <code>find_new_secret(before, after)</code>. A secret counts only if the new text holds more of it than the old text.</small>
+      <div class="res">here: no secret, the Fix goes on</div></div>
+  </div>
+  <div class="note"><b>Two edits to one file?</b> The memory keeps the <b>first</b> text as "before" and updates "now" each time. So the pair always compares the start of the attempt with the present. A new attempt starts with empty memory, after <code>discard_changes</code> reset the files.</div>
+  <div class="src">
+    <a href="../../src/veil/engine/workspace/working_copy.py" target="_blank">engine/workspace/working_copy.py:55-61</a>
+    <a href="../../src/veil/engine/workspace/diff.py" target="_blank">engine/workspace/diff.py:4</a>
+    <a href="../../src/veil/engine/workspace/syntax.py" target="_blank">engine/workspace/syntax.py:16</a>
+    <a href="../../src/veil/engine/fix/secret_check.py" target="_blank">engine/fix/secret_check.py:8</a>
+    <a href="../../src/veil/engine/secrets/scan.py" target="_blank">engine/secrets/scan.py:31</a>
+  </div>
+</div>
+
+<!-- 5 -->
+<h2><span class="n">5</span>The three states of a file</h2>
+<p>A file in the clone is always in one of these states. Only committed work can leave the runner.</p>
+<div class="card">
+<svg viewBox="0 0 900 270" role="img" aria-label="The states of a file in the clone: clean, edited, committed, on GitHub">
+  <g class="n teal"><rect x="10" y="70" width="170" height="76" rx="12"/>
+    <text class="th" x="95" y="100" text-anchor="middle">Clean</text><text class="ts" x="95" y="122" text-anchor="middle">same as the last commit</text></g>
+  <g class="n amber"><rect x="250" y="70" width="190" height="76" rx="12"/>
+    <text class="th" x="345" y="100" text-anchor="middle">Edited</text><text class="ts" x="345" y="122" text-anchor="middle">written, not saved in git</text></g>
+  <g class="n purple"><rect x="510" y="70" width="170" height="76" rx="12"/>
+    <text class="th" x="595" y="100" text-anchor="middle">Committed</text><text class="ts" x="595" y="122" text-anchor="middle">on gozu/fix-…, in the clone</text></g>
+  <g class="n green"><rect x="750" y="70" width="140" height="76" rx="12"/>
+    <text class="th" x="820" y="100" text-anchor="middle">On GitHub</text><text class="ts" x="820" y="122" text-anchor="middle">pushed, in a PR</text></g>
+
+  <path class="a" d="M182 108 L248 108" marker-end="url(#ah)"/>
+  <text class="ts" x="215" y="94" text-anchor="middle">edit_file</text>
+  <path class="a" d="M442 108 L508 108" marker-end="url(#ah)"/>
+  <text class="ts" x="475" y="94" text-anchor="middle">commit</text>
+  <path class="a" d="M682 108 L748 108" marker-end="url(#ah)"/>
+  <text class="ts" x="715" y="94" text-anchor="middle">push</text>
+  <path class="a red" d="M345 148 C345 232 95 232 95 150" marker-end="url(#ah)"/>
+  <text class="ts" x="220" y="238" text-anchor="middle">discard_changes: the attempt failed</text>
+  <text class="ts" x="220" y="256" text-anchor="middle">git restore, then git clean -fd</text>
+</svg>
+  <div class="src">
+    <a href="../../src/veil/adapters/github/workspace.py" target="_blank">adapters/github/workspace.py:61 commit</a>
+    <a href="../../src/veil/adapters/github/workspace.py" target="_blank">adapters/github/workspace.py:70 push</a>
+    <a href="../../src/veil/engine/fix/escalation.py" target="_blank">engine/fix/escalation.py:14</a>
+  </div>
+</div>
+<p>When a ticket fails, or reaches its token cap, the Engine calls <code>discard_changes</code>. The files go back to the last commit. A Fix that already passed stays committed. A <code>git push</code> sends only the branch <code>gozu/fix-…</code>. It never forces the push.</p>
+</main>
+</body>
+</html>

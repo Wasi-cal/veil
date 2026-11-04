@@ -9,7 +9,7 @@ from pydantic import SecretStr
 from veil.adapters.github.api import GitHubApi
 from veil.adapters.github.constants.git import REF_PREFIX
 from veil.adapters.github.constants.modes import DIR_MODE
-from veil.adapters.github.constants.pr_states import CLOSED, OPEN
+from veil.adapters.github.constants.pr_states import CLOSED, MERGED, OPEN
 from veil.adapters.github.git_command import (
     git_environment,
     refuse_option_like,
@@ -17,7 +17,7 @@ from veil.adapters.github.git_command import (
     secret_values,
 )
 from veil.adapters.github.workspace import GitWorkspace
-from veil.engine.constants.names import FIX_BRANCH, OPEN_PR, FixKind
+from veil.engine.constants.names import FIX_BRANCH, MERGED_PR, OPEN_PR, FixKind
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.models.provider.fix_query import FixQuery
 from veil.engine.models.provider.new_pr import NewPr
@@ -81,6 +81,11 @@ class GitHubRepoProvider:
         ]
         if any(pr.state == OPEN for pr in found):
             return OPEN_PR
+        if any(
+            pr.state == MERGED and pr.head_branch.startswith(query.branch_prefix)
+            for pr in found
+        ):
+            return MERGED_PR
         if any(
             pr.state == CLOSED
             and pr.head_branch.startswith(query.branch_prefix)

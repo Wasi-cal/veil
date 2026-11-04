@@ -44,6 +44,10 @@ _Avoid_: Quota, limit (the diff limit is another rule), token ceiling (the old n
 A Gozu Ticket that the agent could not fix safely. The ticket stays open with a comment and a marker label. It stays open until a human asks for another attempt.
 _Avoid_: Rejected ticket, skipped ticket
 
+**Breaking change**:
+A Fix that may break something outside the lines it edits: code, config, a build, a test or a user. An incompatible change to a public interface counts, and so does a Fix that rejects input that used to work. Veil marks the ticket and says why. A person decides what to do.
+_Avoid_: Regression (a bug that already happened; a breaking change is a risk before the merge), Incompatibility
+
 **Engine**:
 The part of the agent that selects tickets, groups them, produces Fixes and opens Fix PRs. It does not depend on how a run starts.
 _Avoid_: Core, library

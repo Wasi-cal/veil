@@ -145,6 +145,20 @@ class FakeRepoProvider:
             )
         )
 
+    def seed_merged_pull_request(
+        self,
+        repo: str,
+        branch: str,
+        labels: tuple[str, ...],
+        base: str | None = None,
+    ) -> None:
+        """Put a merged Fix PR in the fake remote. A person merged it. The ticket may still be open."""
+        self._remote.append(
+            FakeRemoteFix(
+                repo=repo, kind="merged_pr", branch=branch, base=base, labels=labels
+            )
+        )
+
     def seed_branch(self, repo: str, branch: str, labels: tuple[str, ...]) -> None:
         """Put a Fix branch that carries these labels in the fake remote. No PR is open."""
         self._remote.append(
@@ -181,6 +195,10 @@ class FakeRepoProvider:
     def _matches(remote: FakeRemoteFix, query: FixQuery) -> bool:
         if remote.kind == "open_pr":
             return remote.base is None or remote.base == query.source_branch
+        if remote.kind == "merged_pr":
+            return remote.branch.startswith(query.branch_prefix) and (
+                remote.base is None or remote.base == query.source_branch
+            )
         return remote.branch.startswith(query.branch_prefix)
 
     def open_pr(self, new_pr: NewPr) -> str:

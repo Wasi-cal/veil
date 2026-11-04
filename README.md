@@ -57,7 +57,7 @@ The Action needs `actions/checkout` first, because it reads `.gozu/jira-to-pr.ym
 ## What a run does
 
 1. It reads your settings and checks the event. It stops with one error line if a check fails. It changes no ticket in that case.
-2. It finds the open tickets of this repo. It skips a ticket that has a Fix PR, a failed Fix, or a closed Source PR.
+2. It finds the open tickets of this repo. It skips a ticket that has a Fix PR (open or merged), a failed Fix, or a closed Source PR.
 3. It makes one group for each file. Tickets for the same file share a group. Each group gets one Fix PR. High severity goes first.
 4. For each ticket, an AI model reads the code and edits it in a private clone. It has five tools: read, search, list, edit and finish. It has no shell and no network.
 5. The Engine checks every edit and every Fix. Then it commits the Fix and opens the PR, ready for review.
@@ -80,6 +80,7 @@ A `pull_request` run sees only the tickets of the branch of that PR. A PR from a
 These rules are code. A setting cannot turn them off.
 
 - Veil never merges and never opens a PR from or against the default branch.
+- Veil never runs on its own Fix branches, and never fixes a ticket again after its Fix PR is merged.
 - Veil never pushes to your branch. It pushes its own `gozu/fix-*` branches.
 - Veil never reads, lists or edits anything in `.github/`, lockfiles or secret files such as `.env` and keys.
 - Veil never follows a symlink, so a link cannot hide a protected file.

@@ -5,6 +5,7 @@ from veil.adapters.github.constants.repo_name import REPO_NAME
 from veil.shells.github_action.constants.environment import (
     EVENT_PATH_VARIABLE,
     EVENT_VARIABLE,
+    REF_NAME_VARIABLE,
     REPOSITORY_VARIABLE,
     SUMMARY_VARIABLE,
     WORKSPACE_VARIABLE,
@@ -35,5 +36,6 @@ def read_run_environment(environ: Mapping[str, str]) -> RunEnvironment:
         workspace=Path(workspace),
         event=environ.get(EVENT_VARIABLE, ""),
         event_path=Path(event_path) if event_path else None,
+        ref_name=environ.get(REF_NAME_VARIABLE) or None,
         summary_file=Path(summary) if summary else None,
     )

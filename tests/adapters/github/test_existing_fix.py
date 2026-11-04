@@ -81,15 +81,75 @@ def test_an_open_fix_pr_on_the_source_branch_is_an_open_pr(tmp_path):
         {"base_branch": "main"},
         {"labels": ("issue-other",)},
         {"head_repo": "fork/app"},
-        {"state": "merged"},
+        {"state": "merged", "base_branch": "main"},
+        {"state": "merged", "labels": ("issue-other",)},
+        {"state": "merged", "head_repo": "fork/app"},
+        {"state": "merged", "head_branch": "feature-x"},
     ],
-    ids=["other base", "other label", "from a fork", "merged"],
+    ids=[
+        "other base",
+        "other label",
+        "from a fork",
+        "merged, other base",
+        "merged, other label",
+        "merged, from a fork",
+        "merged, not a Fix branch",
+    ],
 )
 def test_a_pr_that_does_not_match_is_not_an_existing_fix(tmp_path, fields):
     base = {"head_branch": FIX_BRANCH, "base_branch": "feature-x", "labels": (LABEL,)}
     provider = provider_with(tmp_path, [pr(**{**base, **fields})])
 
     assert provider.find_existing_fix(query()) is None
+
+
+def test_a_merged_fix_pr_on_the_source_branch_is_a_merged_pr(tmp_path):
+    fix = pr(
+        head_branch=FIX_BRANCH,
+        base_branch="feature-x",
+        labels=(LABEL,),
+        state="merged",
+    )
+    provider = provider_with(tmp_path, [fix])
+
+    assert provider.find_existing_fix(query()) == "merged_pr"
+
+
+def test_a_merged_fix_pr_is_found_even_if_its_branch_is_deleted(tmp_path):
+    fix = pr(
+        head_branch="gozu/fix-GR-9",
+        base_branch="feature-x",
+        labels=(LABEL,),
+        state="merged",
+    )
+    provider = provider_with(tmp_path, [fix])
+
+    assert provider.find_existing_fix(query()) == "merged_pr"
+
+
+def test_an_open_pr_wins_over_a_merged_pr(tmp_path):
+    merged = pr(
+        head_branch=FIX_BRANCH, base_branch="feature-x", labels=(LABEL,), state="merged"
+    )
+    opened = pr(head_branch="gozu/fix-GR-7", base_branch="feature-x", labels=(LABEL,))
+    provider = provider_with(tmp_path, [merged, opened])
+
+    assert provider.find_existing_fix(query()) == "open_pr"
+
+
+def test_a_merged_pr_wins_over_a_fix_branch(tmp_path):
+    merged = pr(
+        head_branch="gozu/fix-GR-9",
+        base_branch="feature-x",
+        labels=(LABEL,),
+        state="merged",
+    )
+    closed = pr(
+        head_branch=FIX_BRANCH, base_branch="feature-x", labels=(LABEL,), state="closed"
+    )
+    provider = provider_with(tmp_path, [closed, merged])
+
+    assert provider.find_existing_fix(query()) == "merged_pr"
 
 
 def test_a_closed_fix_pr_whose_branch_still_exists_is_a_fix_branch(tmp_path):

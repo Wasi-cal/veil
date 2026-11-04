@@ -47,9 +47,10 @@ SOURCE_PR_NOT_OPEN = "source_pr_not_open"
 
 # --- fix_kinds ---
 # The kind of Fix that the repo provider found. A kind is also the reason to skip the ticket.
-FixKind = Literal["open_pr", "fix_branch"]
+FixKind = Literal["open_pr", "merged_pr", "fix_branch"]
 
 OPEN_PR: FixKind = "open_pr"
+MERGED_PR: FixKind = "merged_pr"
 FIX_BRANCH: FixKind = "fix_branch"
 
 # --- severity ---

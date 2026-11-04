@@ -12,4 +12,5 @@ class RunEnvironment(BaseModel):
     workspace: Path
     event: str
     event_path: Path | None
+    ref_name: str | None
     summary_file: Path | None

@@ -190,3 +190,10 @@ def test_the_release_workflow_tests_on_the_python_of_the_image():
     setup = next(step for step in steps if "setup-uv" in step.get("uses", ""))
 
     assert str(setup["with"]["python-version"]) == image_python
+
+
+def test_the_example_job_does_not_start_on_a_fix_branch():
+    [job] = load(WORKFLOW)["jobs"].values()
+
+    assert "gozu/fix-" in job["if"]
+    assert "startsWith" in job["if"]

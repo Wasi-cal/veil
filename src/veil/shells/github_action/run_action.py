@@ -18,6 +18,7 @@ from veil.engine.run import run as run_engine
 from veil.engine.secrets.redact import redact
 from veil.shells.github_action.constants.events import PULL_REQUEST_EVENT
 from veil.shells.github_action.constants.messages import (
+    FIX_BRANCH_RUN,
     FORK_PULL_REQUEST,
     UNEXPECTED_ERROR,
 )
@@ -27,6 +28,7 @@ from veil.shells.github_action.credentials import (
 )
 from veil.shells.github_action.environment import read_run_environment
 from veil.shells.github_action.errors.action_failure import ActionFailure
+from veil.shells.github_action.fix_branch import is_fix_branch
 from veil.shells.github_action.masking import mask_values
 from veil.shells.github_action.pull_request import read_pull_request_head
 from veil.shells.github_action.summary import write_summary
@@ -88,12 +90,18 @@ def _run(
         print(f"::notice::{reason}", file=out, flush=True)
         return 0
     branch = None
+    current = env.ref_name
     if env.event == PULL_REQUEST_EVENT:
         head = read_pull_request_head(env.event_path)
         if not head.is_from(env.repo):
             print(f"::notice::{FORK_PULL_REQUEST}", file=out, flush=True)
             return 0
-        branch = head.branch
+        branch = current = head.branch
+    if is_fix_branch(current, settings):
+        print(
+            f"::notice::{FIX_BRANCH_RUN.format(branch=current)}", file=out, flush=True
+        )
+        return 0
     jira = JiraSettings.from_settings(settings)
     credentials = read_credentials(environ, settings)
     token = read_github_token(environ)

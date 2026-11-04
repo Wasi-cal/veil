@@ -82,6 +82,7 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 | `source_pr_not_open` | The branch of the ticket has no open PR. The developer merged or closed the Source PR, or the branch never had a PR. |
 | `duplicate_issue` | An earlier ticket in this run has the same issue label on the same Source PR branch. It is the same finding, so the Engine keeps the first ticket. |
 | `open_pr` | The repo provider has an open PR with the Source PR branch as its base. The PR carries the issue label of the ticket. |
+| `merged_pr` | A person merged a Fix PR for this ticket into the Source PR branch. The ticket is not fixed again. A person or a scan closes it. |
 | `fix_branch` | The repo provider has a Fix branch that carries the issue label. No PR is open. |
 
 A skipped ticket opens no checkout, uses no tokens and gets no comment. The run report lists each skipped ticket under its reason.
@@ -132,7 +133,7 @@ The cheap model name, the strong model name and the cap are settings.
 The Action is the first Shell (ADR 0013). It runs the Engine once for the repo of the workflow. `run_action(environ)` is its entry point.
 
 1. It reads the repo, the workspace and the event from the runner. It loads `.gozu/jira-to-pr.yml` as the repo settings.
-2. It checks the event. `schedule`, `workflow_dispatch`, `repository_dispatch` and `pull_request` may run. Each one needs its setting to be on. Any other event fails. A `pull_request` event runs only for a PR from this repo. The Action reads the head of the PR from the event file of the runner. A PR from a fork or from a deleted repo ends the run with a notice, before the Action reads a secret. A run on a PR sees only the tickets of the branch of that PR.
+2. It checks the event. A run never starts on a Fix branch (a branch that starts with `gozu/fix-` or with the setting `branch_prefix`). This holds for every event. The check runs before the Action reads a credential. `schedule`, `workflow_dispatch`, `repository_dispatch` and `pull_request` may run. Each one needs its setting to be on. Any other event fails. A `pull_request` event runs only for a PR from this repo. The Action reads the head of the PR from the event file of the runner. A PR from a fork or from a deleted repo ends the run with a notice, before the Action reads a secret. A run on a PR sees only the tickets of the branch of that PR.
 3. It reads the Jira and OpenAI credentials from the variables that the settings name. It reads the `GITHUB_TOKEN` of the workflow. It masks all three in the log.
 4. It builds the context from them. The token covers this repo for this job only.
 5. It builds the context, runs the Engine, closes the checkouts and writes the run report to the step summary.
