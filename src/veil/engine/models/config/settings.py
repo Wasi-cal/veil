@@ -45,6 +45,7 @@ from veil.engine.constants.settings_text import (
     PROJECT_KEY,
     SITE_URL,
 )
+from veil.engine.models.report.model_price import ModelPrice
 
 
 class Settings(BaseModel):
@@ -66,6 +67,8 @@ class Settings(BaseModel):
         min_length=1,
         max_length=MAX_NAME_CHARS,
     )
+    # The price of each model, for the cost in the run report. A price here replaces the default price of the model.
+    model_prices: dict[str, ModelPrice] = Field(default_factory=dict, max_length=50)
     max_attempts: int = Field(default=MAX_ATTEMPTS, ge=1, le=2)
     step_cap: int = Field(default=STEP_CAP, ge=1, le=100)
     tool_result_max_bytes: int = Field(

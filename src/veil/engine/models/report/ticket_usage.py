@@ -7,6 +7,8 @@ class ModelTokens(BaseModel):
     input: int = 0
     output: int = 0
     total: int = 0
+    # The part of `input` that the API served from its cache. It costs less.
+    cached: int = 0
 
 
 class TicketUsage(BaseModel):

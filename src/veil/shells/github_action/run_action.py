@@ -13,6 +13,7 @@ from veil.engine.errors.model_client_error import ModelClientError
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.errors.settings_error import SettingsError
 from veil.engine.errors.tracker_error import TrackerError
+from veil.engine.fix.cost import price_table
 from veil.engine.models.report.run_report import RunReport
 from veil.engine.run import run as run_engine
 from veil.engine.secrets.redact import redact
@@ -145,7 +146,9 @@ def _run(
     finally:
         log.removeHandler(handler)
         provider.close()
-    write_summary(report.redacted(context.redact), env.summary_file)
+    write_summary(
+        report.redacted(context.redact), env.summary_file, price_table(settings)
+    )
     return 0
 
 

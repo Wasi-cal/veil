@@ -13,3 +13,5 @@ class ModelReply(BaseModel):
     # The split of `tokens`. A reply that counts only the total leaves both at 0.
     input_tokens: int = Field(default=0, ge=0)
     output_tokens: int = Field(default=0, ge=0)
+    # The part of `input_tokens` that the API served from its cache. The API prices it lower.
+    cached_tokens: int = Field(default=0, ge=0)

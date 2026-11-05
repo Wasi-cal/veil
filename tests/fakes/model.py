@@ -61,6 +61,7 @@ class FakeModelClient:
         self,
         script: list[list[ToolCall]] | dict[str, list[list[ToolCall]]],
         tokens_per_call: int = 0,
+        cached_per_call: int = 0,
     ):
         self._by_model = (
             {name: list(calls) for name, calls in script.items()}
@@ -69,6 +70,7 @@ class FakeModelClient:
         )
         self._shared = None if isinstance(script, dict) else list(script)
         self._tokens_per_call = tokens_per_call
+        self._cached_per_call = cached_per_call
         self.received: list[list[dict]] = []
         self.tools_received: list[list[ToolDefinition]] = []
         self.models_used: list[str] = []
@@ -112,6 +114,7 @@ class FakeModelClient:
             tokens=tokens,
             input_tokens=tokens - tokens // 3,
             output_tokens=tokens // 3,
+            cached_tokens=self._cached_per_call,
         )
 
 

@@ -137,6 +137,14 @@ The run report still shows the tokens that all tickets used.
 
 The cheap model name, the strong model name and the cap are settings.
 
+## The cost of a run
+
+The Engine does not estimate tokens. Each reply of the model API has a `usage` field with the input tokens, the output tokens and the part of the input that came from the cache of the API. The Engine adds them for each ticket and each model. The cap of a ticket counts the total of these numbers.
+
+The step summary of the run ends with the section **Cost**. It has one row for each model: input tokens (not cached), cached input tokens, output tokens, the input cost, the output cost and the total cost, and a **Total** row. The table of escalated tickets shows the input cost and the output cost of each model of the ticket.
+
+The prices are US dollars for 1 million tokens. The defaults are in `engine/constants/prices.py` (list prices of the standard tier). A cached token costs less than a new one. The output tokens include the reasoning tokens of the model, because the API bills them as output. A model with no price shows `n/a` and stays out of the total. Add or replace a price with the setting `model_prices`.
+
 ## The GitHub Action Shell
 
 The Action is the first Shell (ADR 0013). It runs the Engine once for the repo of the workflow. `run_action(environ)` is its entry point.

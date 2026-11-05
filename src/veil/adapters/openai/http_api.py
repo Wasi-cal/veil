@@ -90,6 +90,7 @@ def _parse(reply: object, key: str) -> ApiResponse:
         total_tokens=total,
         input_tokens=_count(usage, "input_tokens"),
         output_tokens=_count(usage, "output_tokens"),
+        cached_tokens=_count(usage.get("input_tokens_details") or {}, "cached_tokens"),
     )
 
 

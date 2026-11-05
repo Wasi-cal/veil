@@ -238,3 +238,30 @@ def test_the_key_does_not_show_in_repr():
     api = HttpOpenAIApi(SecretStr(API_KEY), base_url="https://api.example.invalid")
 
     assert API_KEY not in repr(api)
+
+
+def test_the_cached_part_of_the_input_is_read_from_the_usage_details():
+    usage = {
+        "input_tokens": 1000,
+        "output_tokens": 50,
+        "total_tokens": 1050,
+        "input_tokens_details": {"cached_tokens": 800},
+    }
+    with StubHttpServer() as server:
+        server.routes[RESPONSES] = (200, response_json([], usage=usage))
+
+        reply = create(server)
+
+    assert (reply.input_tokens, reply.cached_tokens, reply.output_tokens) == (
+        1000,
+        800,
+        50,
+    )
+
+
+def test_a_reply_without_usage_details_has_no_cached_tokens():
+    usage = {"input_tokens": 70, "output_tokens": 5}
+    with StubHttpServer() as server:
+        server.routes[RESPONSES] = (200, response_json([], usage=usage))
+
+        assert create(server).cached_tokens == 0

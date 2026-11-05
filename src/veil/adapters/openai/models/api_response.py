@@ -12,3 +12,4 @@ class ApiResponse(BaseModel):
     total_tokens: int = Field(ge=0)
     input_tokens: int = Field(default=0, ge=0)
     output_tokens: int = Field(default=0, ge=0)
+    cached_tokens: int = Field(default=0, ge=0)

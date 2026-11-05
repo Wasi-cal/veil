@@ -140,3 +140,25 @@ def test_a_model_reply_must_report_its_tokens():
     """A client that forgets the usage would turn the cap off without a sign."""
     with pytest.raises(ValidationError):
         ModelReply(tool_calls=[])
+
+
+def test_the_report_keeps_the_cached_part_of_the_input_for_each_model(tmp_path):
+    context, _, _, _ = make_context(
+        tmp_path,
+        {
+            "small": [*toggle_edits(2), *EDIT_THEN_FINISH],
+            "big": toggle_edits(2),
+        },
+        tokens_per_call=300,
+        cached_per_call=120,
+        settings=Settings(
+            step_cap=2, cheap_model="small", strong_model="big", ticket_token_cap=800
+        ),
+    )
+
+    report = run(context)
+
+    usage = report.usage["GR-100"]
+    # 2 calls of "small" and 1 call of "big", each with 120 cached tokens
+    assert usage.by_model["small"].cached == 240
+    assert usage.by_model["big"].cached == 120

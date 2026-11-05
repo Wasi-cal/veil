@@ -21,6 +21,7 @@ class TicketBudget:
         tokens.total += reply.tokens
         tokens.input += reply.input_tokens
         tokens.output += reply.output_tokens
+        tokens.cached += reply.cached_tokens
 
     def ensure(self) -> None:
         """Raise BudgetExhausted if the ticket used its cap. The Engine checks before each model call."""

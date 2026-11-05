@@ -39,6 +39,7 @@ def make_context(
     tmp_path,
     model_script,
     tokens_per_call=0,
+    cached_per_call=0,
     files=None,
     settings=None,
     extra_tickets=(),
@@ -69,7 +70,9 @@ def make_context(
             repos.seed_source_pr(
                 "acme/app", branch, source_files, is_open=open_source_pr
             )
-    model = FakeModelClient(model_script, tokens_per_call=tokens_per_call)
+    model = FakeModelClient(
+        model_script, tokens_per_call=tokens_per_call, cached_per_call=cached_per_call
+    )
     context = Context(
         settings=settings,
         credentials=credentials,
