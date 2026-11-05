@@ -5,7 +5,7 @@ from tests.fakes.github_api import StubGitHubApi
 from veil.engine import NewPr
 from veil.engine.errors.repo_provider_error import RepoProviderError
 
-FIX_BRANCH = "gozu/fix-GR-1"
+FIX_BRANCH = "veil/fix-GR-1"
 
 
 def remote_branch_heads(tmp_path) -> dict[str, str]:
@@ -104,7 +104,7 @@ def test_a_branch_that_no_checkout_holds_cannot_be_pushed(tmp_path):
     provider, api = committed_fix(tmp_path)
 
     with pytest.raises(RepoProviderError) as error:
-        provider.open_pr(new_pr(head="gozu/fix-GR-99"))
+        provider.open_pr(new_pr(head="veil/fix-GR-99"))
 
     assert TOKEN not in str(error.value)
     assert api.created == []

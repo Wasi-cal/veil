@@ -2,7 +2,11 @@
 from typing import Literal
 
 # --- branches ---
-FIX_BRANCH_PREFIX = "gozu/fix-"
+FIX_BRANCH_PREFIX = "veil/fix-"
+# The prefix of the Fix branches from before the rename. veil still never runs on one.
+OLDER_FIX_BRANCH_PREFIX = "gozu/fix-"
+# The prefixes that always mark a Fix branch, whatever the setting `branch_prefix` says.
+FIXED_BRANCH_PREFIXES = (FIX_BRANCH_PREFIX, OLDER_FIX_BRANCH_PREFIX)
 
 # --- paths ---
 # Gozu makes no ticket for a file in these directories. veil skips an older ticket that has one.

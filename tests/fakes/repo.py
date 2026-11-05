@@ -83,7 +83,7 @@ class FakeRepoProvider:
         self,
         root: Path,
         repos: dict[str, dict[str, str | bytes]],
-        branch_prefix: str = "gozu/fix-",
+        branch_prefix: str = "veil/fix-",
     ):
         self._root = root
         self._branch_prefix = branch_prefix

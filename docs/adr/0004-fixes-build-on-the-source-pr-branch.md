@@ -6,7 +6,7 @@ The Engine uses the branch of the Source PR, not the default branch:
 
 - The checkout is the branch of the Source PR. The Fix commit starts from that branch.
 - The Fix PR targets that branch.
-- The Engine pushes only its own `gozu/fix-*` branch. It never pushes to the Source PR branch or to the default branch.
+- The Engine pushes only its own `veil/fix-*` branch. It never pushes to the Source PR branch or to the default branch.
 - The Engine skips a ticket when its Source PR is not open. The Source PR can be merged or closed, or the branch can have no PR. The reason in the run report is `source_pr_not_open`.
 
 We chose this because a finding can be in code that does not exist on the default branch. The file can be missing, and the line numbers can differ.

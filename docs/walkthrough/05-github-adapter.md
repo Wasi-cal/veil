@@ -130,7 +130,7 @@ This file is the real repo provider. It joins git and the API and owns the tempo
 
 - `_same_repo(head_repo, repo)` — returns true if the head repository name is not empty and equals the repository name without regard to letter case. GitHub names repositories without case. A deleted fork has an empty name, so it never matches.
 - `GitHubRepoProvider` — the real repo provider. Each checkout is a private temporary folder. The caller must call `close` in a `finally` step.
-- `GitHubRepoProvider.__init__(token, api, remote_url, branch_prefix, temp_root)` — stores five values. They are the token, the API object, the function that makes a remote URL, the branch prefix and the temporary root. The token is a `SecretStr`, a value that hides itself when printed. The prefix defaults to `FIX_BRANCH_PREFIX`, which is `gozu/fix-`. If the caller gives a temporary root, it makes that folder with mode `DIR_MODE`. It starts with an empty folder list and an empty checkout map.
+- `GitHubRepoProvider.__init__(token, api, remote_url, branch_prefix, temp_root)` — stores five values. They are the token, the API object, the function that makes a remote URL, the branch prefix and the temporary root. The token is a `SecretStr`, a value that hides itself when printed. The prefix defaults to `FIX_BRANCH_PREFIX`, which is `veil/fix-`. If the caller gives a temporary root, it makes that folder with mode `DIR_MODE`. It starts with an empty folder list and an empty checkout map.
 - `GitHubRepoProvider.__enter__()` — returns the provider, so a `with` block can use it.
 - `GitHubRepoProvider.__exit__(*_exc)` — calls `close` when the `with` block ends, even after an error.
 - `GitHubRepoProvider.close()` — deletes every checkout folder that the provider made. It ignores errors on delete. It then clears the folder list and the checkout map. The Shell calls it.
@@ -142,7 +142,7 @@ This file is the real repo provider. It joins git and the API and owns the tempo
 
 ## Things to know
 
-- The provider refuses to push a branch that does not start with the branch prefix `gozu/fix-` (when the caller keeps the default). It also refuses a head that equals the base. The push sends one explicit reference and never uses force. So the Source PR branch and the default branch cannot be pushed.
+- The provider refuses to push a branch that does not start with the branch prefix `veil/fix-` (when the caller keeps the default). It also refuses a head that equals the base. The push sends one explicit reference and never uses force. So the Source PR branch and the default branch cannot be pushed.
 - `refuse_option_like` runs on every branch name before git sees it. A name that starts with a dash raises an error. Git commands also put `--` before the name when git supports it.
 - The token reaches git only through a per-command header for `https://github.com/`. The remote URL and `.git/config` never hold it. A git child process gets a small environment and a private `HOME`, not the full environment of the Engine.
 - `HttpGitHubApi` never follows a redirect, because the shared HTTP code treats a redirect as a failure. So the token cannot reach another host. It also refuses a base address that is not https, except for a local host.

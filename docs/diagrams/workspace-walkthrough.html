@@ -196,7 +196,7 @@ svg .a.red{stroke:var(--red-s)}
     <div class="c teal"><code>git clone --depth 1</code> into a new temp folder</div>
     <div class="c teal">Files change. Nothing is saved in git yet.</div>
     <div class="c teal">Fail: <code>discard_changes</code> puts the files back</div>
-    <div class="c teal">The branch <code>gozu/fix-…</code> is made. One commit.</div>
+    <div class="c teal">The branch <code>veil/fix-…</code> is made. One commit.</div>
     <div class="c teal"><code>git push</code> of that one branch</div>
     <div class="c teal">The folder is deleted</div>
 
@@ -301,7 +301,7 @@ svg .a.red{stroke:var(--red-s)}
   <g class="n amber"><rect x="250" y="70" width="190" height="76" rx="12"/>
     <text class="th" x="345" y="100" text-anchor="middle">Edited</text><text class="ts" x="345" y="122" text-anchor="middle">written, not saved in git</text></g>
   <g class="n purple"><rect x="510" y="70" width="170" height="76" rx="12"/>
-    <text class="th" x="595" y="100" text-anchor="middle">Committed</text><text class="ts" x="595" y="122" text-anchor="middle">on gozu/fix-…, in the clone</text></g>
+    <text class="th" x="595" y="100" text-anchor="middle">Committed</text><text class="ts" x="595" y="122" text-anchor="middle">on veil/fix-…, in the clone</text></g>
   <g class="n green"><rect x="750" y="70" width="140" height="76" rx="12"/>
     <text class="th" x="820" y="100" text-anchor="middle">On GitHub</text><text class="ts" x="820" y="122" text-anchor="middle">pushed, in a PR</text></g>
 
@@ -321,7 +321,7 @@ svg .a.red{stroke:var(--red-s)}
     <a href="../../src/veil/engine/fix/escalation.py" target="_blank">engine/fix/escalation.py:14</a>
   </div>
 </div>
-<p>When a ticket fails, or reaches its token cap, the Engine calls <code>discard_changes</code>. The files go back to the last commit. A Fix that already passed stays committed. A <code>git push</code> sends only the branch <code>gozu/fix-…</code>. It never forces the push.</p>
+<p>When a ticket fails, or reaches its token cap, the Engine calls <code>discard_changes</code>. The files go back to the last commit. A Fix that already passed stays committed. A <code>git push</code> sends only the branch <code>veil/fix-…</code>. It never forces the push.</p>
 </main>
 </body>
 </html>

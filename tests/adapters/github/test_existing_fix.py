@@ -6,7 +6,7 @@ from veil.adapters.github.models.pull_request import PullRequest
 from veil.engine import FixQuery
 
 LABEL = "issue-abc123"
-FIX_BRANCH = "gozu/fix-GR-5"
+FIX_BRANCH = "veil/fix-GR-5"
 
 
 def pr(**fields) -> PullRequest:
@@ -38,7 +38,7 @@ def query(**fields) -> FixQuery:
         "repo": "acme/app",
         "issue_label": LABEL,
         "source_branch": "feature-x",
-        "branch_prefix": "gozu/fix-",
+        "branch_prefix": "veil/fix-",
     }
     return FixQuery(**{**base, **fields})
 
@@ -117,7 +117,7 @@ def test_a_merged_fix_pr_on_the_source_branch_is_a_merged_pr(tmp_path):
 
 def test_a_merged_fix_pr_is_found_even_if_its_branch_is_deleted(tmp_path):
     fix = pr(
-        head_branch="gozu/fix-GR-9",
+        head_branch="veil/fix-GR-9",
         base_branch="feature-x",
         labels=(LABEL,),
         state="merged",
@@ -131,7 +131,7 @@ def test_an_open_pr_wins_over_a_merged_pr(tmp_path):
     merged = pr(
         head_branch=FIX_BRANCH, base_branch="feature-x", labels=(LABEL,), state="merged"
     )
-    opened = pr(head_branch="gozu/fix-GR-7", base_branch="feature-x", labels=(LABEL,))
+    opened = pr(head_branch="veil/fix-GR-7", base_branch="feature-x", labels=(LABEL,))
     provider = provider_with(tmp_path, [merged, opened])
 
     assert provider.find_existing_fix(query()) == "open_pr"
@@ -139,7 +139,7 @@ def test_an_open_pr_wins_over_a_merged_pr(tmp_path):
 
 def test_a_merged_pr_wins_over_a_fix_branch(tmp_path):
     merged = pr(
-        head_branch="gozu/fix-GR-9",
+        head_branch="veil/fix-GR-9",
         base_branch="feature-x",
         labels=(LABEL,),
         state="merged",
@@ -163,7 +163,7 @@ def test_a_closed_fix_pr_whose_branch_still_exists_is_a_fix_branch(tmp_path):
 
 def test_a_closed_fix_pr_whose_branch_is_gone_is_not_a_fix(tmp_path):
     fix = pr(
-        head_branch="gozu/fix-GR-9",
+        head_branch="veil/fix-GR-9",
         base_branch="feature-x",
         labels=(LABEL,),
         state="closed",
@@ -184,7 +184,7 @@ def test_an_open_pr_wins_over_a_fix_branch(tmp_path):
     closed = pr(
         head_branch=FIX_BRANCH, base_branch="feature-x", labels=(LABEL,), state="closed"
     )
-    opened = pr(head_branch="gozu/fix-GR-7", base_branch="feature-x", labels=(LABEL,))
+    opened = pr(head_branch="veil/fix-GR-7", base_branch="feature-x", labels=(LABEL,))
     provider = provider_with(tmp_path, [closed, opened])
 
     assert provider.find_existing_fix(query()) == "open_pr"

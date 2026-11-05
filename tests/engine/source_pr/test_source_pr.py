@@ -54,7 +54,7 @@ def test_the_engine_never_moves_the_source_branch_or_main(tmp_path):
     run(context)
 
     [pr] = repos.pull_requests
-    assert pr.head.startswith("gozu/fix-")
+    assert pr.head.startswith("veil/fix-")
     assert pr.head != pr.base
     assert repos.head_of("acme/app", "feature-x") == source_before
     assert repos.head_of("acme/app", "main") == main_before

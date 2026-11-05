@@ -102,7 +102,7 @@ def test_a_custom_prefix_does_not_weaken_the_no_loop_rule_for_the_fixed_prefix(
         files={"a.py": BUGGY},
         file="a.py",
         settings=Settings(branch_prefix="veil/"),
-        extra_tickets=[{"key": "GR-101", "file": "a.py", "branch": "gozu/fix-earlier"}],
+        extra_tickets=[{"key": "GR-101", "file": "a.py", "branch": "veil/fix-earlier"}],
     )
 
     report = run(context)

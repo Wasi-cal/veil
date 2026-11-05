@@ -148,7 +148,7 @@ This file holds the fake repository provider for the Engine tests. It uses real 
 - `FakeWorkspace.commit(self, branch, message)` — switches to the branch, creating it if needed, adds all files, and makes one commit.
 - `FakeWorkspace.discard_changes(self)` — resets tracked files to the last commit and removes untracked files.
 - `FakeRepoProvider` — a fake repository provider that uses real local git repositories. It has the list `pull_requests`.
-- `FakeRepoProvider.__init__(self, root, repos, branch_prefix)` — saves the root folder and the prefix of Fix branches. The default prefix is `gozu/fix-`. For each repository it makes an origin repository on the branch `main`. It writes the given files and makes the first commit. The files may be text or bytes.
+- `FakeRepoProvider.__init__(self, root, repos, branch_prefix)` — saves the root folder and the prefix of Fix branches. The default prefix is `veil/fix-`. For each repository it makes an origin repository on the branch `main`. It writes the given files and makes the first commit. The files may be text or bytes.
 - `FakeRepoProvider.seed_source_pr(self, repo, branch, files, is_open)` — makes a branch from `main` with the given file changes and one commit, as a developer does for a Source PR. With `is_open` false the pull request has the state merged or closed, or it does not exist.
 - `FakeRepoProvider.seed_pull_request(self, repo, branch, labels, base)` — puts an open pull request in the fake remote. An earlier run or a person made it. No base means any base.
 - `FakeRepoProvider.seed_branch(self, repo, branch, labels)` — puts a Fix branch with these labels in the fake remote. No pull request is open.
@@ -177,7 +177,7 @@ This file holds the helpers that the GitHub adapter tests share. Several test fi
 - `TOKEN` — a fake GitHub token that the file builds from pieces. Tests check that it never shows in errors, files or configuration.
 - `git(cwd, *args)` — runs a git command in a folder with a fixed test name and email. It raises if git fails. It returns the output text.
 - `make_remote(root, repo, branches)` — builds a bare git remote under `root`. It holds `main` with two commits and one extra commit on each branch of `branches`. It pushes everything. It returns the path of the bare repository.
-- `make_provider(root, api, branch_prefix)` — builds a real `GitHubRepoProvider` with the fake token. The remote address points to the local bare repository. The temporary folder is `tmp` under `root`. The default prefix is `gozu/fix-`.
+- `make_provider(root, api, branch_prefix)` — builds a real `GitHubRepoProvider` with the fake token. The remote address points to the local bare repository. The temporary folder is `tmp` under `root`. The default prefix is `veil/fix-`.
 
 ### tests/adapters/github/test_git_environment.py
 
@@ -232,7 +232,7 @@ This file proves that `open_draft_pr` pushes only the Fix branch, once, and open
 
 This file proves how the provider decides whether a Source PR is open and whether a Fix already exists. It uses `StubGitHubApi` and a real remote.
 
-- `LABEL` — the issue label that the tests look for. `FIX_BRANCH` is the Fix branch name `gozu/fix-GR-5`.
+- `LABEL` — the issue label that the tests look for. `FIX_BRANCH` is the Fix branch name `veil/fix-GR-5`.
 - `pr(**fields)` — builds a `PullRequest` with test defaults. The caller can change any field.
 - `provider_with(tmp_path, pull_requests)` — makes a remote with the branches `feature-x` and the Fix branch, and returns a provider whose stub API holds the given pull requests.
 - `query(**fields)` — builds a `FixQuery` with test defaults. The caller can change any field.

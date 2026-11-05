@@ -25,7 +25,7 @@ The safety rules are code and are not settings. You cannot turn them off. They a
 
 | Setting | Default | Range | What it does |
 |---|---|---|---|
-| `branch_prefix` | `gozu/fix-` | a safe prefix | The start of the name of a Fix branch. |
+| `branch_prefix` | `veil/fix-` | a safe prefix | The start of the name of a Fix branch. |
 | `severity_map` | see below | words to buckets | Which bucket each severity word goes to: `low`, `medium` or `high`. The bucket sets only the order of the PRs: High first. A word that you name changes. The other words keep their default. |
 | `failed_fix_label` | `veil-failed-fix` | one word | The label on a ticket that has a Failed Fix. |
 | `in_review_status` | `In Review` | a status name | The status that a ticket gets after a PR opens. The Jira workflow must have it. |

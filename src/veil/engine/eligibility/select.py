@@ -3,7 +3,7 @@ import logging
 from veil.engine.constants.names import (
     DUPLICATE_ISSUE,
     FAILED_FIX,
-    FIX_BRANCH_PREFIX,
+    FIXED_BRANCH_PREFIXES,
     IGNORED_DIRECTORIES,
     IGNORED_PATH,
     NO_ISSUE_LABEL,
@@ -65,7 +65,7 @@ def _skip_reason(
     issues_in_this_run: set[tuple[str, str, str]],
 ) -> str | None:
     """Return why the Engine must not fix this ticket. Return None if it may. Cheap rules come first."""
-    if ticket.branch.startswith((FIX_BRANCH_PREFIX, settings.branch_prefix)):
+    if ticket.branch.startswith((*FIXED_BRANCH_PREFIXES, settings.branch_prefix)):
         return RAISED_AGAINST_FIX_BRANCH
     if settings.failed_fix_label in ticket.labels:
         return FAILED_FIX

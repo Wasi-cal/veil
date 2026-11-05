@@ -66,7 +66,7 @@ Other rules:
 
 - A Failed Fix stays out of the PR. The PR holds only the Fixes that passed. A ticket that ends as a Failed Fix leaves no edit in the PR.
 - A ticket that uses its token cap in the middle of a group becomes a Failed Fix. The Fixes that passed are still published. The later tickets of the group go on.
-- The branch of a PR starts with the branch prefix (setting `branch_prefix`, default `gozu/fix-`) and the key of the first Fix that passed. A ticket that failed gives no name. So a later run can make a new PR for that ticket without a branch clash.
+- The branch of a PR starts with the branch prefix (setting `branch_prefix`, default `veil/fix-`) and the key of the first Fix that passed. A ticket that failed gives no name. So a later run can make a new PR for that ticket without a branch clash.
 - Every PR opens ready for review. The Engine merges nothing.
 
 ## Which tickets the Engine skips
@@ -75,7 +75,7 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 
 | Reason in the report | What it means |
 |---|---|
-| `raised_against_fix_branch` | The finding is on a Fix branch. That is a branch that starts with `gozu/fix-` or with the setting `branch_prefix`. A human decides what happens to it. |
+| `raised_against_fix_branch` | The finding is on a Fix branch. That is a branch that starts with `veil/fix-`, with `gozu/fix-` (the older prefix) or with the setting `branch_prefix`. A human decides what happens to it. |
 | `failed_fix` | The ticket has the label `veil-failed-fix`. It stays untouched until a human deletes the label. |
 | `ignored_path` | The file of the ticket is inside `.github/`, at any depth. Gozu makes no ticket for these files now. This catches an older ticket. |
 | `no_issue_label` | The ticket has no label that starts with `issue-`. The Engine cannot prove that no PR exists. |
@@ -142,7 +142,7 @@ The cheap model name, the strong model name and the cap are settings.
 The Action is the first Shell (ADR 0013). It runs the Engine once for the repo of the workflow. `run_action(environ)` is its entry point.
 
 1. It reads the repo, the workspace and the event from the runner. It loads `.gozu/jira-to-pr.yml` as the repo settings.
-2. It checks the event. A run never starts on a Fix branch (a branch that starts with `gozu/fix-` or with the setting `branch_prefix`). This holds for every event. The check runs before the Action reads a credential. `schedule`, `workflow_dispatch`, `repository_dispatch` and `pull_request` may run. Each one needs its setting to be on. Any other event fails. A `pull_request` event runs only for a PR from this repo. The Action reads the head of the PR from the event file of the runner. A PR from a fork or from a deleted repo ends the run with a notice, before the Action reads a secret. A run on a PR sees only the tickets of the branch of that PR.
+2. It checks the event. A run never starts on a Fix branch (a branch that starts with `veil/fix-`, with `gozu/fix-` (the older prefix) or with the setting `branch_prefix`). This holds for every event. The check runs before the Action reads a credential. `schedule`, `workflow_dispatch`, `repository_dispatch` and `pull_request` may run. Each one needs its setting to be on. Any other event fails. A `pull_request` event runs only for a PR from this repo. The Action reads the head of the PR from the event file of the runner. A PR from a fork or from a deleted repo ends the run with a notice, before the Action reads a secret. A run on a PR sees only the tickets of the branch of that PR.
 3. It reads the Jira and OpenAI credentials from the variables that the settings name. It reads the `GITHUB_TOKEN` of the workflow. It masks all three in the log.
 4. It builds the context from them. The token covers this repo for this job only.
 5. It builds the context, runs the Engine, closes the checkouts and writes the run report to the step summary.

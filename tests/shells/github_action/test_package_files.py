@@ -195,5 +195,6 @@ def test_the_release_workflow_tests_on_the_python_of_the_image():
 def test_the_example_job_does_not_start_on_a_fix_branch():
     [job] = load(WORKFLOW)["jobs"].values()
 
+    assert "veil/fix-" in job["if"]
     assert "gozu/fix-" in job["if"]
     assert "startsWith" in job["if"]

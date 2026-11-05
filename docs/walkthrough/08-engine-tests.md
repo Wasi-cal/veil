@@ -46,7 +46,7 @@ This file holds one helper that tests of the read tools share. It exists so that
 
 This file proves the main path. One scripted edit makes one commit and one draft PR. It also proves what the first prompt holds and what the report and the ticket show.
 
-- `test_scripted_edit_makes_one_commit_and_one_draft_pr` — a model edits the file and finishes. The Engine opens one draft PR on a `gozu/fix-` branch with one commit that holds the fixed file.
+- `test_scripted_edit_makes_one_commit_and_one_draft_pr` — a model edits the file and finishes. The Engine opens one draft PR on a `veil/fix-` branch with one commit that holds the fixed file.
 - `test_first_prompt_holds_ticket_facts_context_lines_and_marks_ticket_text_untrusted` — a ticket points at line 50 of a 100-line file. The first prompt has the repository, file, line and severity. It shows lines 31 to 69 and not lines 5 or 95. It wraps the finding text in an `untrusted` tag.
 - `test_a_closing_tag_in_the_finding_or_the_file_cannot_end_the_untrusted_block` — the finding and the file both contain a closing tag. The prompt still has each closing tag only once, so the text cannot leave its block.
 - `test_a_line_past_the_end_of_the_file_still_shows_the_end_of_the_file` — a ticket names line 500 of a two-line file. The first prompt still shows the last line of the file.
@@ -141,7 +141,7 @@ This file proves the diff limit. The diff limit is the most changed lines that a
 
 This file proves which tickets the Engine skips. It also proves that a second run creates nothing new. The report names each skip reason.
 
-- `test_ticket_raised_against_a_fix_branch_is_skipped` — a ticket has a `gozu/fix-` branch. The reason is `raised_against_fix_branch`. The Engine touches nothing.
+- `test_ticket_raised_against_a_fix_branch_is_skipped` — a ticket has a `veil/fix-` branch. The reason is `raised_against_fix_branch`. The Engine touches nothing.
 - `test_ticket_with_an_open_pr_is_skipped` — an open PR already carries the issue label of the ticket. The reason is `open_pr`.
 - `test_ticket_with_a_fix_branch_that_carries_its_label_is_skipped` — a Fix branch with the issue label exists but has no open PR. The reason is `fix_branch`.
 - `test_a_fix_for_another_ticket_does_not_block_this_ticket` — open PRs exist for another ticket and for the same label in another repository. The ticket is still `fixed`.
@@ -213,7 +213,7 @@ This file proves the rules for the Shared PR. Low and Medium Fixes of one Source
 - `test_tickets_of_different_source_prs_get_separate_shared_prs` — two tickets have different Source PR branches. There are two PRs, each with its own base branch.
 - `test_at_the_token_ceiling_the_fixes_that_passed_are_published_and_the_rest_wait` — the ceiling is 800. The first ticket is `fixed` and published. The other two are `left_for_next_run` with no comment and no label. The tokens used are 900.
 - `test_a_second_run_after_a_shared_pr_creates_nothing` — a second run skips both tickets with `open_pr`. There is one PR, one workspace and one comment on each ticket.
-- `test_the_branch_names_the_first_fix_that_passed_so_a_retry_does_not_collide` — the first PR branch is `gozu/fix-shared-gr-101`. A human removes the failed marker. The retry gets the branch `gozu/fix-shared-gr-100`, so the two branches do not collide.
+- `test_the_branch_names_the_first_fix_that_passed_so_a_retry_does_not_collide` — the first PR branch is `veil/fix-shared-gr-101`. A human removes the failed marker. The retry gets the branch `veil/fix-shared-gr-100`, so the two branches do not collide.
 
 ### tests/engine/grouping/test_high_pr.py
 
@@ -235,7 +235,7 @@ This file proves how settings change grouping and branch names.
 - `test_default_severity_map_sends_high_to_its_own_pr_and_unknown_words_are_high` — a test with five cases of severity words, for example `BLOCKER`, `MAJOR`, `Low` and `WEIRD`. The High ticket gets its own PR. An unknown word counts as High.
 - `test_the_severity_map_is_a_setting` — a setting maps `MAJOR` to high and `MINOR` to low. The PRs have 1 and 2 commits.
 - `test_the_branch_prefix_is_a_setting_and_the_no_loop_rule_uses_it` — the prefix is `veil/`. The Fix branch starts with it. The Engine skips a ticket on a `veil/` branch as `raised_against_fix_branch`.
-- `test_a_custom_prefix_does_not_weaken_the_no_loop_rule_for_the_fixed_prefix` — with the prefix `veil/`, a ticket on a `gozu/fix-` branch is still skipped.
+- `test_a_custom_prefix_does_not_weaken_the_no_loop_rule_for_the_fixed_prefix` — with the prefix `veil/`, a ticket on a `veil/fix-` branch is still skipped.
 - `test_a_partial_severity_map_changes_only_its_words_and_keeps_the_defaults` — a setting changes only `MAJOR`. The default words keep their meaning. The PRs have 1 and 2 commits.
 - `test_the_branch_prefix_must_be_long_enough_and_end_with_a_separator` — a test with 11 bad prefixes, for example an empty text, `gozu` or `../`. `Settings` refuses each one with a validation error.
 

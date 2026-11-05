@@ -8,9 +8,20 @@ from tests.support.scenario import (
 from veil.engine import run
 
 
-def test_ticket_raised_against_a_fix_branch_is_skipped(tmp_path):
+def test_ticket_raised_against_an_older_gozu_fix_branch_is_skipped(tmp_path):
     context, tracker, repos, model = make_context(
         tmp_path, EDIT_THEN_FINISH, branch="gozu/fix-gr-7"
+    )
+
+    report = run(context)
+
+    assert report.skipped == {"raised_against_fix_branch": ["GR-100"]}
+    assert_untouched(tracker, repos, model)
+
+
+def test_ticket_raised_against_a_fix_branch_is_skipped(tmp_path):
+    context, tracker, repos, model = make_context(
+        tmp_path, EDIT_THEN_FINISH, branch="veil/fix-gr-7"
     )
 
     report = run(context)
@@ -22,7 +33,7 @@ def test_ticket_raised_against_a_fix_branch_is_skipped(tmp_path):
 
 def test_ticket_with_an_open_pr_is_skipped(tmp_path):
     context, tracker, repos, model = make_context(tmp_path, EDIT_THEN_FINISH)
-    repos.seed_pull_request("acme/app", "gozu/fix-earlier", labels=("issue-gr-100",))
+    repos.seed_pull_request("acme/app", "veil/fix-earlier", labels=("issue-gr-100",))
 
     report = run(context)
 
@@ -33,7 +44,7 @@ def test_ticket_with_an_open_pr_is_skipped(tmp_path):
 
 def test_ticket_with_a_fix_branch_that_carries_its_label_is_skipped(tmp_path):
     context, tracker, repos, model = make_context(tmp_path, EDIT_THEN_FINISH)
-    repos.seed_branch("acme/app", "gozu/fix-closed-pr", labels=("issue-gr-100",))
+    repos.seed_branch("acme/app", "veil/fix-closed-pr", labels=("issue-gr-100",))
 
     report = run(context)
 
@@ -44,7 +55,7 @@ def test_ticket_with_a_fix_branch_that_carries_its_label_is_skipped(tmp_path):
 def test_ticket_with_a_merged_fix_pr_is_skipped_so_no_tokens_are_spent_again(tmp_path):
     context, tracker, repos, model = make_context(tmp_path, EDIT_THEN_FINISH)
     repos.seed_merged_pull_request(
-        "acme/app", "gozu/fix-earlier", labels=("issue-gr-100",), base="feature"
+        "acme/app", "veil/fix-earlier", labels=("issue-gr-100",), base="feature"
     )
 
     report = run(context)
@@ -57,7 +68,7 @@ def test_ticket_with_a_merged_fix_pr_is_skipped_so_no_tokens_are_spent_again(tmp
 def test_a_merged_fix_pr_of_another_source_pr_does_not_block_this_ticket(tmp_path):
     context, _, repos, _ = make_context(tmp_path, EDIT_THEN_FINISH)
     repos.seed_merged_pull_request(
-        "acme/app", "gozu/fix-earlier", labels=("issue-gr-100",), base="other-branch"
+        "acme/app", "veil/fix-earlier", labels=("issue-gr-100",), base="other-branch"
     )
 
     report = run(context)
@@ -67,9 +78,9 @@ def test_a_merged_fix_pr_of_another_source_pr_does_not_block_this_ticket(tmp_pat
 
 def test_a_fix_for_another_ticket_does_not_block_this_ticket(tmp_path):
     context, _, repos, _ = make_context(tmp_path, EDIT_THEN_FINISH)
-    repos.seed_pull_request("acme/app", "gozu/fix-other", labels=("issue-gr-999",))
+    repos.seed_pull_request("acme/app", "veil/fix-other", labels=("issue-gr-999",))
     repos.seed_pull_request(
-        "acme/other-repo", "gozu/fix-same", labels=("issue-gr-100",)
+        "acme/other-repo", "veil/fix-same", labels=("issue-gr-100",)
     )
 
     report = run(context)
@@ -139,17 +150,17 @@ def test_report_counts_the_skipped_tickets_by_reason_and_still_fixes_the_rest(tm
     context, _, repos, _ = make_context(
         tmp_path,
         EDIT_THEN_FINISH,
-        branch="gozu/fix-gr-7",
+        branch="veil/fix-gr-7",
         extra_tickets=[
             {"key": "GR-101", "branch": "main"},
             {"key": "GR-102", "branch": "main"},
             {"key": "GR-103", "branch": "main", "labels": ("security",)},
-            {"key": "GR-104", "branch": "gozu/fix-gr-8"},
+            {"key": "GR-104", "branch": "veil/fix-gr-8"},
             {"key": "GR-105", "branch": "main"},
         ],
     )
-    repos.seed_pull_request("acme/app", "gozu/fix-101", labels=("issue-gr-101",))
-    repos.seed_pull_request("acme/app", "gozu/fix-102", labels=("issue-gr-102",))
+    repos.seed_pull_request("acme/app", "veil/fix-101", labels=("issue-gr-101",))
+    repos.seed_pull_request("acme/app", "veil/fix-102", labels=("issue-gr-102",))
 
     report = run(context)
 
@@ -213,7 +224,7 @@ def test_a_fix_pr_on_one_source_pr_does_not_block_another_source_pr(tmp_path):
         tmp_path, EDIT_THEN_FINISH, labels=("issue-gr-100",)
     )
     repos.seed_pull_request(
-        "acme/app", "gozu/fix-elsewhere", labels=("issue-gr-100",), base="other"
+        "acme/app", "veil/fix-elsewhere", labels=("issue-gr-100",), base="other"
     )
 
     report = run(context)

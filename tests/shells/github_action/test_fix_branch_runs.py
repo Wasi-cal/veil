@@ -23,7 +23,7 @@ def without_secrets(world):
         del world.environ[name]
 
 
-@pytest.mark.parametrize("head", ["gozu/fix-vt-46", "gozu/fix-shared-gr-3"])
+@pytest.mark.parametrize("head", ["veil/fix-vt-46", "veil/fix-shared-gr-3"])
 def test_a_pull_request_on_a_fix_branch_never_runs_veil(world, head):
     world.write_settings(SETTINGS)
     without_secrets(world)
@@ -36,10 +36,10 @@ def test_a_pull_request_on_a_fix_branch_never_runs_veil(world, head):
 
 
 def test_the_prefix_setting_decides_which_branches_are_fix_branches(world):
-    world.write_settings({**SETTINGS, "branch_prefix": "veil/"})
+    world.write_settings({**SETTINGS, "branch_prefix": "bot/"})
     without_secrets(world)
 
-    code, spy = world.run_action(**pull_request_event(world, "veil/gr-7"))
+    code, spy = world.run_action(**pull_request_event(world, "bot/gr-7"))
 
     assert (code, spy.contexts) == (0, [])
     assert "Fix branch" in world.out.getvalue()
@@ -48,12 +48,22 @@ def test_the_prefix_setting_decides_which_branches_are_fix_branches(world):
 def test_a_pull_request_on_the_default_prefix_is_refused_even_with_another_prefix(
     world,
 ):
-    world.write_settings({**SETTINGS, "branch_prefix": "veil/"})
+    world.write_settings({**SETTINGS, "branch_prefix": "bot/"})
+    without_secrets(world)
+
+    code, spy = world.run_action(**pull_request_event(world, "veil/fix-vt-46"))
+
+    assert (code, spy.contexts) == (0, [])
+
+
+def test_a_pull_request_on_an_older_gozu_fix_branch_is_refused(world):
+    world.write_settings(SETTINGS)
     without_secrets(world)
 
     code, spy = world.run_action(**pull_request_event(world, "gozu/fix-vt-46"))
 
     assert (code, spy.contexts) == (0, [])
+    assert "Fix branch" in world.out.getvalue()
 
 
 def test_a_pull_request_on_a_normal_branch_still_runs(world):
@@ -72,7 +82,7 @@ def test_a_run_started_on_a_fix_branch_by_any_event_is_refused(world, event):
     without_secrets(world)
 
     code, spy = world.run_action(
-        GITHUB_EVENT_NAME=event, GITHUB_REF_NAME="gozu/fix-vt-46"
+        GITHUB_EVENT_NAME=event, GITHUB_REF_NAME="veil/fix-vt-46"
     )
 
     assert (code, spy.contexts) == (0, [])

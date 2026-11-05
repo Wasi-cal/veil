@@ -47,7 +47,7 @@ def test_tickets_of_different_files_get_one_pr_each_whatever_the_severity(tmp_pa
             repo="acme/app",
             issue_label=label,
             source_branch="feature",
-            branch_prefix="gozu/fix-",
+            branch_prefix="veil/fix-",
         )
         assert repos.find_existing_fix(query) == "open_pr"
 
@@ -184,12 +184,12 @@ def test_the_branch_names_the_first_fix_that_passed_so_a_retry_does_not_collide(
 
     assert first.outcomes == {"GR-100": "failed", "GR-101": "fixed"}
     [pr_one] = repos.pull_requests
-    assert pr_one.head == "gozu/fix-gr-101"
+    assert pr_one.head == "veil/fix-gr-101"
 
     tracker.remove_label("GR-100", "veil-failed-fix")
     second = run(context)
 
     assert second.outcomes == {"GR-100": "fixed", "GR-101": "skipped"}
     pr_one, pr_two = repos.pull_requests
-    assert pr_two.head == "gozu/fix-gr-100"
+    assert pr_two.head == "veil/fix-gr-100"
     assert repos.commit_subjects_on(pr_two) == ["fix(security): Fix a"]

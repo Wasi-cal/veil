@@ -44,13 +44,13 @@ def test_it_finds_the_pull_requests_that_carry_a_label():
         server.routes[("GET", "/search/issues")] = (200, {"items": [{"number": 7}]})
         server.routes[("GET", "/repos/acme/app/pulls/7")] = (
             200,
-            pull_json(7, head="gozu/fix-GR-5", base="feature-x", labels=("issue-abc",)),
+            pull_json(7, head="veil/fix-GR-5", base="feature-x", labels=("issue-abc",)),
         )
 
         [pr] = api_for(server).find_pull_requests("acme/app", label="issue-abc")
 
     assert (pr.head_branch, pr.base_branch, pr.labels) == (
-        "gozu/fix-GR-5",
+        "veil/fix-GR-5",
         "feature-x",
         ("issue-abc",),
     )
@@ -62,7 +62,7 @@ def test_it_opens_a_ready_pr_and_puts_the_labels_on_it():
     with StubHttpServer() as server:
         server.routes[("POST", "/repos/acme/app/pulls")] = (
             201,
-            pull_json(9, head="gozu/fix-GR-1", base="feature-x", draft=False),
+            pull_json(9, head="veil/fix-GR-1", base="feature-x", draft=False),
         )
         server.routes[("POST", "/repos/acme/app/issues/9/labels")] = (
             200,
@@ -70,13 +70,13 @@ def test_it_opens_a_ready_pr_and_puts_the_labels_on_it():
         )
 
         pr = api_for(server).create_pr(
-            "acme/app", "gozu/fix-GR-1", "feature-x", "Fix", "Body", ("issue-abc",)
+            "acme/app", "veil/fix-GR-1", "feature-x", "Fix", "Body", ("issue-abc",)
         )
 
     create, label = server.seen
     assert create.body == {
         "title": "Fix",
-        "head": "gozu/fix-GR-1",
+        "head": "veil/fix-GR-1",
         "base": "feature-x",
         "body": "Body",
         "draft": False,

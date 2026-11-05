@@ -90,14 +90,14 @@ def test_commit_makes_the_branch_and_discard_returns_to_the_last_commit(tmp_path
     workspace = provider.open_workspace("acme/app", "feature-x")
 
     workspace.write_file("app.py", "fixed\n")
-    workspace.commit("gozu/fix-GR-1", "Fix the bug")
+    workspace.commit("veil/fix-GR-1", "Fix the bug")
     workspace.write_file("app.py", "half done\n")
     workspace.write_file("scratch.py", "x\n")
     workspace.discard_changes()
 
     assert workspace.read_file("app.py") == "fixed\n"
     assert workspace.list_files() == ["app.py"]
-    assert git(workspace.path, "branch", "--show-current").strip() == "gozu/fix-GR-1"
+    assert git(workspace.path, "branch", "--show-current").strip() == "veil/fix-GR-1"
     assert git(workspace.path, "log", "-1", "--format=%s").strip() == "Fix the bug"
 
 

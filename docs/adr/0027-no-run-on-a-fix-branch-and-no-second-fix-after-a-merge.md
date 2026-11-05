@@ -12,7 +12,7 @@ The workflow ran on `pull_request` with the type `synchronize`. A person merged 
 - **A run never starts on a Fix branch.** The Action checks the branch before it reads a credential, a ticket or a repo.
   - For a `pull_request` event, the branch is the head branch of the PR.
   - For any other event, the branch is `GITHUB_REF_NAME`.
-  - A Fix branch starts with `gozu/fix-` or with the setting `branch_prefix`. The fixed prefix always counts.
+  - A Fix branch starts with `veil/fix-`, with `gozu/fix-` or with the setting `branch_prefix`. The fixed prefixes always count. `gozu/fix-` is the prefix from before the rename, and it stays so that an older Fix branch is still safe.
   - The run ends with a notice and exit 0.
 - **The ticket rule stays.** A ticket raised against a Fix branch is still skipped (`raised_against_fix_branch`). The new rule is about the run, and the old rule is about the ticket.
 - **The example workflow has a guard.** The job does not start on a Fix branch. This saves the minutes of the runner. The check in the Action is the second layer.

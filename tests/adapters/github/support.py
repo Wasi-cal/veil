@@ -52,7 +52,7 @@ def make_remote(
     return bare
 
 
-def make_provider(root: Path, api=None, branch_prefix: str = "gozu/fix-"):
+def make_provider(root: Path, api=None, branch_prefix: str = "veil/fix-"):
     return GitHubRepoProvider(
         token=SecretStr(TOKEN),
         api=api,

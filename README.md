@@ -81,7 +81,7 @@ These rules are code. A setting cannot turn them off.
 
 - Veil never merges and never opens a PR from or against the default branch.
 - Veil never runs on its own Fix branches, and never fixes a ticket again after its Fix PR is merged.
-- Veil never pushes to your branch. It pushes its own `gozu/fix-*` branches.
+- Veil never pushes to your branch. It pushes its own `veil/fix-*` branches.
 - Veil never reads, lists or edits anything in `.github/`, lockfiles or secret files such as `.env` and keys.
 - Veil never follows a symlink, so a link cannot hide a protected file.
 - Veil never creates or deletes a file.

@@ -89,7 +89,7 @@ This file holds the severity buckets and the default map from severity words to 
 
 ### constants/branches.py
 
-- `FIX_BRANCH_PREFIX` — the text `gozu/fix-`. Each Fix branch starts with it. `Settings` uses it as the default branch prefix.
+- `FIX_BRANCH_PREFIX` — the text `veil/fix-`. Each Fix branch starts with it. `Settings` uses it as the default branch prefix.
 
 ### constants/statuses.py
 
@@ -255,7 +255,7 @@ This file holds the settings of a run. The defaults are in code. The caller can 
 - `Settings.strong_model` — the name of the model for the second attempt. The default is `STRONG_MODEL`. It must not be empty.
 - `Settings.token_ceiling` — the most tokens in one run. The default is 100,000. The least value is 1.
 - `Settings.shared_pr_max` — the most Fixes in a Shared PR. The default is 10. The least value is 1.
-- `Settings.branch_prefix` — the start of each Fix branch name. The default is `gozu/fix-`. It has at least 3 characters. It starts with a letter or a digit. It ends with `/` or `-`.
+- `Settings.branch_prefix` — the start of each Fix branch name. The default is `veil/fix-`. It has at least 3 characters. It starts with a letter or a digit. It ends with `/` or `-`.
 - `Settings.severity_map` — the map from severity words to buckets. The default is `DEFAULT_SEVERITY_MAP`.
 - `Settings.step_cap` — the most model steps in one attempt. The default is 25. The least value is 1.
 - `Settings.explanation_max_sentences` — the most sentences in an explanation. The default is 3. The least value is 1.
