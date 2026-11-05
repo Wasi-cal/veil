@@ -15,8 +15,22 @@ from veil.engine.models.group.fix_group import FixGroup
 
 
 def commit_text(fix: Fix) -> str:
-    """The commit message: the subject of the model, then a footer that names the ticket."""
-    return f"{fix.commit_message}\n\n{COMMIT_FOOTER_KEY}: {fix.ticket.key}"
+    """The commit message: the subject of the model, the three parts of the explanation, then a footer that names the ticket.
+
+    A Breaking change adds its reasons after the three parts.
+    """
+    body = [
+        f"{PROBLEM_LABEL}: {fix.problem}",
+        f"{CHANGE_LABEL}: {fix.change}",
+        f"{SOLVES_LABEL}: {fix.solves}",
+    ]
+    if fix.breaking:
+        body.append(f"{BREAKING_HEADING}: {' '.join(fix.breaking_reasons)}")
+    return (
+        f"{fix.commit_message}\n\n"
+        + "\n".join(body)
+        + f"\n\n{COMMIT_FOOTER_KEY}: {fix.ticket.key}"
+    )
 
 
 def pr_title(fixes: list[Fix]) -> str:

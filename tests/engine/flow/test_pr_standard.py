@@ -43,12 +43,37 @@ def test_a_commit_message_that_is_not_a_conventional_security_fix_is_refused_and
     assert repos.commit_subjects_on(pr) == [GOOD]
 
 
-def test_the_commit_names_its_ticket_in_a_footer(tmp_path):
+def test_the_commit_explains_the_fix_and_names_its_ticket_in_a_footer(tmp_path):
     _, _, repos = run_with(tmp_path, [FIRST, [finish_call(GOOD)]])
 
     [pr] = repos.pull_requests
     [message] = repos.commit_messages_on(pr)
-    assert message.strip().splitlines() == [GOOD, "", "Refs: GR-100"]
+    assert message.strip().splitlines() == [
+        GOOD,
+        "",
+        "Why this is a problem: The input reaches eval, so it can run any code.",
+        "What changed: The call is now int.",
+        "What this solves: The input is now only a number.",
+        "",
+        "Refs: GR-100",
+    ]
+
+
+def test_the_commit_of_a_breaking_fix_gives_the_reason(tmp_path):
+    reason = "The caller of this function can pass a string."
+    call = finish(
+        "The call is now int.",
+        commit_message=GOOD,
+        prefix=False,
+        breaking=True,
+        breaking_reason=reason,
+    )
+    _, _, repos = run_with(tmp_path, [FIRST, [call]])
+
+    [pr] = repos.pull_requests
+    [message] = repos.commit_messages_on(pr)
+    assert f"Breaking change: {reason}" in message.splitlines()
+    assert message.strip().splitlines()[-1] == "Refs: GR-100"
 
 
 def test_the_pr_title_starts_with_the_ticket_key_then_the_commit_subject(tmp_path):

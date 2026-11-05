@@ -75,7 +75,7 @@ The issue type is Bug. The priority comes from the severity: CRITICAL is Highest
 
 ## The commit and the PR (veil)
 
-- **Commit subject:** a Conventional Commit, `fix(security): replace eval with ast.literal_eval`. It has at most 72 characters and no full stop at the end. The footer is `Refs: VT-10`.
+- **Commit subject:** a Conventional Commit, `fix(security): replace eval with ast.literal_eval`. It has at most 72 characters and no full stop at the end. The body has the three parts of the explanation (`Why this is a problem`, `What changed`, `What this solves`), and the reasons if the Fix is a Breaking change. The footer is `Refs: VT-10`.
 - **PR title, one ticket:** the ticket, then the commit subject, `VT-10 | fix(security): replace eval with ast.literal_eval`.
 - **PR title, many tickets:** the tickets, then the count and the file, `VT-10 | VT-11 | VT-12 | fix(security): resolve 3 findings in app.py`. Every ticket is named, however many there are.
 - **PR body:** one section for each ticket, `## VT-10 · path/to/file.py:42`. Each section has three parts: **Why this is a problem**, **What changed** and **What this solves**. A Fix that may break something has a first part, **Breaking change**, with the reason. A PR of several tickets starts with `## Summary` and the reason for the group.
