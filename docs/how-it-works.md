@@ -159,7 +159,7 @@ A ticket needs all of these before the Action fixes it:
 
 Two repo settings must fit the site. The Jira workflow must have the status that `in_review_status` names, or you must set the setting to a status that exists. The repo must allow GitHub Actions to create pull requests (Settings, Actions, General).
 
-Jira search can trail a new ticket by a few seconds. The Gozu scan action runs before veil in the same job and sets the variable `GOZU_TICKET_KEYS` with the keys of the tickets that it just made. The Action reads these tickets by key, and a ticket must pass the same rules as the search. The variable is optional. Without it, veil finds the tickets by search only.
+Jira search can trail a new ticket by a few seconds. The Gozu scan action runs before veil in the same job and sets the variable `GOZU_TICKET_KEYS` with the keys of the tickets that it just made. The Action reads these tickets by key, and a ticket must pass the same rules as the search. The variable is optional. Without it, veil finds the tickets by search only. When the scan made no new ticket, the variable has the value `none`, and the Action skips the run before it reads a credential or calls Jira. To fix older open tickets, start the workflow by hand, because the scan skips the default branch and sets no variable.
 
 ## The service Shell (deferred)
 

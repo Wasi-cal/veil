@@ -16,11 +16,15 @@ from veil.engine.errors.tracker_error import TrackerError
 from veil.engine.models.report.run_report import RunReport
 from veil.engine.run import run as run_engine
 from veil.engine.secrets.redact import redact
-from veil.shells.github_action.constants.environment import TICKET_KEYS_VARIABLE
+from veil.shells.github_action.constants.environment import (
+    NO_NEW_TICKETS,
+    TICKET_KEYS_VARIABLE,
+)
 from veil.shells.github_action.constants.events import PULL_REQUEST_EVENT
 from veil.shells.github_action.constants.messages import (
     FIX_BRANCH_RUN,
     FORK_PULL_REQUEST,
+    NO_NEW_TICKETS_NOTICE,
     UNEXPECTED_ERROR,
 )
 from veil.shells.github_action.credentials import (
@@ -89,6 +93,9 @@ def _run(
     reason = skip_reason(env.event, settings)
     if reason:
         print(f"::notice::{reason}", file=out, flush=True)
+        return 0
+    if environ.get(TICKET_KEYS_VARIABLE, "").strip().lower() == NO_NEW_TICKETS:
+        print(f"::notice::{NO_NEW_TICKETS_NOTICE}", file=out, flush=True)
         return 0
     branch = None
     current = env.ref_name

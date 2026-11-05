@@ -46,3 +46,22 @@ def test_any_other_event_is_refused_before_a_token_or_a_ticket_is_touched(world,
     assert "cannot start a run" in world.out.getvalue()
     assert spy.contexts == []
     assert world.jira.seen == []
+
+
+def test_a_gozu_scan_that_made_no_ticket_means_veil_skips_the_run(world):
+    world.environ["GOZU_TICKET_KEYS"] = "none"
+
+    code, spy = world.run_action()
+
+    assert (code, spy.contexts) == (0, [])
+    assert "no new ticket" in world.out.getvalue()
+    assert world.jira.seen == []
+    assert world.github.seen == []
+
+
+def test_a_gozu_scan_that_made_tickets_does_not_stop_the_run(world):
+    world.environ["GOZU_TICKET_KEYS"] = "SEC-9"
+
+    code, spy = world.run_action()
+
+    assert (code, len(spy.contexts)) == (0, 1)
