@@ -194,3 +194,15 @@ def test_the_repository_name_is_compared_without_case(tmp_path):
     provider = provider_with(tmp_path, [pr(head_repo="Acme/App")])
 
     assert provider.has_open_pr("acme/app", "feature-x") is True
+
+
+def test_a_merged_fix_pr_under_the_older_gozu_prefix_is_still_found(tmp_path):
+    fix = pr(
+        head_branch="gozu/fix-GR-9",
+        base_branch="feature-x",
+        labels=(LABEL,),
+        state="merged",
+    )
+    provider = provider_with(tmp_path, [fix])
+
+    assert provider.find_existing_fix(query()) == "merged_pr"

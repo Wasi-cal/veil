@@ -40,7 +40,12 @@ def interface_reasons(path: str, before: str, after: str) -> list[str]:
 def _interface(text: str) -> dict[str, _Entry] | None:
     try:
         tree = ast.parse(text)
-    except (SyntaxError, ValueError):
+    except (
+        SyntaxError,
+        ValueError,
+        RecursionError,
+        MemoryError,
+    ):  # A deep nest must not stop the run.
         return None
     entries: dict[str, _Entry] = {}
     for node in tree.body:

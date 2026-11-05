@@ -50,3 +50,22 @@ def test_a_manifest_and_a_normal_file_still_read(tmp_path):
 
     assert '"name": "app"' in manifest
     assert "plain" in normal
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "bun.lock",
+        "pdm.lock",
+        "podfile.lock",
+        "pubspec.lock",
+        "flake.lock",
+        "deno.lock",
+        "packages.lock.json",
+        "package.resolved",
+        "gradle.lockfile",
+        "mix.lock",
+    ],
+)
+def test_the_lockfiles_of_other_package_managers_are_in_the_list(name):
+    assert name in LOCKFILE_NAMES

@@ -24,6 +24,9 @@ NPM_DEPENDENCY_KEYS = (
     "optionalDependencies",
 )
 
+# A requirement line longer than this is not read. A very long line can stall the pattern below.
+MAX_REQUIREMENT_LINE = 1000
+
 # A name at the start of a requirement line, and the first version in a version text.
 REQUIREMENT_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 VERSION_NUMBER = re.compile(r"\d+(?:\.\d+)*")

@@ -36,6 +36,16 @@ LOCKFILE_NAMES = frozenset(
         "gemfile.lock",
         "composer.lock",
         "go.sum",
+        "bun.lock",
+        "pdm.lock",
+        "podfile.lock",
+        "pubspec.lock",
+        "flake.lock",
+        "deno.lock",
+        "packages.lock.json",
+        "package.resolved",
+        "gradle.lockfile",
+        "mix.lock",
     }
 )
 

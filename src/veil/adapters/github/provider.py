@@ -17,7 +17,13 @@ from veil.adapters.github.git_command import (
     secret_values,
 )
 from veil.adapters.github.workspace import GitWorkspace
-from veil.engine.constants.names import FIX_BRANCH, MERGED_PR, OPEN_PR, FixKind
+from veil.engine.constants.names import (
+    FIX_BRANCH,
+    MERGED_PR,
+    OLDER_FIX_BRANCH_PREFIX,
+    OPEN_PR,
+    FixKind,
+)
 from veil.engine.errors.repo_provider_error import RepoProviderError
 from veil.engine.models.provider.fix_query import FixQuery
 from veil.engine.models.provider.new_pr import NewPr
@@ -81,14 +87,14 @@ class GitHubRepoProvider:
         ]
         if any(pr.state == OPEN for pr in found):
             return OPEN_PR
+        prefixes = (query.branch_prefix, OLDER_FIX_BRANCH_PREFIX)
         if any(
-            pr.state == MERGED and pr.head_branch.startswith(query.branch_prefix)
-            for pr in found
+            pr.state == MERGED and pr.head_branch.startswith(prefixes) for pr in found
         ):
             return MERGED_PR
         if any(
             pr.state == CLOSED
-            and pr.head_branch.startswith(query.branch_prefix)
+            and pr.head_branch.startswith(prefixes)
             and self._branch_exists(query.repo, pr.head_branch)
             for pr in found
         ):

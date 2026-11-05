@@ -10,6 +10,8 @@ from veil.adapters.jira.constants.details import (
     DETAIL_PACKAGE,
     DETAIL_REPOSITORY,
     DETAIL_SEVERITY,
+    PACKAGE_NAME,
+    VERSION_TEXT,
 )
 from veil.engine.models.ticket.ticket import Ticket
 
@@ -49,6 +51,14 @@ def ticket_from_issue(
         and branch
     ):
         return None
+    installed = details.get(DETAIL_INSTALLED_VERSION, "")
+    fixed = details.get(DETAIL_FIXED_VERSION, "")
+    if (
+        (package and not PACKAGE_NAME.fullmatch(package))
+        or (installed and not VERSION_TEXT.fullmatch(installed))
+        or (fixed and not VERSION_TEXT.fullmatch(fixed))
+    ):
+        return None
     return Ticket(
         key=key,
         repo=repo,
@@ -59,8 +69,8 @@ def ticket_from_issue(
         branch=branch,
         labels=tuple(fields.get("labels", [])),
         package=package or None,
-        installed_version=details.get(DETAIL_INSTALLED_VERSION) or None,
-        fixed_version=details.get(DETAIL_FIXED_VERSION) or None,
+        installed_version=installed or None,
+        fixed_version=fixed or None,
     )
 
 

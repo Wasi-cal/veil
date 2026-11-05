@@ -1,3 +1,5 @@
+import re
+
 # The names of the lines in the Details list that Gozurion writes in a ticket.
 DETAIL_REPOSITORY = "Repository"
 DETAIL_COMPONENT = "Component"
@@ -7,6 +9,9 @@ DETAIL_PACKAGE = "Package"
 DETAIL_INSTALLED_VERSION = "Installed version"
 DETAIL_FIXED_VERSION = "Fixed version"
 DETAIL_BRANCH = "Branch"
+# A package name and a version text from a ticket are plain text. Other text could break the PR body or the prompt.
+PACKAGE_NAME = re.compile(r"[A-Za-z0-9@][A-Za-z0-9@._/:+~-]{0,199}")
+VERSION_TEXT = re.compile(r"[A-Za-z0-9][A-Za-z0-9.+~^<>=!*, |_-]{0,99}")
 # A Sonar component is `project:path`. A plain path has no separator.
 COMPONENT_SEPARATOR = ":"
 

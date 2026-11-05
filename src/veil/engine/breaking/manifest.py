@@ -7,6 +7,7 @@ from veil.engine.constants.breaking import (
     DEPENDENCY_REMOVED_REASON,
     MAJOR_REASON,
     MANIFEST_NAMES,
+    MAX_REQUIREMENT_LINE,
     NPM_DEPENDENCY_KEYS,
     REQUIREMENT_NAME,
     RUNTIME_REASON,
@@ -51,7 +52,11 @@ def _parse(name: str, text: str) -> _Parsed | None:
             return _parse_package(json.loads(text))
         if name == "pyproject.toml":
             return _parse_pyproject(tomllib.loads(text))
-    except ValueError:
+    except (
+        ValueError,
+        RecursionError,
+        MemoryError,
+    ):  # A deep nest must not stop the run.
         return None
     return _parse_requirements(text)
 
@@ -85,6 +90,8 @@ def _parse_requirements(text: str) -> _Parsed:
 def _requirements(lines: list[str]) -> dict[str, str]:
     found = {}
     for line in lines:
+        if len(line) > MAX_REQUIREMENT_LINE:
+            continue
         match = REQUIREMENT_NAME.match(line)
         if match:
             rest = re.sub(r"\[[^\]]*\]", "", line[match.end() :])

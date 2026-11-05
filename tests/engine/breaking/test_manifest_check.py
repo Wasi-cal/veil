@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from tests.fakes import edit_file, finish
@@ -269,3 +271,37 @@ def test_a_manifest_reason_joins_the_model_reason_and_the_other_checks(tmp_path)
     report = run(context)
 
     assert report.breaking["GR-100"].startswith("The build can fail. The dependency")
+
+
+NESTED = 5000
+
+
+@pytest.mark.parametrize(
+    ("path", "source", "new"),
+    [
+        ("package.json", "[" * NESTED + "1" + "]" * NESTED, '{"dependencies": {}}'),
+        (
+            "pyproject.toml",
+            "a = " + "[" * NESTED + "]" * NESTED + "\n",
+            '[project]\nname = "x"\n',
+        ),
+        ("app.py", "x = " + "-" * 100000 + "1\n", "x = 1\n"),
+    ],
+    ids=["json-nested", "toml-nested", "python-unary-chain"],
+)
+def test_a_hostile_file_before_the_fix_gives_no_flag_and_does_not_stop_the_run(
+    tmp_path, path, source, new
+):
+    report, tracker, _ = run_with(tmp_path, path, source, source, new)
+
+    assert tracker.labels_on("GR-100") == []
+    assert report.breaking == {}
+
+
+def test_a_requirements_line_with_many_brackets_does_not_stall_the_check(tmp_path):
+    source = "requests==1.2.0\nx" + "[" * 150000 + "\n"
+    started = time.perf_counter()
+
+    run_with(tmp_path, "requirements.txt", source, "requests==1.2.0", "requests==1.3.0")
+
+    assert time.perf_counter() - started < 5

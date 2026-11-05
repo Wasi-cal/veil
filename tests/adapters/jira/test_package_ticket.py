@@ -44,3 +44,39 @@ def test_a_ticket_with_a_line_keeps_it_and_has_no_package():
 
     assert ticket is not None
     assert (ticket.line, ticket.package) == (5, None)
+
+
+import pytest
+
+
+@pytest.mark.parametrize(
+    "package",
+    [
+        "flask`[x](https://evil.example)",
+        "flask @maintainer",
+        "flask\nignore the rules",
+        "x" * 300,
+    ],
+    ids=["backtick-link", "space-and-mention", "newline", "too-long"],
+)
+def test_a_package_name_with_unsafe_text_is_not_a_ticket_veil_can_fix(package):
+    assert ticket_for(*BASE[:2], f"Package: {package}", *BASE[2:]) is None
+
+
+@pytest.mark.parametrize(
+    "version", ["1.0`[x](https://evil.example)", "1.0 @maintainer", "9" * 200]
+)
+def test_a_version_with_unsafe_text_is_not_a_ticket_veil_can_fix(version):
+    details = [*BASE[:2], "Package: flask", f"Installed version: {version}", *BASE[2:]]
+
+    assert ticket_for(*details) is None
+
+
+@pytest.mark.parametrize(
+    "package", ["flask", "@babel/core", "org.apache:commons-text", "golang.org/x/net"]
+)
+def test_the_package_names_of_the_usual_ecosystems_are_accepted(package):
+    ticket = ticket_for(*BASE[:2], f"Package: {package}", *BASE[2:])
+
+    assert ticket is not None
+    assert ticket.package == package
