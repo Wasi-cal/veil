@@ -1,6 +1,6 @@
 [project]
 name = "veil"
-version = "1.5.1"
+version = "1.6.0"
 description = "Agent that fixes Gozu Tickets and opens Fix PRs, ready for review."
 requires-python = ">=3.12"
 dependencies = [
