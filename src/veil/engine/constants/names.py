@@ -17,6 +17,8 @@ ISSUE_LABEL_PREFIX = "issue-"
 FAILED_FIX_LABEL = "veil-failed-fix"
 # The label that veil adds to a ticket and a Fix PR when the Fix may break something. Only a person removes it.
 BREAKING_LABEL = "breaking-change"
+# The label that veil puts on every Fix PR. It replaces the issue label on the PR.
+FIX_PR_LABEL = "veil-fix"
 # The label that marks a Gozu Ticket as one that the Engine may fix. A setting can change it.
 DEFAULT_ELIGIBLE_LABEL = "veil-eligible"
 

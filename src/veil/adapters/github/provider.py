@@ -19,12 +19,14 @@ from veil.adapters.github.git_command import (
 from veil.adapters.github.workspace import GitWorkspace
 from veil.engine.constants.names import (
     FIX_BRANCH,
+    FIX_PR_LABEL,
     MERGED_PR,
     OLDER_FIX_BRANCH_PREFIX,
     OPEN_PR,
     FixKind,
 )
 from veil.engine.errors.repo_provider_error import RepoProviderError
+from veil.engine.fix.pr_text import pr_covers_ticket
 from veil.engine.models.provider.fix_query import FixQuery
 from veil.engine.models.provider.new_pr import NewPr
 
@@ -79,9 +81,18 @@ class GitHubRepoProvider:
         )
 
     def find_existing_fix(self, query: FixQuery) -> FixKind | None:
+        candidates = [
+            *(
+                pr
+                for pr in self._api.find_pull_requests(query.repo, label=FIX_PR_LABEL)
+                if pr_covers_ticket(pr.body, query.ticket_key)
+            ),
+            # A Fix PR from before the label `veil-fix` carries the issue label.
+            *self._api.find_pull_requests(query.repo, label=query.issue_label),
+        ]
         found = [
             pr
-            for pr in self._api.find_pull_requests(query.repo, label=query.issue_label)
+            for pr in candidates
             if _same_repo(pr.head_repo, query.repo)
             and pr.base_branch == query.source_branch
         ]

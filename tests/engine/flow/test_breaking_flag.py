@@ -21,7 +21,7 @@ def test_a_breaking_fix_gets_the_label_on_the_ticket_and_on_the_pr(tmp_path):
 
     assert tracker.labels_on("GR-100") == ["breaking-change"]
     [pr] = repos.pull_requests
-    assert pr.labels == ("issue-gr-100", "breaking-change")
+    assert pr.labels == ("veil-fix", "breaking-change")
 
 
 def test_a_breaking_fix_shows_its_reason_first_in_the_pr_and_after_the_link_in_the_comment(
@@ -57,7 +57,7 @@ def test_a_fix_that_is_not_breaking_gets_no_label_and_no_extra_text(tmp_path):
 
     assert tracker.labels_on("GR-100") == []
     [pr] = repos.pull_requests
-    assert pr.labels == ("issue-gr-100",)
+    assert pr.labels == ("veil-fix",)
     assert "Breaking change" not in pr.body
     assert all("Breaking change" not in c for c in tracker.comments_on("GR-100"))
     assert report.breaking == {}

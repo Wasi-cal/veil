@@ -8,7 +8,7 @@ The workflow ran on `pull_request` with the type `synchronize`. A person merged 
 
 ## What we decided
 
-- **A merged Fix PR means the ticket is skipped.** The repo provider reports `merged_pr` when a merged PR meets three conditions. It carries the issue label. It starts from a Fix branch of veil. Its base is the Source PR branch. The reason in the report is `merged_pr`. An open PR still wins over a merged PR, and a merged PR wins over a leftover Fix branch.
+- **A merged Fix PR means the ticket is skipped.** The repo provider reports `merged_pr` when a merged PR meets three conditions. It is a Fix PR: it carries the label `veil-fix` and has a section for the ticket key (an older PR carries the issue label). It starts from a Fix branch of veil. Its base is the Source PR branch. The reason in the report is `merged_pr`. An open PR still wins over a merged PR, and a merged PR wins over a leftover Fix branch.
 - **A run never starts on a Fix branch.** The Action checks the branch before it reads a credential, a ticket or a repo.
   - For a `pull_request` event, the branch is the head branch of the PR.
   - For any other event, the branch is `GITHUB_REF_NAME`.

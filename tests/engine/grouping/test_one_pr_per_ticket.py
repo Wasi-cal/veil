@@ -45,6 +45,7 @@ def test_tickets_of_different_files_get_one_pr_each_whatever_the_severity(tmp_pa
         assert tracker.status_of(key) == "In Review"
         query = FixQuery(
             repo="acme/app",
+            ticket_key=key,
             issue_label=label,
             source_branch="feature",
             branch_prefix="veil/fix-",

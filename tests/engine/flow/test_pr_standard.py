@@ -132,3 +132,10 @@ def test_the_body_has_one_section_for_each_ticket_and_no_empty_summary(tmp_path)
     )
     assert section.index("**What changed**") < section.index("**What this solves**")
     assert "Text reaches eval, so it can run code." in section
+
+
+def test_the_fix_pr_has_the_veil_fix_label_and_no_issue_label(tmp_path):
+    _, _, repos = run_with(tmp_path, [FIRST, [finish_call(GOOD)]])
+
+    [pr] = repos.pull_requests
+    assert pr.labels == ("veil-fix",)

@@ -1,6 +1,6 @@
 import logging
 
-from veil.engine.constants.names import BREAKING_LABEL, FIXED
+from veil.engine.constants.names import BREAKING_LABEL, FIX_PR_LABEL, FIXED
 from veil.engine.context import Context
 from veil.engine.fix.pr_text import pr_body, pr_title, ticket_comment
 from veil.engine.models.fix.fix import Fix
@@ -26,14 +26,13 @@ def publish(
     if not fixes:
         return
     breaking = [fix for fix in fixes if fix.breaking]
-    issue_labels = tuple(label for fix in fixes if (label := fix.ticket.issue_label))
     new_pr = NewPr(
         repo=group.repo,
         head=branch,
         base=group.branch,
         title=context.redact(pr_title(fixes)),
         body=context.redact(pr_body(group, fixes)),
-        labels=(*issue_labels, BREAKING_LABEL) if breaking else issue_labels,
+        labels=(FIX_PR_LABEL, BREAKING_LABEL) if breaking else (FIX_PR_LABEL,),
     )
     pr_url = context.repo_provider.open_pr(new_pr)
     for fix in fixes:

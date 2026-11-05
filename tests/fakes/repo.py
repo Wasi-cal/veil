@@ -4,7 +4,8 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from veil.engine import FixQuery, NewPr
-from veil.engine.constants.names import FixKind
+from veil.engine.constants.names import FIX_PR_LABEL, FixKind
+from veil.engine.fix.pr_text import pr_covers_ticket
 
 
 def _git(cwd: Path, *args: str) -> str:
@@ -51,6 +52,7 @@ class FakeRemoteFix(BaseModel):
     branch: str
     base: str | None
     labels: tuple[str, ...]
+    body: str = ""
 
 
 class FakeWorkspace:
@@ -187,10 +189,18 @@ class FakeRepoProvider:
             r.kind
             for r in self._remote
             if r.repo == query.repo
-            and query.issue_label in r.labels
+            and self._is_fix_of(r, query)
             and self._matches(r, query)
         ]
         return "open_pr" if "open_pr" in kinds else (kinds[0] if kinds else None)
+
+    @staticmethod
+    def _is_fix_of(remote: FakeRemoteFix, query: FixQuery) -> bool:
+        if query.issue_label in remote.labels:
+            return True
+        return FIX_PR_LABEL in remote.labels and pr_covers_ticket(
+            remote.body, query.ticket_key
+        )
 
     @staticmethod
     def _matches(remote: FakeRemoteFix, query: FixQuery) -> bool:
@@ -224,6 +234,7 @@ class FakeRepoProvider:
                 branch=new_pr.head,
                 base=new_pr.base,
                 labels=new_pr.labels,
+                body=new_pr.body,
             )
         )
         self.pull_requests.append(

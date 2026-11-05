@@ -81,15 +81,15 @@ The tracker gives the Engine the candidates: tickets that are open, unassigned a
 | `no_issue_label` | The ticket has no label that starts with `issue-`. The Engine cannot prove that no PR exists. |
 | `source_pr_not_open` | The branch of the ticket has no open PR. The developer merged or closed the Source PR, or the branch never had a PR. |
 | `duplicate_issue` | An earlier ticket in this run has the same issue label on the same Source PR branch. It is the same finding, so the Engine keeps the first ticket. |
-| `open_pr` | The repo provider has an open PR with the Source PR branch as its base. The PR carries the issue label of the ticket. |
+| `open_pr` | The repo provider has an open PR with the Source PR branch as its base. The PR carries the label `veil-fix` and has a section for the ticket. A PR from before that label carries the issue label of the ticket. |
 | `merged_pr` | A person merged a Fix PR for this ticket into the Source PR branch. The ticket is not fixed again. A person or a scan closes it. |
-| `fix_branch` | The repo provider has a Fix branch that carries the issue label. No PR is open. |
+| `fix_branch` | The repo provider has a closed PR with a Fix branch that still exists. The PR is a Fix PR as above. No PR is open. |
 
 A skipped ticket opens no checkout, uses no tokens and gets no comment. The run report lists each skipped ticket under its reason.
 
 The run report has a table with one row for each ticket: the ticket, the outcome and the reason. A Failed Fix has the same reason in the report as in its Jira comment. The Engine hides credentials in the reason.
 
-This makes a second run safe. The Engine puts the issue label on each PR that it opens. The next run finds the PR and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
+This makes a second run safe. The Engine puts the label `veil-fix` on each PR that it opens. It does not put the issue label on the PR. The body of the PR has one section for each ticket, with the ticket key in its heading. The next run finds the PR by the label and by that key, and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
 
 If the tracker lists a ticket twice, the Engine uses it once. If two tickets have the same issue label on the same Source PR branch, the Engine fixes the first one. It skips the second because the first PR already exists.
 

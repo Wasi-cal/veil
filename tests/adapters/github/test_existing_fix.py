@@ -39,6 +39,7 @@ def query(**fields) -> FixQuery:
         "issue_label": LABEL,
         "source_branch": "feature-x",
         "branch_prefix": "veil/fix-",
+        "ticket_key": "GR-5",
     }
     return FixQuery(**{**base, **fields})
 
@@ -206,3 +207,51 @@ def test_a_merged_fix_pr_under_the_older_gozu_prefix_is_still_found(tmp_path):
     provider = provider_with(tmp_path, [fix])
 
     assert provider.find_existing_fix(query()) == "merged_pr"
+
+
+def veil_pr(key="GR-5", **fields):
+    body = f"## {key} · `app.py:3`\n\n**Why this is a problem**\nIt is unsafe."
+    return pr(
+        head_branch=FIX_BRANCH,
+        base_branch="feature-x",
+        labels=("veil-fix",),
+        body=body,
+        **fields,
+    )
+
+
+def test_an_open_pr_with_the_veil_fix_label_and_the_ticket_section_is_found(tmp_path):
+    provider = provider_with(tmp_path, [veil_pr()])
+
+    assert provider.find_existing_fix(query()) == "open_pr"
+
+
+def test_a_veil_fix_pr_of_another_ticket_is_not_found(tmp_path):
+    provider = provider_with(tmp_path, [veil_pr(key="GR-6")])
+
+    assert provider.find_existing_fix(query()) is None
+
+
+def test_a_pr_with_the_ticket_section_but_no_veil_fix_label_is_not_found(tmp_path):
+    other = pr(
+        head_branch="other", base_branch="feature-x", body="## GR-5 · `app.py:3`\n"
+    )
+    provider = provider_with(tmp_path, [other])
+
+    assert provider.find_existing_fix(query()) is None
+
+
+def test_a_merged_veil_fix_pr_is_found_by_its_ticket_section(tmp_path):
+    provider = provider_with(tmp_path, [veil_pr(state="merged")])
+
+    assert provider.find_existing_fix(query()) == "merged_pr"
+
+
+def test_a_shared_veil_fix_pr_is_found_for_each_ticket_in_it(tmp_path):
+    body = "## GR-5 · `a.py:1`\n\ntext\n\n## GR-6 · `a.py:9`\n\ntext"
+    shared = pr(
+        head_branch=FIX_BRANCH, base_branch="feature-x", labels=("veil-fix",), body=body
+    )
+    provider = provider_with(tmp_path, [shared])
+
+    assert provider.find_existing_fix(query(ticket_key="GR-6")) == "open_pr"

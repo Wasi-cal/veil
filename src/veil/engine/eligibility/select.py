@@ -79,6 +79,7 @@ def _skip_reason(
         return SOURCE_PR_NOT_OPEN
     query = FixQuery(
         repo=ticket.repo,
+        ticket_key=ticket.key,
         issue_label=ticket.issue_label,
         source_branch=ticket.branch,
         branch_prefix=settings.branch_prefix,

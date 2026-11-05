@@ -14,6 +14,16 @@ from veil.engine.models.fix.fix import Fix
 from veil.engine.models.group.fix_group import FixGroup
 
 
+def ticket_heading(key: str) -> str:
+    """The start of the section of a ticket in the body of a Fix PR. A later run finds its Fix PR by this text."""
+    return f"## {key} · "
+
+
+def pr_covers_ticket(body: str, key: str) -> bool:
+    """True if the body of a Fix PR has a section for this ticket."""
+    return any(line.startswith(ticket_heading(key)) for line in body.splitlines())
+
+
 def commit_text(fix: Fix) -> str:
     """The commit message: the subject of the model, the three parts of the explanation, then a footer that names the ticket.
 
@@ -68,7 +78,7 @@ def pr_body(group: FixGroup, fixes: list[Fix]) -> str:
         )
         note = f"{LOCKFILE_NOTE}\n\n" if ticket.package else ""
         sections.append(
-            f"## {ticket.key} · {place}\n\n"
+            f"{ticket_heading(ticket.key)}{place}\n\n"
             f"{note}"
             f"{breaking}"
             f"**{PROBLEM_LABEL}**\n{fix.problem}\n\n"
