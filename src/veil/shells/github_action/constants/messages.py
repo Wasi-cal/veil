@@ -6,9 +6,7 @@ TRIGGER_OFF = "Skipped the run. The event {event} is off. Turn on the setting {s
 FIX_BRANCH_RUN = "Skipped the run. The branch {branch} is a Fix branch. Veil never runs on its own branches."
 NO_EVENT_FILE = "The variable {name} is not set or does not name a file. The runner sets it for a pull_request event."
 BAD_EVENT_FILE = "The event file does not hold the head of a pull request."
-NO_NEW_TICKETS_NOTICE = (
-    "Skipped the run. The Gozu scan made no new ticket, so there is nothing new to fix."
-)
+NO_NEW_TICKETS_NOTICE = "Skipped the run. The Gozu scan found no To Do ticket for this branch, so there is nothing to fix."
 FORK_PULL_REQUEST = "Skipped the run. The pull request comes from another repo, such as a fork. A fork never gets a secret."
 CREDENTIAL_MISSING = "The variable {name} is not set or is empty."
 CREDENTIAL_TOO_SHORT = "The variable {name} is too short to be a credential."

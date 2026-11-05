@@ -10,10 +10,11 @@ REF_NAME_VARIABLE = "GITHUB_REF_NAME"
 # The largest event file that the Action reads.
 EVENT_FILE_MAX_BYTES = 10 * 1024 * 1024
 
-# The Gozu scan action sets this variable for the steps after it. It lists the keys of the tickets that the scan just made,
-# separated by commas. Jira search can trail a new ticket by a few seconds, so veil reads these tickets by key.
+# The Gozu scan action sets this variable for the steps after it. It lists the keys of the To Do tickets of the branch,
+# with the tickets that the scan just made, separated by commas. Jira search can trail a new ticket by a few seconds,
+# so veil reads the tickets that the search did not show by key.
 TICKET_KEYS_VARIABLE = "GOZU_TICKET_KEYS"
-# The Gozu scan sets the variable to this word when it ran and made no new ticket. Then veil skips the run.
+# The Gozu scan sets the variable to this word when no ticket of the branch is left to do. Then veil skips the run.
 NO_NEW_TICKETS = "none"
 
 # The workflow gives the Action its GitHub token through this variable. The token covers this repo for this job only.

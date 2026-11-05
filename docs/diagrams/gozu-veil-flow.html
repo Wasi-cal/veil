@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gozu + veil flow</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2230; --muted: #5b6577; --line: #cdd3de; --lane: #e9edf3;
+    --accent: #2563eb; --accent-soft: #dbe7ff;
+    --scan: #7c3aed; --shell: #0d9488; --find: #2563eb; --skip: #d97706; --fix: #db2777; --pub: #16a34a; --loop: #475569;
+    --warn: #b45309; --warn-bg: #fff4e0; --ok-bg: #e6f6ec; --shadow: 0 1px 2px rgba(20,30,50,.08), 0 4px 14px rgba(20,30,50,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f131b; --panel: #171c27; --ink: #e8ecf4; --muted: #9aa5ba; --line: #333c4e; --lane: #1d2431;
+      --accent: #6b9bff; --accent-soft: #1d2b4d;
+      --scan: #a78bfa; --shell: #2dd4bf; --find: #6b9bff; --skip: #fbbf24; --fix: #f472b6; --pub: #4ade80; --loop: #94a3b8;
+      --warn: #fbbf24; --warn-bg: #2b2412; --ok-bg: #12261a; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f131b; --panel: #171c27; --ink: #e8ecf4; --muted: #9aa5ba; --line: #333c4e; --lane: #1d2431;
+    --accent: #6b9bff; --accent-soft: #1d2b4d;
+    --scan: #a78bfa; --shell: #2dd4bf; --find: #6b9bff; --skip: #fbbf24; --fix: #f472b6; --pub: #4ade80; --loop: #94a3b8;
+    --warn: #fbbf24; --warn-bg: #2b2412; --ok-bg: #12261a; --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 16px; margin: 0; font-weight: 650; }
+  .grow { flex: 1; }
+  .count { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 74px; text-align: right; }
+  button { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button[disabled] { opacity: .45; cursor: default; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px 0; }
+  .chip { font-size: 12px; padding: 2px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); cursor: pointer; background: var(--panel); }
+  .chip.on { color: #fff; border-color: transparent; }
+  main { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr); gap: 14px; padding: 10px 16px 16px; min-height: 0; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; overflow: auto; } .app { height: auto; } }
+  .stage, .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); min-height: 0; }
+  .stage { overflow: auto; position: relative; cursor: pointer; }
+  .stage svg { display: block; width: 100%; min-width: 640px; }
+  .card { overflow: auto; padding: 16px 18px; cursor: default; }
+  .card h2 { margin: 0 0 4px; font-size: 18px; line-height: 1.3; }
+  .kicker { font-size: 12px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+  .route { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 10px; font-size: 13px; }
+  .route span.actor { padding: 1px 9px; border-radius: 6px; background: var(--lane); }
+  .card p { margin: 8px 0; }
+  .card ul { margin: 6px 0 8px; padding-left: 20px; }
+  .card li { margin: 3px 0; }
+  .box { border-radius: 8px; padding: 8px 12px; margin: 10px 0; font-size: 14px; }
+  .box.calls { background: var(--accent-soft); }
+  .box.stops { background: var(--warn-bg); }
+  .box.good { background: var(--ok-bg); }
+  .box b.t { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--lane); padding: 1px 5px; border-radius: 4px; }
+  .rules { list-style: none; padding: 0; margin: 8px 0; }
+  .rules li { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: start; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; margin: 6px 0; background: var(--panel); }
+  .rules li.hidden { display: none; }
+  .rules li.now { border-color: var(--skip); box-shadow: 0 0 0 2px color-mix(in srgb, var(--skip) 30%, transparent); }
+  .rules .n { font-weight: 700; color: var(--skip); }
+  .tag { font-size: 11px; padding: 1px 8px; border-radius: 99px; background: var(--lane); color: var(--muted); white-space: nowrap; }
+  .tag.gh { background: color-mix(in srgb, var(--shell) 20%, transparent); color: var(--ink); }
+  .tag.jira { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--ink); }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  /* diagram */
+  .life { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 5; }
+  .actor rect { fill: var(--lane); stroke: var(--line); }
+  .actor text { fill: var(--ink); font-size: 13px; font-weight: 650; text-anchor: middle; }
+  .actor text.sub { font-weight: 400; font-size: 11px; fill: var(--muted); }
+  .band { fill: var(--lane); opacity: .55; }
+  .bandtxt { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+  .arrow { fill: none; stroke-width: 2; opacity: .0; }
+  .arrow.seen { opacity: .38; }
+  .arrow.active { opacity: 1; stroke-width: 3; }
+  .arrow.draw { animation: draw .55s ease-out both; }
+  @keyframes draw { from { stroke-dashoffset: var(--len); stroke-dasharray: var(--len); } to { stroke-dashoffset: 0; stroke-dasharray: var(--len); } }
+  .lbl { font-size: 13px; fill: var(--ink); text-anchor: middle; opacity: 0; paint-order: stroke; stroke: var(--panel); stroke-width: 5px; stroke-linejoin: round; }
+  .lbl.seen { opacity: .6; } .lbl.active { opacity: 1; font-weight: 650; }
+  .num circle { fill: var(--panel); stroke-width: 2; } .num text { font-size: 10.5px; font-weight: 700; text-anchor: middle; fill: var(--ink); }
+  .num { opacity: 0; } .num.seen { opacity: .65; } .num.active { opacity: 1; }
+  .overview .arrow, .overview .lbl, .overview .num { opacity: .9 !important; }
+  .overview .arrow { stroke-width: 2; }
+  .gap { border-left: 4px solid var(--warn); }
+  @media (prefers-reduced-motion: reduce) { .arrow.draw { animation: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div>
+    <header>
+      <h1>Gozu scan + veil: one job, step by step</h1>
+      <span class="grow"></span>
+      <span class="count" id="count" aria-live="polite"></span>
+      <button id="prev" aria-label="Previous step">← Back</button>
+      <button id="next" class="primary" aria-label="Next step">Next →</button>
+      <button id="whole" aria-label="Show the whole flow">Whole flow</button>
+      <button id="theme" aria-label="Switch light or dark">◐</button>
+    </header>
+    <div class="phases" id="phases" role="tablist" aria-label="Phases"></div>
+  </div>
+  <main>
+    <div class="stage" id="stage" aria-label="Flow diagram. Click to go to the next step."></div>
+    <aside class="card" id="card" aria-live="polite"></aside>
+  </main>
+</div>
+
+<script>
+"use strict";
+/* Actors: the columns of the diagram. */
+const ACTORS = {
+  GH: { name: "GitHub", sub: "runner, PRs, repo" },
+  GZ: { name: "Gozu action", sub: "scan step" },
+  JR: { name: "Jira", sub: "tickets" },
+  VA: { name: "veil Action", sub: "shell, checks" },
+  VE: { name: "veil Engine", sub: "decides, fixes" },
+  AI: { name: "OpenAI model", sub: "writes the fix" },
+};
+const ORDER = ["GH", "GZ", "JR", "VA", "VE", "AI"];
+
+/* Phases. The colour of an arrow is the colour of its phase. */
+const PHASES = [
+  { id: "trigger", name: "1 Trigger", color: "--loop" },
+  { id: "scan", name: "2 Gozu scan", color: "--scan" },
+  { id: "shell", name: "3 veil starts", color: "--shell" },
+  { id: "find", name: "4 Find tickets", color: "--find" },
+  { id: "skip", name: "5 Skip rules", color: "--skip" },
+  { id: "fix", name: "6 Fix", color: "--fix" },
+  { id: "pub", name: "7 Publish", color: "--pub" },
+  { id: "loop", name: "8 Next run", color: "--loop" },
+];
+
+/* Each step is one arrow. `sub` lists extra clicks inside the step. */
+const STEPS = [
+  { ph: "trigger", from: "GH", to: "GZ", label: "PR opened or pushed", n: "PR event starts the job",
+    title: "A pull request starts one job with two steps",
+    body: [
+      "The workflow <code>gozu-veil</code> runs on <code>pull_request</code> (opened, reopened, synchronize) and on a manual start.",
+      "It has <b>one job</b>: checkout of the PR head, then the Gozu step, then the veil step. One runner, one checkout.",
+      "A concurrency group lets only one run per repo go at a time, and it never cancels a run that is going."],
+    stops: ["A fork PR gets no secrets, so both steps skip it."] },
+
+  { ph: "scan", from: "GZ", to: "GZ", label: "gate: should this branch be scanned?", n: "Gate",
+    title: "The gate runs before anything is installed",
+    body: [
+      "Gozu skips the run when the head branch is the <b>default branch</b>, a <b>veil branch</b> (<code>veil/*</code>, <code>gozu/fix-*</code>), a <b>fork</b> PR, or matches <code>skip-branches</code>.",
+      "A skipped run costs a few seconds and sets no <code>GOZU_TICKET_KEYS</code>."],
+    stops: ["Default branch, veil branch, fork: the Gozu step ends here."] },
+
+  { ph: "scan", from: "GZ", to: "GZ", label: "scan with Trivy and Semgrep", n: "Scan",
+    title: "Trivy and Semgrep both scan the checkout",
+    body: [
+      "Trivy finds vulnerabilities in dependencies, secrets and misconfigurations. Semgrep finds code issues.",
+      "Both run by default (<code>scanners: trivy,semgrep</code>).",
+      "<b>Caches:</b> the Semgrep venv (keyed by tool versions, OS, CPU, Python) and the Trivy database (new key each day)."],
+    calls: ["No Jira or GitHub call. Runs on the runner."] },
+
+  { ph: "scan", from: "GZ", to: "JR", label: "which findings have a ticket?", n: "Look up tickets",
+    title: "One search finds the tickets that already exist",
+    body: [
+      "Each finding has an identity: <code>issue-&lt;id&gt;</code>, a hash of repo, file, line, rule and type. <b>The branch is not in it.</b>",
+      "Gozu searches the <b>whole Jira project, in any status</b>, for those labels. One search covers many findings.",
+      "So a finding that has a ticket from an older branch or from the Gozu CLI is <b>not ticketed again</b>."],
+    calls: ["Jira: a few <code>search/jql</code> calls, not one per finding."] },
+
+  { ph: "scan", from: "GZ", to: "JR", label: "create a ticket per new finding", n: "Create tickets",
+    title: "Every finding with no ticket gets one",
+    body: [
+      "There is no cap: 700 findings make 700 tickets.",
+      "A ticket has the title <code>repo | file | line | title</code>, the labels <code>issue-&lt;id&gt;</code>, <code>&lt;tool&gt;</code>, <code>branch-&lt;branch&gt;</code>, a Details list, and status <b>To Do</b>.",
+      "Extras, best effort: a code snippet PNG, a comment, a place in the active sprint.",
+      "Two runs at once can both create one. The oldest stays and the newer closes as a duplicate."],
+    calls: ["Jira: create, comment, attach, per new ticket."] },
+
+  { ph: "scan", from: "GZ", to: "JR", label: "close fixed, reopen returned", n: "Auto-close",
+    title: "Auto-close: only tickets of this branch",
+    body: [
+      "Open tickets that have <b>this branch's</b> <code>branch-&lt;name&gt;</code> label, made by a scanner that ran, whose finding is <b>no longer reported</b>, are closed. They get the label <code>gozu-auto-closed</code> and a comment.",
+      "A finding that comes back reopens a ticket that Gozu closed. A ticket that a person closed stays closed."],
+    stops: [
+      "<b>Older tickets are not touched.</b> A ticket from another branch, from <code>main</code>, or from the Gozu CLI has a different branch label. This scan cannot see those branches, so it leaves them open."] },
+
+  { ph: "scan", from: "GZ", to: "GH", label: "GOZU_TICKET_KEYS=VT-1,VT-2 or none", n: "Hand over",
+    title: "Gozu tells the later steps what is left to do",
+    body: [
+      "Gozu runs one more search: the tickets of <b>this branch</b> that are still <b>To Do</b>. It adds the tickets it just made and writes <code>GOZU_TICKET_KEYS</code> into the job environment (at most 200 keys), or the word <code>none</code> when nothing is left.",
+      "Older tickets that veil did not fix yet are in the list, so they are not left behind.",
+      "veil reads a ticket <b>by key</b> only when its search misses it, because Jira search can trail a new ticket by a few seconds."],
+    calls: ["Jira: one search for the To Do tickets of the branch.", "Then a write to the <code>GITHUB_ENV</code> file. No network."] },
+
+  { ph: "shell", from: "VA", to: "VA", label: "read settings, allowed event?", n: "Settings",
+    title: "veil starts with checks that need no secret",
+    body: [
+      "It reads <code>.gozu/jira-to-pr.yml</code> from the checkout and checks that this event is switched on (<code>pull_request_enabled</code>).",
+      "An unknown or invalid setting fails the run <b>before it touches any ticket</b>."],
+    stops: ["Event switched off: the run ends with a notice."] },
+
+  { ph: "shell", from: "VA", to: "VA", label: "GOZU_TICKET_KEYS = none ? skip", n: "Nothing to do",
+    title: "Skip when no ticket is left to do",
+    body: [
+      "If the variable says <code>none</code>, no ticket of this branch is To Do. veil ends the run before it reads a credential or calls Jira or GitHub.",
+      "A ticket that an earlier run did not fix is still To Do, so the variable is filled and veil runs."],
+    stops: ["Value <code>none</code>: the veil step ends here."] },
+
+  { ph: "shell", from: "VA", to: "VA", label: "fork? veil branch? credentials", n: "Fork, branch, secrets",
+    title: "Fork and veil-branch checks, then credentials",
+    body: [
+      "A PR from a fork ends the run (a fork has no secrets). A run on a branch that starts with <code>veil/fix-</code>, <code>gozu/fix-</code> or your <code>branch_prefix</code> ends too: veil never fixes its own fixes.",
+      "Only now does it read the secrets and mask them in the log."],
+    stops: ["Fork PR or veil branch: the run ends with a notice."] },
+
+  { ph: "find", from: "VE", to: "JR", label: "open, unassigned tickets (+ new keys)", n: "Search Jira",
+    title: "The Engine asks Jira for open tickets",
+    body: [
+      "JQL: project in (your keys), <code>statusCategory != Done</code>, <code>assignee is EMPTY</code>, plus the eligible label if you set one.",
+      "The tickets that Gozu just made are read <b>by key</b> and checked against the same rules.",
+      "Then a filter: only tickets of <b>this repo</b>, and on a PR run only tickets whose <b>branch is exactly the PR branch</b>.",
+      "This is the line <code>Found 74 open ticket(s)</code> in your log."],
+    calls: ["Jira: paged search, plus one read per new key."],
+    stops: ["Tickets from other branches never reach the Engine on a PR run."] },
+
+  { ph: "skip", from: "VE", to: "VE", label: "select eligible: 7 rules, cheap first", n: "Skip rules",
+    title: "How veil skips a ticket",
+    body: ["Each ticket goes through these rules in order. The first rule that matches skips it, and the reason goes in the run report. Rules without a network call come first."],
+    sub: [
+      { t: "Raised against a Fix branch (<code>veil/fix-*</code>, <code>gozu/fix-*</code>, your prefix). A human decides what happens to it.", tag: "no call", code: "raised_against_fix_branch" },
+      { t: "Has the label <code>veil-failed-fix</code>. A person deletes the label to ask for another attempt.", tag: "no call", code: "failed_fix" },
+      { t: "The file is inside <code>.github/</code>. veil never edits workflows.", tag: "no call", code: "ignored_path" },
+      { t: "No <code>issue-&lt;id&gt;</code> label. veil cannot tell whether a fix exists.", tag: "no call", code: "no_issue_label" },
+      { t: "Same repo, branch and issue label as an earlier ticket in this run. It is one finding, so the first ticket wins.", tag: "no call", code: "duplicate_issue" },
+      { t: "The ticket's branch has <b>no open PR</b>. A Fix PR targets that branch, so there must be a Source PR.", tag: "GitHub list", code: "source_pr_not_open" },
+      { t: "A Fix already exists: an <b>open</b> Fix PR (<code>open_pr</code>), a <b>merged</b> Fix PR (<code>merged_pr</code>), or a closed PR whose Fix branch still exists (<code>fix_branch</code>). A Fix PR has the label <code>veil-fix</code> and a section for the ticket key (or the old issue label).", tag: "GitHub list", code: "open_pr / merged_pr / fix_branch" },
+    ],
+    stops: ["Every ticket that passes all seven rules is eligible."] },
+
+  { ph: "skip", from: "VE", to: "GH", label: "read the PR list once", n: "Why veil reads PRs",
+    title: "Why veil reads the pull requests",
+    body: [
+      "Two rules need PR facts: <b>is there an open Source PR for this branch?</b> and <b>does this ticket already have a Fix PR?</b>",
+      "<b>The bug in your log:</b> veil asked GitHub's search API about each ticket and then fetched every match one by one. 74 tickets made hundreds of calls, and GitHub answered 403 (rate limit).",
+      "<b>The fix (v1.5.1):</b> one paged read of the repo's PRs (newest 1000) per run. Every ticket is answered from that list in memory. The list is dropped when veil opens a PR."],
+    calls: ["GitHub: <code>GET /repos/…/pulls?state=all&amp;per_page=100</code>, once per repo per run. No search API."] },
+
+  { ph: "fix", from: "VE", to: "VE", label: "group: one PR per file", n: "Group",
+    title: "Eligible tickets are grouped",
+    body: [
+      "Tickets that flag the <b>same file on the same Source PR</b> share one group, because their fixes overlap. Each other ticket gets its own group.",
+      "High groups go first, then Medium, then Low. There is no cap on the number of groups."] },
+
+  { ph: "fix", from: "VE", to: "GH", label: "shallow checkout of the PR branch", n: "Checkout",
+    title: "veil checks out the Source PR branch",
+    body: [
+      "A shallow, private checkout. The token goes to git through the environment, never in the URL or in <code>.git/config</code>.",
+      "The Fix is built <b>on top of the Source PR branch</b>, and the Fix PR targets that branch. veil never touches the default branch."],
+    calls: ["git: one shallow fetch for each group."] },
+
+  { ph: "fix", from: "VE", to: "AI", label: "read, search, edit, finish (≤25 steps)", n: "Model loop",
+    title: "The model fixes one ticket with five tools",
+    body: [
+      "Tools: <code>read_file</code>, <code>search</code>, <code>list_dir</code>, <code>edit_file</code>, <code>finish</code>. <b>No shell, no network.</b>",
+      "Ticket text and repo files are <b>untrusted data</b>. The model cannot read secrets, <code>.git/</code>, <code>.github/</code> or lockfiles.",
+      "A package ticket on a lockfile is redirected to the manifest in the same folder.",
+      "Each ticket has its own token cap. Default model: <code>gpt-6-luna</code>."],
+    stops: ["Step cap (25) or token cap reached: the attempt fails."] },
+
+  { ph: "fix", from: "VE", to: "VE", label: "checks: parses, no secret, breaking?", n: "Checks",
+    title: "veil checks the result itself",
+    body: [
+      "The edited files must still <b>parse</b>. The added lines, commit text and explanation are <b>scanned for secrets</b>.",
+      "Engine checks flag a <b>breaking change</b> with no model call: a changed public Python interface, a risky manifest change (major bump, raised runtime, removed dependency), a major version jump on a package ticket.",
+      "A check can only add a flag. It never clears the model's."] },
+
+  { ph: "fix", from: "VE", to: "AI", label: "failed? one retry with the strong model", n: "Escalate",
+    title: "One retry, then Failed Fix",
+    body: [
+      "A failed attempt discards its edits. The strong model (<code>gpt-6.1-terra</code>) tries once from clean files, within the same token budget.",
+      "If that fails, or the cap is reached, the ticket becomes a <b>Failed Fix</b>: a comment with the reason and the label <code>veil-failed-fix</code>. It stays open and gets no PR. The run goes on."],
+    stops: ["Failed Fix: later runs skip it (rule 2) until a person removes the label."] },
+
+  { ph: "pub", from: "VE", to: "GH", label: "push veil/fix-… and open the Fix PR", n: "Open PR",
+    title: "One Fix PR for each group",
+    body: [
+      "Each Fix is its own commit: a Conventional Commit subject, the three explanation parts, and <code>Refs: KEY</code>.",
+      "veil pushes the branch <code>veil/fix-&lt;first key&gt;</code> (never forced) and opens a PR <b>ready for review</b> against the Source PR branch, with the label <code>veil-fix</code> (and <code>breaking-change</code> if flagged). It never merges."],
+    calls: ["GitHub: one push and one PR create for each group."] },
+
+  { ph: "pub", from: "VE", to: "JR", label: "comment + move to In Progress", n: "Update tickets",
+    title: "Every fixed ticket is updated",
+    body: [
+      "A comment with the PR link and the three parts. A <code>breaking-change</code> label if the Fix is flagged.",
+      "The status moves <b>To Do → In Progress</b> (the setting <code>in_review_status</code>; your VT workflow has no In Review). veil never closes a ticket."],
+    calls: ["Jira: comment, label, transition for each ticket."] },
+
+  { ph: "pub", from: "VA", to: "GH", label: "run summary", n: "Summary",
+    title: "The run report goes to the job summary",
+    body: ["PRs opened, tickets by outcome (fixed, Failed Fix, skipped with reasons, left for next run), tokens used, breaking changes. Credentials are masked."] },
+
+  { ph: "loop", from: "GH", to: "GZ", label: "Fix PR merged → push → run again", n: "Merge and re-run",
+    title: "A person merges the Fix PR",
+    body: [
+      "The Fix PR is opened with <code>GITHUB_TOKEN</code>, so it starts no workflow by itself. Both steps also skip <code>veil/fix-*</code> branches.",
+      "When a person merges it into the PR branch, the push starts the workflow again on that branch."] },
+
+  { ph: "loop", from: "GZ", to: "JR", label: "finding gone → close ticket", n: "Auto-close",
+    title: "Gozu closes the fixed tickets",
+    body: [
+      "The scan no longer reports the fixed findings, so Gozu closes those tickets (status <b>In Progress → Done</b>, label <code>gozu-auto-closed</code>).",
+      "A Done ticket leaves veil's search (<code>statusCategory != Done</code>). New findings in the new push become new tickets, and veil fixes those."] },
+
+  { ph: "loop", from: "VA", to: "JR", label: "next run: older To Do tickets", n: "Older tickets",
+    title: "How tickets that Gozu made earlier get fixed",
+    body: [
+      "On the next run Gozu usually makes <b>no new ticket</b>. It still lists the <b>To Do tickets of the branch</b>, so <code>GOZU_TICKET_KEYS</code> is filled and veil runs.",
+      "A ticket that a crashed or stopped run did not fix is still To Do, so it is picked up now. A fixed ticket is In Progress or Done and is not listed.",
+      "veil skips only when nothing is To Do. <b>Failed Fix</b> tickets stay To Do with their label, so veil runs and skips them in rule 2 at no model cost."] },
+];
+
+/* ---------- drawing ---------- */
+const NS = "http://www.w3.org/2000/svg";
+const stage = document.getElementById("stage");
+const card = document.getElementById("card");
+const phasesEl = document.getElementById("phases");
+const countEl = document.getElementById("count");
+const prevBtn = document.getElementById("prev");
+const nextBtn = document.getElementById("next");
+const wholeBtn = document.getElementById("whole");
+
+const W = 980, COLX = {}, TOP = 70, ROW = 62, BAND = 30, LEFT = 90, RIGHT = 90;
+ORDER.forEach((id, i) => { COLX[id] = LEFT + (i * (W - LEFT - RIGHT)) / (ORDER.length - 1); });
+
+let layout = [];          // y of each step, and bands
+let height = 0;
+(function computeLayout() {
+  let y = TOP, last = null;
+  STEPS.forEach((s, i) => {
+    if (s.ph !== last) { layout.push({ band: s.ph, y }); y += BAND; last = s.ph; }
+    y += ROW / 2; s.y = y; y += ROW / 2;
+  });
+  height = y + 24;
+})();
+
+const color = (ph) => `var(${PHASES.find(p => p.id === ph).color})`;
+const el = (name, attrs = {}, parent) => {
+  const e = document.createElementNS(NS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+};
+
+const svg = el("svg", { viewBox: `0 0 ${W} ${height}`, role: "img", "aria-label": "Sequence diagram of the Gozu scan and veil" });
+stage.appendChild(svg);
+const defs = el("defs", {}, svg);
+PHASES.forEach(p => {
+  const m = el("marker", { id: "ah-" + p.id, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 z", fill: color(p.id) }, m);
+});
+layout.forEach(b => {
+  const p = PHASES.find(x => x.id === b.band);
+  el("rect", { x: 8, y: b.y, width: W - 16, height: BAND - 4, rx: 6, class: "band" }, svg);
+  const t = el("text", { x: 18, y: b.y + 17, class: "bandtxt", fill: color(b.band) }, svg);
+  t.textContent = p.name;
+});
+ORDER.forEach(id => {
+  el("line", { x1: COLX[id], x2: COLX[id], y1: 52, y2: height - 8, class: "life" }, svg);
+  const g = el("g", { class: "actor" }, svg);
+  el("rect", { x: COLX[id] - 66, y: 6, width: 132, height: 42, rx: 8 }, g);
+  const a = el("text", { x: COLX[id], y: 24 }, g); a.textContent = ACTORS[id].name;
+  const b = el("text", { x: COLX[id], y: 40, class: "sub" }, g); b.textContent = ACTORS[id].sub;
+});
+
+const marks = STEPS.map((s, i) => {
+  const c = color(s.ph);
+  const x1 = COLX[s.from], x2 = COLX[s.to], y = s.y;
+  let d, lx, ly;
+  const leftward = s.from === s.to && x1 > W / 2;
+  if (s.from === s.to) {
+    const k = leftward ? -1 : 1;
+    d = `M ${x1} ${y - 14} h ${46 * k} v 28 h ${-46 * k}`; lx = x1 + k * 58; ly = y + 4;
+  } else {
+    const dir = x2 > x1 ? 1 : -1;
+    d = `M ${x1} ${y} L ${x2 - dir * 2} ${y}`; lx = (x1 + x2) / 2; ly = y - 8;
+  }
+  const g = el("g", { "data-i": i, style: "cursor:pointer" }, svg);
+  const path = el("path", { d, class: "arrow", stroke: c, "marker-end": `url(#ah-${s.ph})` }, g);
+  const t = el("text", { x: lx, y: ly, class: "lbl" }, g);
+  t.textContent = s.label;
+  if (s.from === s.to) t.style.textAnchor = leftward ? "end" : "start";
+  // The number sits just outside the source lifeline, away from the arrow, so it never covers a label.
+  const nx = s.from === s.to ? x1 + (leftward ? 16 : -16) : x1 + (x2 > x1 ? -16 : 16);
+  const num = el("g", { class: "num", transform: `translate(${nx} ${y})` }, g);
+  el("circle", { r: 10, stroke: c }, num);
+  const nt = el("text", { y: 4 }, num); nt.textContent = i + 1;
+  // wide invisible hit area for the overview
+  el("rect", { x: s.from === s.to ? (leftward ? x1 - 330 : x1 - 20) : Math.min(x1, x2) - 8, y: y - 18, width: s.from === s.to ? 350 : Math.abs(x2 - x1) + 16, height: 36, fill: "transparent" }, g);
+  return { g, path, t, num, len: path.getTotalLength ? 0 : 0 };
+});
+
+/* ---------- state ---------- */
+let cur = -1;          // -1: intro, 0..N-1: step, N: whole flow
+let subShown = 0;      // how many sub items are shown for the current step
+const N = STEPS.length;
+
+function render() {
+  const whole = cur === N;
+  svg.classList.toggle("overview", whole);
+  marks.forEach((m, i) => {
+    const active = i === cur;
+    const seen = i < cur || whole;
+    const wasActive = m.path.classList.contains("active");
+    m.path.setAttribute("class", "arrow" + (active ? " active" : seen ? " seen" : ""));
+    m.t.setAttribute("class", "lbl" + (active ? " active" : seen ? " seen" : ""));
+    m.num.setAttribute("class", "num" + (active ? " active" : seen ? " seen" : ""));
+    if (active && !wasActive) {
+      const len = m.path.getTotalLength();
+      m.path.style.setProperty("--len", len);
+      m.path.classList.add("draw");
+    }
+  });
+  // phase chips
+  phasesEl.innerHTML = "";
+  const curPh = cur >= 0 && cur < N ? STEPS[cur].ph : null;
+  PHASES.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "chip" + (curPh === p.id ? " on" : "");
+    b.textContent = p.name;
+    if (curPh === p.id) b.style.background = color(p.id);
+    b.onclick = () => { const i = STEPS.findIndex(s => s.ph === p.id); go(i); };
+    phasesEl.appendChild(b);
+  });
+  prevBtn.disabled = cur <= -1;
+  nextBtn.disabled = cur >= N;
+  countEl.textContent = cur < 0 ? "Start" : whole ? "Whole flow" : `${cur + 1} / ${N}`;
+  card.innerHTML = cardHtml();
+  if (cur >= 0 && cur < N) {
+    const y = STEPS[cur].y;
+    stage.scrollTo({ top: Math.max(0, (y / height) * svg.getBoundingClientRect().height - stage.clientHeight / 2), behavior: "smooth" });
+  } else if (cur < 0) stage.scrollTo({ top: 0 });
+}
+
+const actorChip = (id) => `<span class="actor">${ACTORS[id].name}</span>`;
+
+function cardHtml() {
+  if (cur < 0) {
+    return `<div class="kicker" style="color:var(--accent)">Start</div>
+      <h2>How Gozu and veil work together</h2>
+      <p>Gozu <b>finds</b> problems and makes Jira tickets. veil <b>fixes</b> those tickets and opens pull requests. Both run as two steps of one job in your workflow.</p>
+      <p>Click the diagram, press <code>→</code> or <code>Space</code>, or use <b>Next</b>. Each click draws the next connection and explains it. <code>←</code> goes back.</p>
+      <div class="box good"><b class="t">What you will see</b>
+        <ul><li>The scan, step by step</li><li>How veil starts and which checks stop it</li><li>How veil finds tickets and the 7 rules that skip a ticket</li><li>Why veil reads GitHub pull requests</li><li>How a fix is made, published and later closed</li><li>How older tickets are picked up, and the whole flow on one page</li></ul></div>
+      <p class="hint">Dark or light follows your system. The ◐ button switches it.</p>`;
+  }
+  if (cur === N) {
+    const items = PHASES.map(p => {
+      const first = STEPS.findIndex(s => s.ph === p.id);
+      const steps = STEPS.map((s, i) => [s, i]).filter(([s]) => s.ph === p.id);
+      return `<li style="margin:6px 0"><b style="color:${color(p.id)}">${p.name}</b>: ${steps.map(([s, i]) => `<a href="#" data-go="${i}">${i + 1} ${s.n}</a>`).join(" · ")}</li>`;
+    }).join("");
+    return `<div class="kicker" style="color:var(--accent)">Whole flow</div>
+      <h2>Everything on one page</h2>
+      <p>Every arrow is one step. Click an arrow, or a link below, to read that step.</p>
+      <ul style="list-style:none;padding:0">${items}</ul>
+      <div class="box good"><b class="t">Skip rule</b>veil skips a run only when no ticket of the branch is To Do (step 9). An older ticket that was not fixed keeps veil running (step ${N}).</div>
+      <div class="box calls"><b class="t">GitHub calls in a veil run</b>One paged read of the PR list for each repo, then one push and one PR create for each group. No search API.</div>`;
+  }
+  const s = STEPS[cur];
+  const p = PHASES.find(x => x.id === s.ph);
+  const route = s.from === s.to
+    ? `${actorChip(s.from)} <span>checks itself</span>`
+    : `${actorChip(s.from)} <span>→</span> ${actorChip(s.to)}`;
+  let h = `<div class="kicker" style="color:${color(s.ph)}">${p.name} · step ${cur + 1}</div><h2>${s.title}</h2><div class="route">${route}</div>`;
+  h += s.body.map(b => `<p>${b}</p>`).join("");
+  if (s.sub) {
+    h += `<ol class="rules" id="rules">` + s.sub.map((r, i) =>
+      `<li class="${i < subShown ? "" : "hidden"}${i === subShown - 1 ? " now" : ""}"><span class="n">${i + 1}</span><span>${r.t}<br><code>${r.code}</code></span><span class="tag ${r.tag.startsWith("GitHub") ? "gh" : ""}">${r.tag}</span></li>`).join("") + `</ol>`;
+    if (subShown < s.sub.length) h += `<p class="hint">Click for rule ${subShown + 1} of ${s.sub.length}.</p>`;
+  }
+  if (s.calls) h += `<div class="box calls"><b class="t">Calls</b>${s.calls.join("<br>")}</div>`;
+  if (s.stops && (!s.sub || subShown >= s.sub.length)) h += `<div class="box stops${s.gap ? " gap" : ""}"><b class="t">Can stop here</b>${s.stops.join("<br>")}</div>`;
+  return h;
+}
+
+function go(i) {
+  cur = Math.max(-1, Math.min(N, i));
+  subShown = 0;
+  render();
+}
+function next() {
+  if (cur >= 0 && cur < N && STEPS[cur].sub && subShown < STEPS[cur].sub.length) { subShown++; render(); return; }
+  if (cur < N) go(cur + 1);
+}
+function prev() {
+  if (cur >= 0 && cur < N && STEPS[cur].sub && subShown > 0) { subShown--; render(); return; }
+  if (cur > -1) go(cur - 1);
+}
+
+nextBtn.onclick = next;
+prevBtn.onclick = prev;
+wholeBtn.onclick = () => go(N);
+stage.addEventListener("click", (e) => {
+  const g = e.target.closest("g[data-i]");
+  if (cur === N && g) { go(+g.dataset.i); return; }
+  next();
+});
+card.addEventListener("click", (e) => {
+  const a = e.target.closest("a[data-go]");
+  if (a) { e.preventDefault(); go(+a.dataset.go); }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") { if (document.activeElement.tagName !== "BUTTON") { e.preventDefault(); next(); } }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); prev(); }
+  else if (e.key === "Home") go(-1);
+  else if (e.key === "End") go(N);
+  else if (e.key.toLowerCase() === "o") go(N);
+});
+document.getElementById("theme").onclick = () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+};
+render();
+</script>
+</body>
+</html>

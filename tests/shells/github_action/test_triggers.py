@@ -54,7 +54,7 @@ def test_a_gozu_scan_that_made_no_ticket_means_veil_skips_the_run(world):
     code, spy = world.run_action()
 
     assert (code, spy.contexts) == (0, [])
-    assert "no new ticket" in world.out.getvalue()
+    assert "no To Do ticket" in world.out.getvalue()
     assert world.jira.seen == []
     assert world.github.seen == []
 
