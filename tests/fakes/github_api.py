@@ -13,20 +13,21 @@ class StubGitHubApi:
         self.created: list[PullRequest] = []
         self._default_branch = default_branch
         self.default_branch_questions = 0
+        self.pull_request_reads = 0
 
     def default_branch(self, repo: str) -> str:
         self.default_branch_questions += 1
         return self._default_branch
 
     def find_pull_requests(
-        self, repo: str, head: str | None = None, label: str | None = None
+        self, repo: str, head: str | None = None
     ) -> list[PullRequest]:
+        if head is None:
+            self.pull_request_reads += 1
         return [
             pr
             for pr in self.pull_requests
-            if pr.base_repo == repo
-            and (head is None or pr.head_branch == head)
-            and (label is None or label in pr.labels)
+            if pr.base_repo == repo and (head is None or pr.head_branch == head)
         ]
 
     def create_pr(

@@ -16,6 +16,7 @@ from veil.adapters.github.git_command import (
     run_git,
     secret_values,
 )
+from veil.adapters.github.models.pull_request import PullRequest
 from veil.adapters.github.workspace import GitWorkspace
 from veil.engine.constants.names import (
     FIX_BRANCH,
@@ -54,6 +55,7 @@ class GitHubRepoProvider:
         self._api = api
         self._remote_url = remote_url
         self._branch_prefix = branch_prefix
+        self._pr_cache: dict[str, list[PullRequest]] = {}
         self._temp_root = temp_root
         if temp_root is not None:
             temp_root.mkdir(mode=DIR_MODE, parents=True, exist_ok=True)
@@ -74,26 +76,26 @@ class GitHubRepoProvider:
         self._directories.clear()
         self._workspaces.clear()
 
+    def _pull_requests(self, repo: str) -> list[PullRequest]:
+        """The PRs of the repo. One read for each repo in a run answers every ticket, so a run makes few API calls."""
+        if repo not in self._pr_cache:
+            self._pr_cache[repo] = self._api.find_pull_requests(repo)
+        return self._pr_cache[repo]
+
     def has_open_pr(self, repo: str, branch: str) -> bool:
         return any(
-            pr.state == OPEN and _same_repo(pr.head_repo, repo)
-            for pr in self._api.find_pull_requests(repo, head=branch)
+            pr.state == OPEN
+            and pr.head_branch == branch
+            and _same_repo(pr.head_repo, repo)
+            for pr in self._pull_requests(repo)
         )
 
     def find_existing_fix(self, query: FixQuery) -> FixKind | None:
-        candidates = [
-            *(
-                pr
-                for pr in self._api.find_pull_requests(query.repo, label=FIX_PR_LABEL)
-                if pr_covers_ticket(pr.body, query.ticket_key)
-            ),
-            # A Fix PR from before the label `veil-fix` carries the issue label.
-            *self._api.find_pull_requests(query.repo, label=query.issue_label),
-        ]
         found = [
             pr
-            for pr in candidates
-            if _same_repo(pr.head_repo, query.repo)
+            for pr in self._pull_requests(query.repo)
+            if self._is_fix_pr_of(pr, query)
+            and _same_repo(pr.head_repo, query.repo)
             and pr.base_branch == query.source_branch
         ]
         if any(pr.state == OPEN for pr in found):
@@ -111,6 +113,13 @@ class GitHubRepoProvider:
         ):
             return FIX_BRANCH
         return None
+
+    @staticmethod
+    def _is_fix_pr_of(pr: PullRequest, query: FixQuery) -> bool:
+        """A Fix PR has the label `veil-fix` and a section for the ticket. A Fix PR from before that label has the issue label."""
+        return (
+            FIX_PR_LABEL in pr.labels and pr_covers_ticket(pr.body, query.ticket_key)
+        ) or query.issue_label in pr.labels
 
     def _branch_exists(self, repo: str, branch: str) -> bool:
         with tempfile.TemporaryDirectory(
@@ -189,11 +198,13 @@ class GitHubRepoProvider:
             raise RepoProviderError(
                 f"No checkout of {new_pr.repo} holds the branch {new_pr.head}."
             )
-        return self._api.create_pr(
+        created = self._api.create_pr(
             new_pr.repo,
             new_pr.head,
             new_pr.base,
             new_pr.title,
             new_pr.body,
             new_pr.labels,
-        ).url
+        )
+        self._pr_cache.pop(new_pr.repo, None)  # The new PR changes the answer.
+        return created.url

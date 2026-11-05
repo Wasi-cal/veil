@@ -5,6 +5,7 @@ from pydantic import SecretStr
 from veil.adapters.github.constants.http import (
     API_URL,
     API_VERSION,
+    MAX_PR_PAGES,
     PAGE_SIZE,
     UNAUTHORIZED,
 )
@@ -35,23 +36,24 @@ class HttpGitHubApi:
         self._base_url = base_url.rstrip("/")
 
     def find_pull_requests(
-        self, repo: str, head: str | None = None, label: str | None = None
+        self, repo: str, head: str | None = None
     ) -> list[PullRequest]:
         self._check_repo(repo)
-        if label is not None:
-            query = f'repo:{repo} is:pr label:"{label}"'
-            found = self._call(
-                "GET", "/search/issues", {"q": query, "per_page": PAGE_SIZE}
-            )
-            raw = [
-                self._call("GET", f"/repos/{repo}/pulls/{int(item['number'])}")
-                for item in found["items"]
-            ]
-        else:
-            params: dict[str, str | int] = {"state": "all", "per_page": PAGE_SIZE}
-            if head is not None:
-                params["head"] = f"{repo.split('/')[0]}:{head}"
-            raw = self._call("GET", f"/repos/{repo}/pulls", params)
+        params: dict[str, str | int] = {
+            "state": "all",
+            "sort": "created",
+            "direction": "desc",
+            "per_page": PAGE_SIZE,
+        }
+        if head is not None:
+            params["head"] = f"{repo.split('/')[0]}:{head}"
+        raw: list = []
+        # One page answers a question about one head. A list of all PRs can need more pages.
+        for page in range(1, 2 if head is not None else MAX_PR_PAGES + 1):
+            items = self._call("GET", f"/repos/{repo}/pulls", {**params, "page": page})
+            raw.extend(items)
+            if len(items) < PAGE_SIZE:
+                break
         found_prs = [self._pull_request(item) for item in raw]
         return [pr for pr in found_prs if head is None or pr.head_branch == head]
 

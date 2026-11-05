@@ -89,7 +89,7 @@ A skipped ticket opens no checkout, uses no tokens and gets no comment. The run 
 
 The run report has a table with one row for each ticket: the ticket, the outcome and the reason. A Failed Fix has the same reason in the report as in its Jira comment. The Engine hides credentials in the reason.
 
-This makes a second run safe. The Engine puts the label `veil-fix` on each PR that it opens. It does not put the issue label on the PR. The body of the PR has one section for each ticket, with the ticket key in its heading. The next run finds the PR by the label and by that key, and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
+The repo provider reads the PRs of the repo once for each run (the newest 1000), not once for each ticket, so a run with many tickets stays under the rate limit of GitHub. This makes a second run safe. The Engine puts the label `veil-fix` on each PR that it opens. It does not put the issue label on the PR. The body of the PR has one section for each ticket, with the ticket key in its heading. The next run finds the PR by the label and by that key, and skips the ticket. The Engine skips a Failed Fix ticket too, so it gets no second comment. After a run that stopped at the token ceiling, the next run fixes only the tickets that the earlier run left.
 
 If the tracker lists a ticket twice, the Engine uses it once. If two tickets have the same issue label on the same Source PR branch, the Engine fixes the first one. It skips the second because the first PR already exists.
 

@@ -255,3 +255,18 @@ def test_a_shared_veil_fix_pr_is_found_for_each_ticket_in_it(tmp_path):
     provider = provider_with(tmp_path, [shared])
 
     assert provider.find_existing_fix(query(ticket_key="GR-6")) == "open_pr"
+
+
+def test_many_questions_about_one_repo_read_the_pull_requests_once(tmp_path):
+    api = StubGitHubApi([veil_pr()])
+    make_remote(
+        tmp_path,
+        branches={"feature-x": {"app.py": "x\n"}, FIX_BRANCH: {"app.py": "y\n"}},
+    )
+    provider = make_provider(tmp_path, api=api)
+
+    for key in ("GR-5", "GR-6", "GR-7"):
+        provider.find_existing_fix(query(ticket_key=key))
+        provider.has_open_pr("acme/app", "feature-x")
+
+    assert api.pull_request_reads == 1

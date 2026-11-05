@@ -39,23 +39,20 @@ def test_it_finds_the_pull_requests_of_a_head_branch_in_every_state():
     assert request.authorization == f"Bearer {TOKEN}"
 
 
-def test_it_finds_the_pull_requests_that_carry_a_label():
+def test_it_reads_every_pull_request_in_pages_and_never_uses_the_search_api():
+    first = [pull_json(n, head=f"b{n}", base="main") for n in range(1, 101)]
+    second = [
+        pull_json(101, head="veil/fix-GR-5", base="feature-x", labels=("veil-fix",))
+    ]
     with StubHttpServer() as server:
-        server.routes[("GET", "/search/issues")] = (200, {"items": [{"number": 7}]})
-        server.routes[("GET", "/repos/acme/app/pulls/7")] = (
-            200,
-            pull_json(7, head="veil/fix-GR-5", base="feature-x", labels=("issue-abc",)),
-        )
+        server.routes[("GET", "/repos/acme/app/pulls")] = [(200, first), (200, second)]
 
-        [pr] = api_for(server).find_pull_requests("acme/app", label="issue-abc")
+        found = api_for(server).find_pull_requests("acme/app")
 
-    assert (pr.head_branch, pr.base_branch, pr.labels) == (
-        "veil/fix-GR-5",
-        "feature-x",
-        ("issue-abc",),
-    )
-    search = server.seen[0]
-    assert search.query["q"] == ['repo:acme/app is:pr label:"issue-abc"']
+    assert len(found) == 101
+    assert found[-1].labels == ("veil-fix",)
+    assert [r.path for r in server.seen] == ["/repos/acme/app/pulls"] * 2
+    assert [r.query["page"] for r in server.seen] == [["1"], ["2"]]
 
 
 def test_it_opens_a_ready_pr_and_puts_the_labels_on_it():
