@@ -16,6 +16,7 @@ from veil.engine.errors.tracker_error import TrackerError
 from veil.engine.models.report.run_report import RunReport
 from veil.engine.run import run as run_engine
 from veil.engine.secrets.redact import redact
+from veil.shells.github_action.constants.environment import TICKET_KEYS_VARIABLE
 from veil.shells.github_action.constants.events import PULL_REQUEST_EVENT
 from veil.shells.github_action.constants.messages import (
     FIX_BRANCH_RUN,
@@ -112,8 +113,20 @@ def _run(
     ]
     mask_values(tuple(known), out)
 
+    new_ticket_keys = tuple(
+        key.strip()
+        for key in environ.get(TICKET_KEYS_VARIABLE, "").split(",")
+        if key.strip()
+    )
     context, provider = build_context(
-        settings, jira, credentials, token, urls, env.repo, branch
+        settings,
+        jira,
+        credentials,
+        token,
+        urls,
+        env.repo,
+        branch,
+        new_ticket_keys=new_ticket_keys,
     )
     handler = logging.StreamHandler(out)
     handler.setFormatter(logging.Formatter("%(message)s"))

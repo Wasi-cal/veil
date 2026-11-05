@@ -14,6 +14,7 @@ def make_tracker(
     server: StubHttpServer,
     email: str | None = "bot@example.invalid",
     metadata_cache=None,
+    extra_keys=(),
     **settings,
 ) -> JiraTracker:
     return JiraTracker(
@@ -23,6 +24,7 @@ def make_tracker(
         credentials=JiraCredentials(email=email, api_token=SecretStr(API_TOKEN)),
         api_base=server.url,
         metadata_cache=metadata_cache,
+        extra_keys=extra_keys,
     )
 
 

@@ -1,5 +1,5 @@
 import hashlib
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from typing import Any
 
@@ -78,7 +78,9 @@ class JiraTracker:
         credentials: JiraCredentials,
         api_base: str | None = None,
         metadata_cache: MetadataCache | None = None,
+        extra_keys: Sequence[str] = (),
     ):
+        self._extra_keys = tuple(dict.fromkeys(extra_keys))
         self._settings = settings
         self._metadata = metadata_cache or NoMetadataCache()
         self._http = JiraHttp(api_base or settings.site_url, credentials)
@@ -103,7 +105,63 @@ class JiraTracker:
                         tickets.append(ticket)
                 page_token = page.get("nextPageToken")
             if not page_token:
-                return tickets
+                return tickets + self._new_tickets({t.key for t in tickets}, custom_ids)
+
+    def _new_tickets(self, known: set[str], custom_ids: dict[str, str]) -> list[Ticket]:
+        """The tickets that the caller names by key and that the search did not show.
+
+        Jira search can trail a new ticket by a few seconds. A read by key does not. A ticket must pass the
+        same rules as the search: a project of the settings, not done, no assignee and the eligible label.
+        A key that is not valid or not known to Jira is skipped.
+        """
+        tickets: list[Ticket] = []
+        for key in self._extra_keys:
+            if key in known or not self._in_projects(key):
+                continue
+            try:
+                issue = self._http.call(
+                    "GET",
+                    f"{ISSUE_PATH}/{key}",
+                    params={
+                        "fields": ",".join(
+                            [
+                                "labels",
+                                "description",
+                                "status",
+                                "assignee",
+                                *custom_ids.values(),
+                            ]
+                        )
+                    },
+                    shape=dict,
+                )
+            except TrackerError:
+                continue
+            with _expected_shape("the ticket"):
+                if not self._is_eligible(issue):
+                    continue
+                ticket = ticket_from_issue(issue, custom_ids)
+            if ticket is not None:
+                tickets.append(ticket)
+        return tickets
+
+    def _in_projects(self, key: str) -> bool:
+        return bool(ISSUE_KEY.fullmatch(key)) and (
+            key.rsplit("-", 1)[0] in self._settings.project_keys
+        )
+
+    def _is_eligible(self, issue: dict) -> bool:
+        """The rules of the search query, checked on one ticket."""
+        fields = issue["fields"]
+        label = self._settings.eligible_label
+        done = (fields.get("status") or {}).get("statusCategory", {}).get(
+            "key"
+        ) == DONE_CATEGORY
+        return (
+            not done
+            and not fields.get("assignee")
+            and (not label or label in fields.get("labels", []))
+        )
 
     def add_comment(self, key: str, text: str) -> None:
         """Post the comment with a hidden marker. Skip it if a comment of the ticket has that marker."""

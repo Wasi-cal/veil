@@ -159,6 +159,8 @@ A ticket needs all of these before the Action fixes it:
 
 Two repo settings must fit the site. The Jira workflow must have the status that `in_review_status` names, or you must set the setting to a status that exists. The repo must allow GitHub Actions to create pull requests (Settings, Actions, General).
 
+Jira search can trail a new ticket by a few seconds. The Gozu scan action runs before veil in the same job and sets the variable `GOZU_TICKET_KEYS` with the keys of the tickets that it just made. The Action reads these tickets by key, and a ticket must pass the same rules as the search. The variable is optional. Without it, veil finds the tickets by search only.
+
 ## The service Shell (deferred)
 
 The org-wide service was to be the second Shell. It is not in the code now. veil runs on one repo through the GitHub Action. ADR 0017 keeps the decisions of the service. The code is deleted on purpose, and git history keeps it (commit `0bcf11c`).

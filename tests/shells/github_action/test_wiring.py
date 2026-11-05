@@ -86,3 +86,29 @@ def test_the_settings_can_name_other_variables_for_the_credentials(world):
 
     assert code == 0
     assert set(spy.contexts[0].credential_values) == {TOKEN, JIRA_TOKEN, OPENAI_KEY}
+
+
+def test_the_tickets_that_the_gozu_scan_just_made_are_read_by_key(world):
+    new = {
+        "id": "1",
+        "key": "SEC-9",
+        "fields": {
+            "labels": ["issue-aa", "branch-feature-x"],
+            "status": {"statusCategory": {"key": "new"}},
+            "assignee": None,
+            "description": None,
+        },
+    }
+    world.jira.routes[("GET", "/rest/api/3/issue/SEC-9")] = (200, new)
+    world.environ["GOZU_TICKET_KEYS"] = "SEC-9,SEC-10"
+
+    class Caller(SpyRun):
+        def __call__(self, context):
+            context.tracker.open_tickets()
+            return super().__call__(context)
+
+    code, _ = world.run_action(run=Caller(world.out))
+
+    assert code == 0
+    asked = [r.path for r in world.jira.seen if r.method == "GET"]
+    assert "/rest/api/3/issue/SEC-9" in asked
