@@ -25,6 +25,7 @@ def attempt(
     model: str,
     workspace: Workspace,
     failure: str | None = None,
+    reasoning_effort: str | None = None,
 ) -> Fix:
     """Try to fix one Gozu Ticket with one model. Return the Fix. The edits stay in the workspace, not committed.
 
@@ -62,6 +63,7 @@ def attempt(
         budget,
         context.progress,
         ticket.finding,
+        reasoning_effort,
     )
     ensure_no_secret(context, working_copy, finish)
     working_copy.verify()

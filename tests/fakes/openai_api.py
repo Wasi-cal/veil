@@ -21,9 +21,20 @@ class StubOpenAIApi:
         self.requests: list[dict] = []
 
     def create_response(
-        self, model: str, input_items: list[dict], tools: list[dict]
+        self,
+        model: str,
+        input_items: list[dict],
+        tools: list[dict],
+        reasoning_effort: str | None = None,
     ) -> ApiResponse:
-        self.requests.append({"model": model, "input": input_items, "tools": tools})
+        self.requests.append(
+            {
+                "model": model,
+                "input": input_items,
+                "tools": tools,
+                "reasoning_effort": reasoning_effort,
+            }
+        )
         reply = self._replies.pop(0)
         if isinstance(reply, Exception):
             raise reply

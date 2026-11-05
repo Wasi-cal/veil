@@ -45,6 +45,7 @@ from veil.engine.constants.settings_text import (
     PROJECT_KEY,
     SITE_URL,
 )
+from veil.engine.models.config.reasoning_effort import ReasoningEffort
 from veil.engine.models.report.model_price import ModelPrice
 
 
@@ -69,6 +70,8 @@ class Settings(BaseModel):
     )
     # The price of each model, for the cost in the run report. A price here replaces the default price of the model.
     model_prices: dict[str, ModelPrice] = Field(default_factory=dict, max_length=50)
+    # How much the cheap model reasons before each step. None leaves the choice to the model. The strong model always uses its own default.
+    cheap_reasoning_effort: ReasoningEffort | None = None
     max_attempts: int = Field(default=MAX_ATTEMPTS, ge=1, le=2)
     step_cap: int = Field(default=STEP_CAP, ge=1, le=100)
     tool_result_max_bytes: int = Field(

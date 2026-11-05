@@ -38,9 +38,15 @@ class OpenAIModelClient:
         self._sleep = sleep
 
     def next(
-        self, messages: list[dict], model: str, tools: list[ToolDefinition]
+        self,
+        messages: list[dict],
+        model: str,
+        tools: list[ToolDefinition],
+        reasoning_effort: str | None = None,
     ) -> ModelReply:
-        response = self._create(model, _items(messages), [_tool(t) for t in tools])
+        response = self._create(
+            model, _items(messages), [_tool(t) for t in tools], reasoning_effort
+        )
         return ModelReply(
             tool_calls=[
                 ToolCall(
@@ -56,17 +62,23 @@ class OpenAIModelClient:
             cached_tokens=response.cached_tokens,
         )
 
-    def _create(self, model: str, items: list[dict], tools: list[dict]) -> ApiResponse:
+    def _create(
+        self,
+        model: str,
+        items: list[dict],
+        tools: list[dict],
+        reasoning_effort: str | None,
+    ) -> ApiResponse:
         for attempt in range(MODEL_CALL_RETRIES):
             try:
-                return self._api.create_response(model, items, tools)
+                return self._api.create_response(model, items, tools, reasoning_effort)
             except ModelClientError as failure:
                 if not failure.retryable:
                     raise
                 self._sleep(
                     min(RETRY_MAX_DELAY_SECONDS, RETRY_BASE_DELAY_SECONDS * 2**attempt)
                 )
-        return self._api.create_response(model, items, tools)
+        return self._api.create_response(model, items, tools, reasoning_effort)
 
 
 def _tool(tool: ToolDefinition) -> dict:

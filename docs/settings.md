@@ -12,6 +12,7 @@ The safety rules are code and are not settings. You cannot turn them off. They a
 |---|---|---|---|
 | `cheap_model` | `gpt-6-luna` | any name | The model for the first attempt. |
 | `strong_model` | `gpt-6.1-terra` | any name | The model for the second attempt. |
+| `cheap_reasoning_effort` | not set | `none`, `low`, `medium`, `high`, `xhigh`, `max` | How much the cheap model reasons before each step. A lower level costs less and is faster, because reasoning tokens are billed as output. It may fix fewer hard tickets. The strong model keeps its own default. Not set leaves the choice to the model. A model that does not take the level makes the API refuse the call. |
 | `max_attempts` | 2 | 1 to 2 | The attempts for one ticket. With 1, the strong model never runs. |
 | `step_cap` | 25 | 1 to 100 | The most tool calls in one attempt. |
 | `tool_result_max_bytes` | 8192 | 256 to 65536 | The most bytes of one tool result that the model sees. |

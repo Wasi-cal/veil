@@ -24,6 +24,7 @@ def converse(
     budget: TicketBudget,
     progress: Callable[[int], None] | None = None,
     finding_text: str = "",
+    reasoning_effort: str | None = None,
 ) -> FinishArgs:
     """Run the tool calls of the model until it calls finish with valid arguments. Return them.
 
@@ -36,7 +37,7 @@ def converse(
     finish: FinishArgs | None = None
     while finish is None:
         budget.ensure()
-        reply = model_client.next(messages, model, tools)
+        reply = model_client.next(messages, model, tools, reasoning_effort)
         budget.spend(model, reply)
         report.tokens_used += reply.tokens
         if progress is not None:

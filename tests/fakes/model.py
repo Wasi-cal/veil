@@ -74,6 +74,7 @@ class FakeModelClient:
         self.received: list[list[dict]] = []
         self.tools_received: list[list[ToolDefinition]] = []
         self.models_used: list[str] = []
+        self.efforts_used: list[str | None] = []
         self._call_count = 0
 
     def everything_received(self) -> str:
@@ -96,11 +97,16 @@ class FakeModelClient:
         return next(m["content"] for m in self.received[0] if m["role"] == "user")
 
     def next(
-        self, messages: list[dict], model: str, tools: list[ToolDefinition]
+        self,
+        messages: list[dict],
+        model: str,
+        tools: list[ToolDefinition],
+        reasoning_effort: str | None = None,
     ) -> ModelReply:
         """Check the conversation as a real API does. Then return the next scripted reply."""
         _check_conversation(messages)
         self.models_used.append(model)
+        self.efforts_used.append(reasoning_effort)
         self.received.append([dict(m) for m in messages])
         self.tools_received.append(list(tools))
         queue = self._shared if self._by_model is None else self._by_model[model]

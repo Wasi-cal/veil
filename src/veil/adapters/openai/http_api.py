@@ -36,9 +36,21 @@ class HttpOpenAIApi:
         self._timeout = timeout_seconds
 
     def create_response(
-        self, model: str, input_items: list[dict], tools: list[dict]
+        self,
+        model: str,
+        input_items: list[dict],
+        tools: list[dict],
+        reasoning_effort: str | None = None,
     ) -> ApiResponse:
         key = self._api_key.get_secret_value()
+        body: dict = {
+            "model": model,
+            "input": input_items,
+            "tools": tools,
+            "store": False,
+        }
+        if reasoning_effort is not None:
+            body["reasoning"] = {"effort": reasoning_effort}
         reply = call_json(
             service="OpenAI",
             error=_failed_call,
@@ -47,7 +59,7 @@ class HttpOpenAIApi:
             method="POST",
             path=RESPONSES_PATH,
             headers={"Authorization": f"Bearer {key}", "Accept": "application/json"},
-            body={"model": model, "input": input_items, "tools": tools, "store": False},
+            body=body,
             timeout=self._timeout,
         )
         try:

@@ -57,7 +57,15 @@ def _attempts(
 ) -> Fix:
     settings = context.settings
     try:
-        return attempt(context, ticket, report, budget, settings.cheap_model, workspace)
+        return attempt(
+            context,
+            ticket,
+            report,
+            budget,
+            settings.cheap_model,
+            workspace,
+            reasoning_effort=settings.cheap_reasoning_effort,
+        )
     except AttemptFailed as first:
         workspace.discard_changes()
         log.warning(

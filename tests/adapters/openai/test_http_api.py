@@ -265,3 +265,25 @@ def test_a_reply_without_usage_details_has_no_cached_tokens():
         server.routes[RESPONSES] = (200, response_json([], usage=usage))
 
         assert create(server).cached_tokens == 0
+
+
+def test_the_request_asks_for_the_reasoning_effort_when_one_is_given():
+    with StubHttpServer() as server:
+        server.routes[RESPONSES] = (200, response_json([]))
+
+        api_for(server).create_response(
+            "cheap-model", INPUT, TOOLS, reasoning_effort="low"
+        )
+
+    [request] = server.seen
+    assert request.body["reasoning"] == {"effort": "low"}
+
+
+def test_the_request_has_no_reasoning_part_without_an_effort():
+    with StubHttpServer() as server:
+        server.routes[RESPONSES] = (200, response_json([]))
+
+        create(server)
+
+    [request] = server.seen
+    assert "reasoning" not in request.body
