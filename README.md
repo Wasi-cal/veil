@@ -96,6 +96,7 @@ These rules are code. A setting cannot turn them off.
 
 ## More
 
+- [A workflow that runs the Gozu scan first, then veil](docs/examples/gozu-and-veil-workflow.yml)
 - [All settings](docs/settings.md)
 - [How veil works](docs/how-it-works.md)
 - [Decisions](docs/adr)
